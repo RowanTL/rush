@@ -42,6 +42,8 @@
               buildInputs = runtimeDeps;
               nativeBuildInputs = buildDeps ++ devDeps ++ [ rustc ];
               packages = with pkgs; [
+                rust-analyzer
+                lldb
                 (vscode-with-extensions.override {
                   vscode = vscodium;
                   vscodeExtensions = with vscode-extensions; [
