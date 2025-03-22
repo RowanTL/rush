@@ -41,6 +41,15 @@
               '';
               buildInputs = runtimeDeps;
               nativeBuildInputs = buildDeps ++ devDeps ++ [ rustc ];
+              packages = with pkgs; [
+                (vscode-with-extensions.override {
+                  vscode = vscodium;
+                  vscodeExtensions = with vscode-extensions; [
+                    rust-lang.rust-analyzer
+                    vadimcn.vscode-lldb
+                  ];
+                })
+              ];
             };
         in {
           _module.args.pkgs = import inputs.nixpkgs {
