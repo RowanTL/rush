@@ -2,38 +2,61 @@
 //!
 //! This file contains numeric instructions for int and float.
 
-use crate::push::state::*;
-use paste::paste;
-use std::ops::Add;
+use crate::push::state::{EMPTY_STATE, PushState};
+use std::ops::{Add, Sub};
 
-fn _add<T: Add<Output = T>>(val0: T, val1: T) -> T {
-    val0 + val1
+/// Adds two addable values together.
+fn _add<T>(vals: Vec<T>) -> Option<T>
+where
+    T: Add<Output = T>,
+    T: Copy,
+{
+    Some(vals[1] + vals[0])
 }
 
-#[macro_export]
-macro_rules! make_instruction {
-    ($stack_name:ident, $fn_name:ident) => {
-        paste::item! {
-            fn [< $stack_name $fn_name >] (state: &mut PushState) -> Option< {
-                let val0 = state.$stack_name[0];
-                let val1 = state.$stack_name[1];
-                $fn_name(val0, val1);
-                println!("{val0} {val1}");
-            }
-        }
-    };
+/// Subtracts two subtractable values from each other.
+fn _sub<T>(vals: Vec<T>) -> Option<T>
+where
+    T: Sub<Output = T>,
+    T: Copy,
+{
+    Some(vals[1] - vals[0])
 }
+
+/// Declares int_add
+make_instruction!(int, _add, i64);
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    /// Tests the _add function.
     #[test]
     fn add_test() {
+        let vals: Vec<i64> = vec![1, 2];
+        assert_eq!(Some(3), _add(vals));
+
+        let vals: Vec<f64> = vec![1.1, 2.2];
+        assert_eq!(Some(3.3), _add(vals));
+    }
+
+    /// Tests the _sub function.
+    #[test]
+    fn sub_test() {
+        let vals: Vec<i64> = vec![1, 2];
+        assert_eq!(Some(1), _sub(vals));
+
+        let vals: Vec<f64> = vec![1.1, 2.2];
+        assert_eq!(Some(1.1), _sub(vals));
+    }
+
+    // Tests that the various state_add functions work.
+    #[test]
+    fn state_add() {
         let mut test_state = EMPTY_STATE;
         test_state.int = vec![1, 2];
-        // assert_eq!(vec![1, 2, 3], _add(&mut test_state).int);
-        make_instruction!(int, _add);
-        int_add(&mut test_state);
+        test_state.float = vec![1.1, 2.2];
+        int_add(&mut test_state, 2);
+        assert_eq!(test_state.int, vec![3]);
     }
 }

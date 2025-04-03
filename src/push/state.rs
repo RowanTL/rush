@@ -1,7 +1,7 @@
 #[derive(Debug, Clone)]
 pub struct PushState {
     pub int: Vec<i64>,
-    pub float: Vec<i64>,
+    pub float: Vec<f64>,
     pub string: Vec<Vec<u8>>,
     pub bool: Vec<bool>,
     pub char: Vec<u8>,

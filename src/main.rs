@@ -2,5 +2,7 @@ mod instructions;
 mod push;
 
 fn main() {
-    println!("Hello, world!");
+    let arr: Vec<i32> = vec![];
+    let slice = &arr[..2];
+    println!("{:?}", slice);
 }
