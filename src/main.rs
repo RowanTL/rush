@@ -1,18 +1,32 @@
+use instructions::utils::InstructionTrait;
+use rust_decimal::MathematicalOps;
 use rust_decimal::prelude::*;
-use rust_decimal_macros::dec;
 
 mod instructions;
 mod push;
 
+fn test_func() {}
+fn another_test_func() {}
+
 fn main() {
-    // let arr: Vec<i32> = vec![];
-    // let slice = &arr[..2];
-    // println!("{:?}", slice);
+    // let sixth_pi = Decimal::PI / dec!(6.0);
+    // let result = dec!(1).sin();
+    // let result = Decimal::PI.sin().checked_div(Decimal::PI.cos());
+    // let result = dec!(1.0) / Decimal::HALF_PI.sin();
+    // let result = sixth_pi.sin();
+    // let result = Decimal::HALF_PI.cos();
+    // let result = Decimal::PI.sin();
+    // let result = Decimal::PI.tan();
+    // let result = dec!(1.0) / Decimal::QUARTER_PI.tan();
+    // let result = dec!(1.0) / Decimal::QUARTER_PI.cos();
+    // let result = dec!(1.2).checked_exp();
+    let result = dec!(2).log10();
 
-    // let arr: Vec<Decimal> = vec![dec!(2.2), dec!(1.1)];
-    // println!("{arr:?}");
+    println!("{result:?}");
+    // println!("{sixth_pi}");
 
-    // let result = dec!(1.0) / dec!(0.0);
-    let result = dec!(2.7) % dec!(1.2);
-    println!("{result}");
+    // casting a function call to a usize is a way to
+    // test for function equality.
+    let test_func_result = test_func as usize == test_func as usize;
+    println!("{test_func_result}");
 }
