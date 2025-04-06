@@ -1,4 +1,4 @@
-use instructions::utils::InstructionTrait;
+use instructions::utils::NumericTrait;
 use rust_decimal::MathematicalOps;
 use rust_decimal::prelude::*;
 

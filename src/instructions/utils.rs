@@ -8,7 +8,7 @@ use std::ops::Div;
 ///
 /// Trig functions named safe rather than checked to not overlap
 /// with Decimal library's checked function names.
-pub trait InstructionTrait: Sized + Div<Output = Self> {
+pub trait NumericTrait: Sized + Div<Output = Self> {
     fn checked_div(self, v: Self) -> Option<Self>;
     fn checked_mod(self, v: Self) -> Option<Self>;
     fn increment(self) -> Self;
@@ -24,9 +24,10 @@ pub trait InstructionTrait: Sized + Div<Output = Self> {
     fn to_bool(self) -> bool;
     fn sign_reverse(self) -> Self;
     fn square(self) -> Self;
+    fn from_bool(v: bool) -> Self;
 }
 
-impl InstructionTrait for Decimal {
+impl NumericTrait for Decimal {
     fn checked_div(self, v: Self) -> Option<Self> {
         if v == dec!(0.0) { None } else { Some(self / v) }
     }
@@ -72,9 +73,12 @@ impl InstructionTrait for Decimal {
     fn square(self) -> Self {
         self * self
     }
+    fn from_bool(v: bool) -> Self {
+        if v { dec!(1.0) } else { dec!(0.0) }
+    }
 }
 
-impl InstructionTrait for i128 {
+impl NumericTrait for i128 {
     fn checked_div(self, v: Self) -> Option<Self> {
         if v == 0 { None } else { Some(self / v) }
     }
@@ -124,5 +128,33 @@ impl InstructionTrait for i128 {
     }
     fn square(self) -> Self {
         self * self
+    }
+    fn from_bool(v: bool) -> Self {
+        if v { 1 } else { 0 }
+    }
+}
+
+pub trait LogicalTrait {
+    fn logical_and(self, v: Self) -> Self;
+    fn logical_or(self, v: Self) -> Self;
+    fn logical_not(self) -> Self;
+    fn logical_xor(self, v: Self) -> Self;
+}
+
+impl LogicalTrait for bool {
+    fn logical_and(self, v: Self) -> Self {
+        self && v
+    }
+    fn logical_or(self, v: Self) -> Self {
+        self || v
+    }
+    fn logical_not(self) -> Self {
+        !self
+    }
+    fn logical_xor(self, v: Self) -> Self {
+        match (self, v) {
+            (true, true) | (false, false) => false,
+            _ => true,
+        }
     }
 }

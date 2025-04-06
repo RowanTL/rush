@@ -11,7 +11,7 @@ use rust_decimal::prelude::{FromPrimitive, ToPrimitive};
 use std::cmp::{max, min};
 use std::ops::{Add, Div, Mul, Sub};
 
-use super::utils::InstructionTrait;
+use super::utils::NumericTrait;
 
 /// Adds two addable values together.
 fn _add<T>(vals: Vec<T>) -> Option<T>
@@ -46,7 +46,7 @@ make_instruction!(float, float, _mult, Decimal, 2);
 /// Divides two values from each other.
 fn _div<T>(vals: Vec<T>) -> Option<T>
 where
-    T: Div<Output = T> + Copy + InstructionTrait,
+    T: Div<Output = T> + Copy + NumericTrait,
 {
     vals[1].checked_div(vals[0])
 }
@@ -56,7 +56,7 @@ make_instruction!(float, float, _div, Decimal, 2);
 /// Takes the remainder of two values
 fn _rem<T>(vals: Vec<T>) -> Option<T>
 where
-    T: Div<Output = T> + Copy + InstructionTrait,
+    T: Div<Output = T> + Copy + NumericTrait,
 {
     vals[1].checked_mod(vals[0])
 }
@@ -86,7 +86,7 @@ make_instruction!(float, float, _min, Decimal, 2);
 /// Increments a single value by 1
 fn _inc<T>(vals: Vec<T>) -> Option<T>
 where
-    T: InstructionTrait + Copy,
+    T: NumericTrait + Copy,
 {
     Some(vals[0].increment())
 }
@@ -96,7 +96,7 @@ make_instruction!(float, float, _inc, Decimal, 1);
 /// Decrements a single value by 1
 fn _dec<T>(vals: Vec<T>) -> Option<T>
 where
-    T: InstructionTrait + Copy,
+    T: NumericTrait + Copy,
 {
     Some(vals[0].decrement())
 }
@@ -146,7 +146,7 @@ make_instruction!(float, boolean, _gte, Decimal, 2);
 /// Runs sin on a single item.
 fn _sin<T>(vals: Vec<T>) -> Option<T>
 where
-    T: Copy + InstructionTrait,
+    T: Copy + NumericTrait,
 {
     vals[0].safe_sin()
 }
@@ -156,7 +156,7 @@ make_instruction!(float, float, _sin, Decimal, 1);
 /// Runs arcsin on a single item.
 fn _arcsin<T>(vals: Vec<T>) -> Option<T>
 where
-    T: Copy + InstructionTrait,
+    T: Copy + NumericTrait,
 {
     vals[0].safe_sin()?.inverse()
 }
@@ -166,7 +166,7 @@ make_instruction!(float, float, _arcsin, Decimal, 1);
 /// Runs cos on a single item.
 fn _cos<T>(vals: Vec<T>) -> Option<T>
 where
-    T: Copy + InstructionTrait,
+    T: Copy + NumericTrait,
 {
     vals[0].safe_cos()
 }
@@ -176,7 +176,7 @@ make_instruction!(float, float, _cos, Decimal, 1);
 /// Runs arcsin on a single item.
 fn _arccos<T>(vals: Vec<T>) -> Option<T>
 where
-    T: Copy + InstructionTrait,
+    T: Copy + NumericTrait,
 {
     vals[0].safe_cos()?.inverse()
 }
@@ -186,7 +186,7 @@ make_instruction!(float, float, _arccos, Decimal, 1);
 /// Runs tan on a single item.
 fn _tan<T>(vals: Vec<T>) -> Option<T>
 where
-    T: Copy + InstructionTrait,
+    T: Copy + NumericTrait,
 {
     vals[0].safe_tan()
 }
@@ -196,7 +196,7 @@ make_instruction!(float, float, _tan, Decimal, 1);
 /// Runs arctan on a single item.
 fn _arctan<T>(vals: Vec<T>) -> Option<T>
 where
-    T: Copy + InstructionTrait,
+    T: Copy + NumericTrait,
 {
     vals[0].safe_tan()?.inverse()
 }
@@ -216,21 +216,21 @@ fn _to_float(vals: Vec<i128>) -> Option<Decimal> {
 make_instruction!(int, float, _to_float, i128, 1);
 
 /// Converts a single number to a bool.
-fn _to_bool<T>(vals: Vec<T>) -> Option<bool>
+fn _from_bool<T>(vals: Vec<bool>) -> Option<T>
 where
-    T: Copy + InstructionTrait,
+    T: Copy + NumericTrait,
 {
-    Some(vals[0].to_bool())
+    Some(T::from_bool(vals[0]))
 }
-make_instruction!(int, boolean, _to_bool, i128, 1);
-make_instruction!(float, boolean, _to_bool, Decimal, 1);
+make_instruction!(int, boolean, _from_bool, bool, 1);
+make_instruction!(float, boolean, _from_bool, bool, 1);
 
 /// Takes the log base 10 of a single Decimal. Acts as a
 /// NoOp if the value is 0. If the value is negative, takes
 /// the absolute value of the number.
 fn _log<T>(vals: Vec<T>) -> Option<T>
 where
-    T: Copy + InstructionTrait,
+    T: Copy + NumericTrait,
 {
     vals[0].absolute().safe_log10()
 }
@@ -240,7 +240,7 @@ make_instruction!(float, float, _log, Decimal, 1);
 /// Takes the exp of a single value. Ints get truncated.
 fn _exp<T>(vals: Vec<T>) -> Option<T>
 where
-    T: Copy + InstructionTrait,
+    T: Copy + NumericTrait,
 {
     vals[0].safe_exp()
 }
@@ -250,7 +250,7 @@ make_instruction!(float, float, _exp, Decimal, 1);
 /// Takes the square root of the absolute value of a single value.
 fn _sqrt<T>(vals: Vec<T>) -> Option<T>
 where
-    T: Copy + InstructionTrait,
+    T: Copy + NumericTrait,
 {
     vals[0].safe_sqrt()
 }
@@ -261,7 +261,7 @@ make_instruction!(float, float, _sqrt, Decimal, 1);
 /// does nothing (returns None). Truncates an int to 0.
 fn _inv<T>(vals: Vec<T>) -> Option<T>
 where
-    T: Copy + InstructionTrait,
+    T: Copy + NumericTrait,
 {
     vals[0].inverse()
 }
@@ -271,7 +271,7 @@ make_instruction!(float, float, _inv, Decimal, 1);
 /// Takes the absolute value of the top number
 fn _abs<T>(vals: Vec<T>) -> Option<T>
 where
-    T: Copy + InstructionTrait,
+    T: Copy + NumericTrait,
 {
     Some(vals[0].absolute())
 }
@@ -281,7 +281,7 @@ make_instruction!(float, float, _abs, Decimal, 1);
 /// Reverses the sign of the top number
 fn _sign_reverse<T>(vals: Vec<T>) -> Option<T>
 where
-    T: Copy + InstructionTrait,
+    T: Copy + NumericTrait,
 {
     Some(vals[0].sign_reverse())
 }
@@ -291,7 +291,7 @@ make_instruction!(float, float, _sign_reverse, Decimal, 1);
 /// Squares the top number
 fn _square<T>(vals: Vec<T>) -> Option<T>
 where
-    T: Copy + InstructionTrait,
+    T: Copy + NumericTrait,
 {
     Some(vals[0].square())
 }
