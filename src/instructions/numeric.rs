@@ -5,9 +5,9 @@
 // There has to be a better way to declare these functions.
 // Just don't know enough Rust yet ig.
 
-use crate::push::state::{EMPTY_STATE, PushState};
+use crate::push::state::PushState;
+use rust_decimal::Decimal;
 use rust_decimal::prelude::{FromPrimitive, ToPrimitive};
-use rust_decimal::{Decimal, MathematicalOps, dec};
 use std::cmp::{max, min};
 use std::ops::{Add, Div, Mul, Sub};
 
@@ -298,9 +298,80 @@ where
 make_instruction!(int, int, _square, i128, 1);
 make_instruction!(float, float, _square, Decimal, 1);
 
+/// A list of all of the defined int functions in this file.
+/// Must manually register functions in this list if added.
+pub fn int_instructions() -> Vec<fn(&mut PushState)> {
+    vec![
+        int_add,
+        int_sub,
+        int_mult,
+        int_div,
+        int_rem,
+        int_max,
+        int_min,
+        int_inc,
+        int_dec,
+        int_lt,
+        int_gt,
+        int_lte,
+        int_gte,
+        int_sin,
+        int_arcsin,
+        int_cos,
+        int_arccos,
+        int_tan,
+        int_arctan,
+        int_to_float,
+        int_to_bool,
+        int_log,
+        int_exp,
+        int_sqrt,
+        int_inv,
+        int_abs,
+        int_sign_reverse,
+        int_square,
+    ]
+}
+
+/// All of the float instructions declared in this file.
+pub fn float_instructions() -> Vec<fn(&mut PushState)> {
+    vec![
+        float_add,
+        float_sub,
+        float_mult,
+        float_div,
+        float_rem,
+        float_max,
+        float_min,
+        float_inc,
+        float_dec,
+        float_lt,
+        float_gt,
+        float_lte,
+        float_gte,
+        float_sin,
+        float_arcsin,
+        float_cos,
+        float_arccos,
+        float_tan,
+        float_arctan,
+        float_to_int,
+        float_to_bool,
+        float_log,
+        float_exp,
+        float_sqrt,
+        float_inv,
+        float_abs,
+        float_sign_reverse,
+        float_square,
+    ]
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::push::state::EMPTY_STATE;
+    use rust_decimal::dec;
 
     /// Tests the _add function.
     #[test]

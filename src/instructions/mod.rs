@@ -24,7 +24,7 @@ pub mod macros {
             paste::item! {
                 /// Runs the $fn_name function on the top $fn_arity items from
                 /// the $in_stack and places the calculated value on the $out_stack.
-                fn [< $in_stack $fn_name >] (state: &mut PushState) {
+                pub fn [< $in_stack $fn_name >] (state: &mut PushState) {
                     let in_stack_len = state.$in_stack.len();
                     if in_stack_len < $fn_arity {
                         return;

@@ -15,7 +15,9 @@ pub struct PushState {
     pub vector_float: Vec<Vec<Decimal>>,
     pub vector_string: Vec<Vec<Vec<u8>>>,
     pub vector_boolean: Vec<Vec<bool>>,
-    pub vector_char: Vec<u8>,
+    pub vector_char: Vec<Vec<u8>>,
+    pub exec: Vec<Gene>,
+    pub code: Vec<Gene>,
 }
 
 pub const EMPTY_STATE: PushState = PushState {
@@ -29,4 +31,26 @@ pub const EMPTY_STATE: PushState = PushState {
     vector_string: vec![],
     vector_boolean: vec![],
     vector_char: vec![],
+    exec: vec![],
+    code: vec![],
 };
+
+#[derive(PartialEq, Eq, Debug, Clone)]
+pub enum Gene {
+    GeneInt(i128),
+    GeneFloat(Decimal),
+    GeneBoolean(bool),
+    GeneString(Vec<u8>),
+    GeneChar(u8),
+    GeneVectorInt(Vec<i128>),
+    GeneVectorFloat(Vec<Decimal>),
+    GeneVectorBoolean(Vec<bool>),
+    GeneVectorString(Vec<Vec<u8>>),
+    GeneVectorChar(Vec<u8>),
+    StateFunc(fn(&mut PushState)),
+    Close,
+    Open(u8),
+    Skip,
+    Block(Box<Vec<Gene>>),
+    CrossoverPadding,
+}
