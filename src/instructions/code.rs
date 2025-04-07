@@ -99,10 +99,10 @@ make_instruction_clone!(code, code, _wrap_block, Gene, 1);
 fn _combine(vals: Vec<Gene>) -> Option<Gene> {
     match (&vals[0], &vals[1]) {
         (Gene::Block(x), Gene::Block(y)) => {
-            let mut x_clone = x.clone();
-            let y_clone = y.clone();
-            x_clone.extend(y_clone.into_iter());
-            Some(Gene::Block(x_clone))
+            let x_clone = x.clone();
+            let mut y_clone = y.clone();
+            y_clone.extend(x_clone.into_iter());
+            Some(Gene::Block(y_clone))
         }
         (Gene::Block(x), y) => {
             let mut x_clone = x.clone();
@@ -117,7 +117,7 @@ fn _combine(vals: Vec<Gene>) -> Option<Gene> {
         (x, y) => Some(Gene::Block(Box::new(vec![x.clone(), y.clone()]))),
     }
 }
-make_instruction_clone!(code, code, _combine, Gene, 1);
+make_instruction_clone!(code, code, _combine, Gene, 2);
 
 #[cfg(test)]
 mod tests {
@@ -291,6 +291,63 @@ mod tests {
 
     #[test]
     fn combine_test() {
-        // TODO: This later
+        let mut test_state = EMPTY_STATE;
+
+        test_state
+            .code
+            .push(Gene::Block(Box::new(vec![Gene::GeneInt(1)])));
+        test_state.code.push(Gene::Block(Box::new(vec![
+            Gene::GeneFloat(dec!(3.8)),
+            Gene::GeneBoolean(true),
+        ])));
+        code_combine(&mut test_state);
+        assert_eq!(
+            vec![Gene::Block(Box::new(vec![
+                Gene::GeneInt(1),
+                Gene::GeneFloat(dec!(3.8)),
+                Gene::GeneBoolean(true),
+            ]))],
+            test_state.code
+        );
+        test_state.code.clear();
+
+        test_state
+            .code
+            .push(Gene::Block(Box::new(vec![Gene::GeneInt(1)])));
+        test_state.code.push(Gene::GeneFloat(dec!(4.0)));
+        code_combine(&mut test_state);
+        assert_eq!(
+            vec![Gene::Block(Box::new(vec![
+                Gene::GeneInt(1),
+                Gene::GeneFloat(dec!(4.0)),
+            ]))],
+            test_state.code
+        );
+        test_state.code.clear();
+
+        test_state.code.push(Gene::GeneFloat(dec!(4.0)));
+        test_state
+            .code
+            .push(Gene::Block(Box::new(vec![Gene::GeneInt(1)])));
+        code_combine(&mut test_state);
+        assert_eq!(
+            vec![Gene::Block(Box::new(vec![
+                Gene::GeneInt(1),
+                Gene::GeneFloat(dec!(4.0)),
+            ]))],
+            test_state.code
+        );
+        test_state.code.clear();
+
+        test_state.code.push(Gene::GeneFloat(dec!(4.0)));
+        test_state.code.push(Gene::GeneChar('z'));
+        code_combine(&mut test_state);
+        assert_eq!(
+            vec![Gene::Block(Box::new(vec![
+                Gene::GeneChar('z'),
+                Gene::GeneFloat(dec!(4.0)),
+            ]))],
+            test_state.code
+        );
     }
 }
