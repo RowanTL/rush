@@ -20,13 +20,17 @@ fn main() {
     // let result = dec!(1.0) / Decimal::QUARTER_PI.tan();
     // let result = dec!(1.0) / Decimal::QUARTER_PI.cos();
     // let result = dec!(1.2).checked_exp();
-    let result = dec!(2).log10();
+    // let result = dec!(2).log10();
+    let result = vec![0, 1, 2];
+    let r_len = result.len();
+    let fin_result = &result[..r_len - 1];
+    println!("{fin_result:?}");
 
-    println!("{result:?}");
+    // println!("{result:?}");
     // println!("{sixth_pi}");
 
     // casting a function call to a usize is a way to
     // test for function equality.
-    let test_func_result = test_func as usize == test_func as usize;
-    println!("{test_func_result}");
+    // let test_func_result = test_func as usize == test_func as usize;
+    // println!("{test_func_result}");
 }

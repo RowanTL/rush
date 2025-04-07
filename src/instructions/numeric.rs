@@ -11,7 +11,7 @@ use rust_decimal::prelude::{FromPrimitive, ToPrimitive};
 use std::cmp::{max, min};
 use std::ops::{Add, Div, Mul, Sub};
 
-use super::utils::NumericTrait;
+use super::utils::{CastingTrait, NumericTrait};
 
 /// Adds two addable values together.
 fn _add<T>(vals: Vec<T>) -> Option<T>
@@ -203,27 +203,33 @@ where
 make_instruction!(int, int, _arctan, i128, 1);
 make_instruction!(float, float, _arctan, Decimal, 1);
 
-/// Converts the top int to a float.
-fn _to_int(vals: Vec<Decimal>) -> Option<i128> {
-    vals[0].to_i128()
-}
-make_instruction!(float, int, _to_int, Decimal, 1);
-
-/// Converts the top float to an int.
-fn _to_float(vals: Vec<i128>) -> Option<Decimal> {
-    Decimal::from_i128(vals[0])
-}
-make_instruction!(int, float, _to_float, i128, 1);
-
-/// Converts a single number to a bool.
-fn _from_bool<T>(vals: Vec<bool>) -> Option<T>
+/// Converts a single value from a float to an arbitrary type.
+fn _from_int<T>(vals: Vec<i128>) -> Option<T>
 where
-    T: Copy + NumericTrait,
+    T: Copy + CastingTrait,
 {
-    Some(T::from_bool(vals[0]))
+    T::from_int(vals[0])
 }
-make_instruction!(int, boolean, _from_bool, bool, 1);
-make_instruction!(float, boolean, _from_bool, bool, 1);
+make_instruction_out!(int, float, _from_int, i128, 1);
+
+/// Converts a single value from a float to an arbitrary type.
+fn _from_float<T>(vals: Vec<Decimal>) -> Option<T>
+where
+    T: Copy + CastingTrait,
+{
+    T::from_float(vals[0])
+}
+make_instruction_out!(float, int, _from_float, Decimal, 1);
+
+/// Converts a bool to a to a new type.
+fn _from_boolean<T>(vals: Vec<bool>) -> Option<T>
+where
+    T: Copy + CastingTrait,
+{
+    T::from_bool(vals[0])
+}
+make_instruction_out!(boolean, int, _from_boolean, bool, 1);
+make_instruction_out!(boolean, float, _from_boolean, bool, 1);
 
 /// Takes the log base 10 of a single Decimal. Acts as a
 /// NoOp if the value is 0. If the value is negative, takes
@@ -321,8 +327,8 @@ pub fn int_instructions() -> Vec<fn(&mut PushState)> {
         int_arccos,
         int_tan,
         int_arctan,
-        int_to_float,
-        int_to_bool,
+        int_from_float,
+        int_from_boolean,
         int_log,
         int_exp,
         int_sqrt,
@@ -355,8 +361,8 @@ pub fn float_instructions() -> Vec<fn(&mut PushState)> {
         float_arccos,
         float_tan,
         float_arctan,
-        float_to_int,
-        float_to_bool,
+        float_from_int,
+        float_from_boolean,
         float_log,
         float_exp,
         float_sqrt,
@@ -540,17 +546,6 @@ mod tests {
 
         let vals = vec![Decimal::QUARTER_PI];
         assert_eq!(Some(dec!(1.0000000043184676055890307049)), _arctan(vals));
-    }
-
-    /// Tests the functions that cast from one numeric type
-    /// to another
-    #[test]
-    fn cast_tests() {
-        let vals = vec![dec!(1.2)];
-        assert_eq!(Some(1), _to_int(vals));
-
-        let vals: Vec<i128> = vec![2];
-        assert_eq!(Some(dec!(2.0)), _to_float(vals));
     }
 
     /// Tests that the various addition functions.
@@ -793,32 +788,13 @@ mod tests {
         let mut test_state = EMPTY_STATE;
 
         test_state.int = vec![0, 1];
-        int_to_float(&mut test_state);
+        float_from_int(&mut test_state);
         assert_eq!(vec![dec!(1.0)], test_state.float);
-
         test_state.int.clear();
+
         test_state.float = vec![dec!(2.1)];
-        float_to_int(&mut test_state);
+        int_from_float(&mut test_state);
         assert_eq!(vec![2], test_state.int);
-
-        test_state.int = vec![1];
-        int_to_bool(&mut test_state);
-        assert_eq!(vec![true], test_state.boolean);
-        test_state.boolean.clear();
-
-        test_state.int = vec![0];
-        int_to_bool(&mut test_state);
-        assert_eq!(vec![false], test_state.boolean);
-        test_state.boolean.clear();
-
-        test_state.float = vec![dec!(2.0)];
-        float_to_bool(&mut test_state);
-        assert_eq!(vec![true], test_state.boolean);
-        test_state.boolean.clear();
-
-        test_state.float = vec![dec!(0.0)];
-        float_to_bool(&mut test_state);
-        assert_eq!(vec![false], test_state.boolean);
     }
 
     /// Tests the log function

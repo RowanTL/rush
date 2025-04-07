@@ -21,10 +21,8 @@ pub trait NumericTrait: Sized + Div<Output = Self> {
     fn absolute(self) -> Self;
     fn safe_log10(self) -> Option<Self>;
     fn safe_sqrt(self) -> Option<Self>;
-    fn to_bool(self) -> bool;
     fn sign_reverse(self) -> Self;
     fn square(self) -> Self;
-    fn from_bool(v: bool) -> Self;
 }
 
 impl NumericTrait for Decimal {
@@ -64,17 +62,11 @@ impl NumericTrait for Decimal {
     fn safe_sqrt(self) -> Option<Self> {
         self.absolute().sqrt()
     }
-    fn to_bool(self) -> bool {
-        if self == dec!(0.0) { false } else { true }
-    }
     fn sign_reverse(self) -> Self {
         self * dec!(-1)
     }
     fn square(self) -> Self {
         self * self
-    }
-    fn from_bool(v: bool) -> Self {
-        if v { dec!(1.0) } else { dec!(0.0) }
     }
 }
 
@@ -120,20 +112,16 @@ impl NumericTrait for i128 {
     fn safe_sqrt(self) -> Option<Self> {
         Decimal::from_i128(self)?.absolute().sqrt()?.to_i128()
     }
-    fn to_bool(self) -> bool {
-        if self == 0 { false } else { true }
-    }
     fn sign_reverse(self) -> Self {
         -1 * self
     }
     fn square(self) -> Self {
         self * self
     }
-    fn from_bool(v: bool) -> Self {
-        if v { 1 } else { 0 }
-    }
 }
 
+/// A trait for types to implement logical functions that work
+/// for push types.
 pub trait LogicalTrait {
     fn logical_and(self, v: Self) -> Self;
     fn logical_or(self, v: Self) -> Self;
@@ -156,5 +144,48 @@ impl LogicalTrait for bool {
             (true, true) | (false, false) => false,
             _ => true,
         }
+    }
+}
+
+/// A trait for uniform conversions between types.
+pub trait CastingTrait: Sized {
+    fn from_bool(v: bool) -> Option<Self>;
+    fn from_int(v: i128) -> Option<Self>;
+    fn from_float(v: Decimal) -> Option<Self>;
+}
+
+impl CastingTrait for i128 {
+    fn from_bool(v: bool) -> Option<Self> {
+        Some(if v { 1 } else { 0 })
+    }
+    fn from_int(v: i128) -> Option<Self> {
+        Some(v)
+    }
+    fn from_float(v: Decimal) -> Option<Self> {
+        v.to_i128()
+    }
+}
+
+impl CastingTrait for Decimal {
+    fn from_bool(v: bool) -> Option<Self> {
+        Some(if v { dec!(1.0) } else { dec!(0.0) })
+    }
+    fn from_int(v: i128) -> Option<Self> {
+        Decimal::from_i128(v)
+    }
+    fn from_float(v: Decimal) -> Option<Self> {
+        Some(v)
+    }
+}
+
+impl CastingTrait for bool {
+    fn from_bool(v: bool) -> Option<Self> {
+        Some(v)
+    }
+    fn from_int(v: i128) -> Option<Self> {
+        Some(if v != 0 { true } else { false })
+    }
+    fn from_float(v: Decimal) -> Option<Self> {
+        Some(if v != dec!(0.0) { true } else { false })
     }
 }

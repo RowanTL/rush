@@ -43,8 +43,66 @@ pub mod macros {
             }
         };
     }
+
+    /// The same as make_instruction above but prepends the output
+    /// stack to the function name rather than the input stack.
+    #[macro_export]
+    macro_rules! make_instruction_out {
+        ($in_stack:ident, $out_stack:ident, $fn_name:ident, $fn_type:ty, $fn_arity:stmt) => {
+            paste::item! {
+                /// Runs the $fn_name function on the top $fn_arity items from
+                /// the $in_stack and places the calculated value on the $out_stack.
+                pub fn [< $out_stack $fn_name >] (state: &mut PushState) {
+                    let in_stack_len = state.$in_stack.len();
+                    if in_stack_len < $fn_arity {
+                        return;
+                    }
+                    let mut inputs: Vec<$fn_type> = Vec::with_capacity($fn_arity);
+                    for n in 1..=$fn_arity {
+                        inputs.push(state.$in_stack[in_stack_len - n]);
+                    }
+                    if let Some(result) = $fn_name(inputs) {
+                        for _ in 0..$fn_arity {
+                            state.$in_stack.pop();
+                        }
+                        state.$out_stack.push(result);
+                    }
+                }
+            }
+        };
+    }
+
+    /// The same as make_instruction but uses clone() to fill the arguments
+    /// to each function rather than a reference. Is slower, but will be okay
+    /// for the time being.
+    #[macro_export]
+    macro_rules! make_instruction_clone {
+        ($in_stack:ident, $out_stack:ident, $fn_name:ident, $fn_type:ty, $fn_arity:stmt) => {
+            paste::item! {
+                /// Runs the $fn_name function on the top $fn_arity items from
+                /// the $in_stack and places the calculated value on the $out_stack.
+                pub fn [< $in_stack $fn_name >] (state: &mut PushState) {
+                    let in_stack_len = state.$in_stack.len();
+                    if in_stack_len < $fn_arity {
+                        return;
+                    }
+                    let mut inputs: Vec<$fn_type> = Vec::with_capacity($fn_arity);
+                    for n in 1..=$fn_arity {
+                        inputs.push(state.$in_stack[in_stack_len - n].clone());
+                    }
+                    if let Some(result) = $fn_name(inputs) {
+                        for _ in 0..$fn_arity {
+                            state.$in_stack.pop();
+                        }
+                        state.$out_stack.push(result);
+                    }
+                }
+            }
+        };
+    }
 }
 
+pub mod code;
 pub mod logical;
 pub mod numeric;
 pub mod utils;
