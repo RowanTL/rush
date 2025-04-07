@@ -4,7 +4,7 @@ use rust_decimal::prelude::*;
 ///
 /// I chose to use `rust_decimal` crate here because
 /// there are round off errors with the build in `f64`.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PushState {
     pub int: Vec<i128>,
     pub float: Vec<Decimal>,
