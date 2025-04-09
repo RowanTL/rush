@@ -60,7 +60,7 @@
           };
 
           packages.default = self'.packages.rush;
-          devShells.default = self'.devShells.nightly;
+          devShells.default = self'.devShells.stable;
 
           packages.rush = (rustPackage "rush");
           packages.rush-base = (rustPackage "");
