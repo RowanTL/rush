@@ -147,4 +147,21 @@ mod tests {
         );
         // println!("{:?}", test_state.exec);
     }
+
+    #[test]
+    fn interpret_program_test() {
+        use crate::instructions::numeric::int_add;
+
+        let mut test_state = EMPTY_STATE;
+
+        test_state.exec = vec![
+            Gene::StateFunc(int_add),
+            Gene::StateFunc(int_add),
+            Gene::GeneInt(2),
+            Gene::GeneInt(3),
+            Gene::GeneInt(4),
+        ];
+        interpret_program(&mut test_state, 1000, 1000);
+        assert_eq!(vec![9], test_state.int);
+    }
 }
