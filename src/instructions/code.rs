@@ -89,7 +89,7 @@ fn _but_last(vals: Vec<Gene>) -> Option<Gene> {
 }
 make_instruction_clone!(code, code, _but_last, Gene, 1);
 
-/// Returns all of the vals wrapped in a code block
+/// Returns all the vals wrapped in a code block
 fn _wrap_block(vals: Vec<Gene>) -> Option<Gene> {
     Some(Gene::Block(Box::new(vals)))
 }
@@ -123,7 +123,7 @@ make_instruction_clone!(code, code, _combine, Gene, 2);
 
 /// Pushes `code_pop` and the top item of the code stack to the exec stack.
 /// Top code item gets executed before being removed from code stack.
-fn code_do_then_pop(state: &mut PushState) {
+pub fn code_do_then_pop(state: &mut PushState) {
     if state.code.is_empty() {
         return;
     }
@@ -134,7 +134,7 @@ fn code_do_then_pop(state: &mut PushState) {
 
 /// Evaluates the top item on the code stack based off
 /// the range of two ints from the int stack.
-fn code_do_range(state: &mut PushState) {
+pub fn code_do_range(state: &mut PushState) {
     if state.code.is_empty() || state.int.len() < 2 {
         return;
     }
@@ -165,8 +165,14 @@ fn code_do_range(state: &mut PushState) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{instructions::numeric::int_add, push::state::EMPTY_STATE};
+    use crate::{
+        instructions::numeric::int_add,
+        push::{interpreter::interpret_program, state::EMPTY_STATE},
+    };
     use rust_decimal::dec;
+
+    const STEP_LIMIT: usize = 1000;
+    const MAX_STACK_SIZE: usize = 1000;
 
     #[test]
     fn is_block_test() {
@@ -395,7 +401,7 @@ mod tests {
     }
 
     #[test]
-    fn _code_do_then_pop_test() {
+    fn code_do_then_pop_test() {
         let mut test_state = EMPTY_STATE;
 
         test_state.code.push(Gene::StateFunc(int_add));
@@ -405,5 +411,24 @@ mod tests {
             vec![Gene::StateFunc(code_pop), Gene::StateFunc(int_add)],
             test_state.exec
         );
+    }
+
+    #[test]
+    fn code_do_range_test() {
+        let mut test_state = EMPTY_STATE;
+
+        let code_do_range_addr = format!("0x{:x}", code_do_range as usize);
+        let int_add_addr = format!("0x{:x}", int_add as usize);
+        let code_from_exec_addr = format!("0x{:x}", code_from_exec as usize);
+
+        test_state.exec = vec![
+            Gene::StateFunc(code_do_range),
+            Gene::StateFunc(int_add),
+            Gene::StateFunc(code_from_exec),
+            Gene::GeneInt(6),
+            Gene::GeneInt(3),
+        ];
+        interpret_program(&mut test_state, STEP_LIMIT, MAX_STACK_SIZE);
+        assert_eq!(vec![18], test_state.int);
     }
 }
