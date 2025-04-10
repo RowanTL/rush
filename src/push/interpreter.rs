@@ -64,9 +64,9 @@ mod tests {
 
         gene_to_stack(
             &mut test_state,
-            Gene::GeneString("test".as_bytes().to_vec()),
+            Gene::GeneString(vec!['t', 'e', 's', 't']),
         );
-        assert_eq!(vec!["test".as_bytes().to_vec()], test_state.string);
+        assert_eq!(vec![vec!['t', 'e', 's', 't']], test_state.string);
         test_state.string.clear();
 
         gene_to_stack(&mut test_state, Gene::GeneChar('a'));
@@ -103,19 +103,19 @@ mod tests {
 
         gene_to_stack(
             &mut test_state,
-            Gene::GeneVectorString(vec!["test0".as_bytes().to_vec()]),
+            Gene::GeneVectorString(vec![vec!['t', 'e', 's', 't', '0']]),
         );
         gene_to_stack(
             &mut test_state,
             Gene::GeneVectorString(vec![
-                "test1".as_bytes().to_vec(),
-                "test2".as_bytes().to_vec(),
+                vec!['t', 'e', 's', 't', '1'],
+                vec!['t', 'e', 's', 't', '2'],
             ]),
         );
         assert_eq!(
             vec![
-                vec!["test0".as_bytes().to_vec()],
-                vec!["test1".as_bytes().to_vec(), "test2".as_bytes().to_vec()]
+                vec![vec!['t', 'e', 's', 't', '0']],
+                vec![vec!['t', 'e', 's', 't', '1'], vec!['t', 'e', 's', 't', '2']]
             ],
             test_state.vector_string
         );
