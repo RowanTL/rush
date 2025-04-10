@@ -48,7 +48,14 @@
                   vscode = vscodium;
                   vscodeExtensions = with vscode-extensions; [
                     rust-lang.rust-analyzer
-                    vadimcn.vscode-lldb
+                  ] ++ pkgs.vscode-utils.extensionsFromVscodeMarketplace [
+                    {
+                      name = "vscode-lldb";
+                      publisher = "vadimcn";
+                      version = "1.11.4";
+                      # sha256 = "1hp6gjh4xp2m1xlm1jsdzxw9d8frkiidhph6nvl24d0h8z34w49g";
+                      sha256 = "ylWlqKSiqsOL1S4vaFKLDck1wGm155bEGGL4+sKdBF8=";
+                    }
                   ];
                 })
               ];
