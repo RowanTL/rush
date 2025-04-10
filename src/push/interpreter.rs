@@ -28,7 +28,7 @@ pub fn gene_to_stack(state: &mut PushState, gene: Gene) {
 
 /// Where a push program's exec stack is interpreted to completion.
 /// TODO: Decide where to place loading in a push program.
-pub fn interpret_program(state: &mut PushState, step_limit: usize, max_stack_size: isize) {
+pub fn interpret_program(state: &mut PushState, step_limit: usize, max_stack_size: usize) {
     let mut steps: usize = 0;
     while state.exec.len() > 0 && steps < step_limit {
         if let Some(gene) = state.exec.pop() {
@@ -62,10 +62,7 @@ mod tests {
         assert_eq!(vec![true], test_state.boolean);
         test_state.boolean.clear();
 
-        gene_to_stack(
-            &mut test_state,
-            Gene::GeneString(vec!['t', 'e', 's', 't']),
-        );
+        gene_to_stack(&mut test_state, Gene::GeneString(vec!['t', 'e', 's', 't']));
         assert_eq!(vec![vec!['t', 'e', 's', 't']], test_state.string);
         test_state.string.clear();
 
