@@ -10,9 +10,9 @@ make_instruction_clone!(code, code, _noop, Gene, 0);
 make_instruction_clone!(exec, exec, _noop, Gene, 0);
 
 /// Pops the top value from the stack
-fn _pop<T>(vals: Vec<T>) -> Option<T> 
-where 
-    T: Clone
+fn _pop<T>(vals: Vec<T>) -> Option<T>
+where
+    T: Clone,
 {
     // This is suboptimal, how to re-write?
     // Calls for a complete overhaul later down the line.
@@ -30,6 +30,35 @@ make_instruction_no_out!(vector_boolean, _pop, Vec<bool>, 1);
 make_instruction_no_out!(vector_char, _pop, Vec<char>, 1);
 make_instruction_no_out!(code, _pop, Gene, 1);
 make_instruction_no_out!(exec, _pop, Gene, 1);
+
+/// Wraps a type in its respective Gene
+macro_rules! make_code {
+    ($in_stack:ident, $gene:ident) => {
+        paste::item! {
+            pub fn [< code_from_ $in_stack >] (state: &mut PushState) {
+                if let Some(val) = state.$in_stack.pop() {
+                    state.code.push(Gene::$gene(val));
+                }
+            }
+        }
+    };
+}
+make_code!(int, GeneInt);
+make_code!(float, GeneFloat);
+make_code!(string, GeneString);
+make_code!(boolean, GeneBoolean);
+make_code!(char, GeneChar);
+make_code!(vector_int, GeneVectorInt);
+make_code!(vector_float, GeneVectorFloat);
+make_code!(vector_string, GeneVectorString);
+make_code!(vector_boolean, GeneVectorBoolean);
+make_code!(vector_char, GeneVectorChar);
+
+pub fn code_from_exec(state: &mut PushState) {
+    if let Some(gene) = state.exec.pop() {
+        state.code.push(gene);
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -64,5 +93,21 @@ mod tests {
         code_pop(&mut test_state);
         let empty_vec: Vec<Gene> = vec![];
         assert_eq!(empty_vec, test_state.code);
+    }
+
+    #[test]
+    fn from_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.int = vec![1, 2];
+        code_from_int(&mut test_state);
+        assert_eq!(vec![Gene::GeneInt(2)], test_state.code);
+        assert_eq!(vec![1], test_state.int);
+        test_state.int.clear();
+        test_state.code.clear();
+
+        test_state.exec.push(Gene::GeneInt(5));
+        code_from_exec(&mut test_state);
+        assert_eq!(vec![Gene::GeneInt(5)], test_state.code);
     }
 }
