@@ -44,7 +44,6 @@ mod tests {
 
     use super::*;
     use rust_decimal::dec;
-    use crate::instructions::common::code_from_exec;
 
     #[test]
     fn gene_to_stack_test() {
