@@ -2,7 +2,7 @@ use std::ops::Not;
 
 use crate::push::state::{Gene, PushState};
 
-use super::common::{code_from_exec, code_pop};
+use super::common::{code_from_exec, code_pop, int_pop};
 
 /// Checks to see if a single gene is a block.
 fn _is_block(vals: Vec<Gene>) -> Option<bool> {
@@ -157,9 +157,123 @@ pub fn code_do_range(state: &mut PushState) {
             to_do.clone(),
             Gene::StateFunc(code_do_range),
         ])));
-        state.int.push(current_idx);
-        state.exec.push(to_do);
     }
+    state.int.push(current_idx);
+    state.exec.push(to_do);
+}
+
+/// Evaluates the top item on the exec stack based off
+/// the range of two ints from the int stack.
+pub fn exec_do_range(state: &mut PushState) {
+    if state.exec.is_empty() || state.int.len() < 2 {
+        return;
+    }
+    let to_do = state.exec.pop().unwrap();
+    let dest_idx = state.int.pop().unwrap();
+    let current_idx = state.int.pop().unwrap();
+
+    let mut increment = 0;
+    if current_idx < dest_idx {
+        increment = 1
+    } else if current_idx > dest_idx {
+        increment = -1
+    }
+
+    if increment != 0 {
+        state.exec.push(Gene::Block(Box::new(vec![
+            Gene::GeneInt(current_idx + increment),
+            Gene::GeneInt(dest_idx),
+            Gene::StateFunc(exec_do_range),
+            to_do.clone(),
+        ])));
+    }
+    state.int.push(current_idx);
+    state.exec.push(to_do);
+}
+
+/// Evaluates the top item on the code stack n times. N pulled from
+/// top of int stack.
+pub fn code_do_count(state: &mut PushState) {
+    if state.code.is_empty() || state.int.is_empty() {
+        return;
+    }
+    if state.int[state.int.len() - 1] < 1 {
+        return;
+    }
+    let code = state.code.pop().unwrap();
+    let count = state.int.pop().unwrap();
+    state.exec.push(Gene::Block(Box::new(vec![
+        Gene::GeneInt(0),
+        Gene::GeneInt(count - 1),
+        Gene::StateFunc(code_from_exec),
+        code,
+        Gene::StateFunc(code_do_range)
+    ])));
+}
+
+/// Evaluates the top item on the exec stack n times. N pulled from top
+/// of int stack.
+pub fn exec_do_count(state: &mut PushState) {
+    if state.exec.is_empty() || state.int.is_empty() {
+        return;
+    }
+    if state.int[state.int.len() - 1] < 1 {
+        return;
+    }
+    let code = state.exec.pop().unwrap();
+    let count = state.int.pop().unwrap();
+    state.exec.push(Gene::Block(Box::new(vec![
+        Gene::GeneInt(0),
+        Gene::GeneInt(count - 1),
+        Gene::StateFunc(exec_do_range),
+        code
+    ])));
+}
+
+/// Evaluates the top item on the code stack n times but differently that
+/// than `code_do_count`. Don't ask, it uses a block for some reason.
+pub fn code_do_times(state: &mut PushState) {
+    if state.code.is_empty() || state.int.is_empty() {
+        return;
+    }
+    if state.int[state.int.len() - 1] < 1 {
+        return;
+    }
+    let code = state.code.pop().unwrap();
+    let times = state.int.pop().unwrap();
+    let nested_block = Gene::Block(Box::new(vec![
+        Gene::StateFunc(int_pop),
+        code,
+    ]));
+    state.exec.push(Gene::Block(Box::new(vec![
+        Gene::GeneInt(0),
+        Gene::GeneInt(times - 1),
+        Gene::StateFunc(code_from_exec),
+        nested_block,
+        Gene::StateFunc(code_do_range),
+    ])));
+}
+
+/// Evalutes the top item on the code stack n times. Also different :shrug:
+pub fn exec_do_times(state: &mut PushState) {
+    if state.exec.is_empty() || state.int.is_empty() {
+        return;
+    }
+    if state.int[state.int.len() - 1] < 1 {
+        return;
+    }
+    let code = state.exec.pop().unwrap();
+    let times = state.int.pop().unwrap();
+    let nested_block = Gene::Block(Box::new(vec![
+        Gene::StateFunc(int_pop),
+        code,
+    ]));
+    state.exec.push(Gene::Block(Box::new(vec![
+        Gene::GeneInt(0),
+        Gene::GeneInt(times - 1),
+        Gene::StateFunc(exec_do_range),
+        nested_block,
+    ])));
 }
 
 #[cfg(test)]
@@ -417,10 +531,6 @@ mod tests {
     fn code_do_range_test() {
         let mut test_state = EMPTY_STATE;
 
-        let code_do_range_addr = format!("0x{:x}", code_do_range as usize);
-        let int_add_addr = format!("0x{:x}", int_add as usize);
-        let code_from_exec_addr = format!("0x{:x}", code_from_exec as usize);
-
         test_state.exec = vec![
             Gene::StateFunc(code_do_range),
             Gene::StateFunc(int_add),
@@ -430,5 +540,81 @@ mod tests {
         ];
         interpret_program(&mut test_state, STEP_LIMIT, MAX_STACK_SIZE);
         assert_eq!(vec![18], test_state.int);
+    }
+
+    #[test]
+    fn exec_do_range_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.exec = vec![
+            Gene::StateFunc(int_add),
+            Gene::StateFunc(exec_do_range),
+            Gene::GeneInt(5),
+            Gene::GeneInt(3),
+            Gene::GeneInt(8),
+        ];
+        interpret_program(&mut test_state, STEP_LIMIT, MAX_STACK_SIZE);
+        assert_eq!(vec![20], test_state.int);
+    }
+
+    #[test]
+    fn code_do_count_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.exec = vec![
+            Gene::StateFunc(code_do_count),
+            Gene::StateFunc(int_add),
+            Gene::StateFunc(code_from_exec),
+            Gene::GeneInt(6),
+        ];
+        interpret_program(&mut test_state, STEP_LIMIT, MAX_STACK_SIZE);
+        assert_eq!(vec![15], test_state.int);
+    }
+
+    #[test]
+    fn exec_do_count_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.exec = vec![
+            Gene::StateFunc(int_add),
+            Gene::StateFunc(exec_do_count),
+            Gene::GeneInt(5),
+            Gene::GeneInt(3),
+        ];
+        interpret_program(&mut test_state, STEP_LIMIT, MAX_STACK_SIZE);
+        assert_eq!(vec![13], test_state.int);
+    }
+
+    #[test]
+    fn code_do_times_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.exec = vec![
+            Gene::StateFunc(code_do_times),
+            Gene::StateFunc(int_add),
+            Gene::StateFunc(code_from_exec),
+            Gene::GeneInt(2),
+            Gene::GeneInt(4),
+            Gene::GeneInt(3),
+            Gene::GeneInt(6),
+        ];
+        interpret_program(&mut test_state, STEP_LIMIT, MAX_STACK_SIZE);
+        assert_eq!(vec![13], test_state.int);
+    }
+
+    #[test]
+    fn exec_do_times_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.exec = vec![
+            Gene::StateFunc(int_add),
+            Gene::StateFunc(exec_do_times),
+            Gene::GeneInt(7),
+            Gene::GeneInt(4),
+            Gene::GeneInt(5),
+            Gene::GeneInt(3),
+        ];
+        interpret_program(&mut test_state, STEP_LIMIT, MAX_STACK_SIZE);
+        assert_eq!(vec![12], test_state.int);
     }
 }
