@@ -16,7 +16,7 @@ pub fn gene_to_stack(state: &mut PushState, gene: Gene) {
         Gene::GeneVectorString(x) => state.vector_string.push(x),
         Gene::GeneVectorChar(x) => state.vector_char.push(x),
         Gene::StateFunc(func) => func(state),
-        Gene::Block(x) => state.exec.extend(x.into_iter()),
+        Gene::Block(x) => state.exec.extend(x.into_iter().rev()),
         Gene::Close => panic!("Close found in the exec stack, this should not happen!"),
         Gene::Open(_) => panic!("Open found in the exec stack, this should not happen!"),
         Gene::Skip => panic!("Skip found in the exec stack, this should not happen!"),
@@ -44,6 +44,7 @@ mod tests {
 
     use super::*;
     use rust_decimal::dec;
+    use crate::instructions::common::code_from_exec;
 
     #[test]
     fn gene_to_stack_test() {
@@ -134,15 +135,20 @@ mod tests {
         test_state.exec.push(Gene::GeneInt(2));
         gene_to_stack(&mut test_state, test_block);
         assert_eq!(
+            //vec![
+            //    Gene::GeneInt(2),
+            //    Gene::GeneInt(1),
+            //    Gene::GeneFloat(dec!(2.3)),
+            //    Gene::StateFunc(int_add)
+            //],
             vec![
                 Gene::GeneInt(2),
-                Gene::GeneInt(1),
+                Gene::StateFunc(int_add),
                 Gene::GeneFloat(dec!(2.3)),
-                Gene::StateFunc(int_add)
+                Gene::GeneInt(1),
             ],
             test_state.exec
         );
-        // println!("{:?}", test_state.exec);
     }
 
     #[test]
