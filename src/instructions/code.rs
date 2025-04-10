@@ -2,6 +2,8 @@ use std::ops::Not;
 
 use crate::push::state::{Gene, PushState};
 
+use super::common::code_pop;
+
 /// Checks to see if a single gene is a block.
 fn _is_block(vals: Vec<Gene>) -> Option<bool> {
     Some(match vals[0] {
@@ -119,10 +121,21 @@ fn _combine(vals: Vec<Gene>) -> Option<Gene> {
 }
 make_instruction_clone!(code, code, _combine, Gene, 2);
 
+/// Pushes `code_pop` and the top item of the code stack to the exec stack.
+/// Top code item gets executed before being removed from code stack.
+fn code_do_then_pop(state: &mut PushState) {
+    if state.code.is_empty() {
+        return;
+    }
+    let c = state.code[state.code.len() - 1].clone();
+    state.exec.push(Gene::StateFunc(code_pop));
+    state.exec.push(c);
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::push::state::EMPTY_STATE;
+    use crate::{instructions::numeric::int_add, push::state::EMPTY_STATE};
     use rust_decimal::dec;
 
     #[test]
@@ -348,6 +361,19 @@ mod tests {
                 Gene::GeneFloat(dec!(4.0)),
             ]))],
             test_state.code
+        );
+    }
+
+    #[test]
+    fn _code_do_then_pop_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.code.push(Gene::StateFunc(int_add));
+        code_do_then_pop(&mut test_state);
+        assert_eq!(vec![Gene::StateFunc(int_add)], test_state.code);
+        assert_eq!(
+            vec![Gene::StateFunc(code_pop), Gene::StateFunc(int_add)],
+            test_state.exec
         );
     }
 }
