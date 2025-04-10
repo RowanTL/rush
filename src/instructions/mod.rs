@@ -126,6 +126,33 @@ pub mod macros {
             }
         };
     }
+
+    /// Same as the make_instruction macro except it pushes nothing to the
+    /// output stack.
+    #[macro_export]
+    macro_rules! make_instruction_no_out {
+        ($in_stack:ident, $fn_name:ident, $fn_type:ty, $fn_arity:stmt) => {
+            paste::item! {
+                /// Runs the $fn_name function on the top $fn_arity items from
+                /// the $in_stack and places the calculated value on the $out_stack.
+                pub fn [< $in_stack $fn_name >] (state: &mut PushState) {
+                    let in_stack_len = state.$in_stack.len();
+                    if in_stack_len < $fn_arity {
+                        return;
+                    }
+                    let mut inputs: Vec<$fn_type> = Vec::with_capacity($fn_arity);
+                    for n in 1..=$fn_arity {
+                        inputs.push(state.$in_stack[in_stack_len - n].clone());
+                    }
+                    if let Some(_) = $fn_name(inputs) {
+                        for _ in 0..$fn_arity {
+                            state.$in_stack.pop();
+                        }
+                    }
+                }
+            }
+        };
+    }
 }
 
 pub mod code;
