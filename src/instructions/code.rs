@@ -2,7 +2,7 @@ use std::ops::Not;
 
 use crate::push::state::{Gene, PushState};
 
-use super::common::code_pop;
+use super::common::{code_from_exec, code_pop};
 
 /// Checks to see if a single gene is a block.
 fn _is_block(vals: Vec<Gene>) -> Option<bool> {
@@ -130,6 +130,36 @@ fn code_do_then_pop(state: &mut PushState) {
     let c = state.code[state.code.len() - 1].clone();
     state.exec.push(Gene::StateFunc(code_pop));
     state.exec.push(c);
+}
+
+/// Evaluates the top item on the code stack based off
+/// the range of two ints from the int stack.
+fn code_do_range(state: &mut PushState) {
+    if state.code.is_empty() || state.int.len() < 2 {
+        return;
+    }
+    let to_do = state.code.pop().unwrap();
+    let dest_idx = state.int.pop().unwrap();
+    let current_idx = state.int.pop().unwrap();
+
+    let mut increment = 0;
+    if current_idx < dest_idx {
+        increment = 1
+    } else if current_idx > dest_idx {
+        increment = -1
+    }
+
+    if increment != 0 {
+        state.exec.push(Gene::Block(Box::new(vec![
+            Gene::GeneInt(current_idx + increment),
+            Gene::GeneInt(dest_idx),
+            Gene::StateFunc(code_from_exec),
+            to_do.clone(),
+            Gene::StateFunc(code_do_range),
+        ])));
+        state.int.push(current_idx);
+        state.exec.push(to_do);
+    }
 }
 
 #[cfg(test)]
