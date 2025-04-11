@@ -346,6 +346,28 @@ pub fn _if(vals: Vec<Gene>, auxs: Vec<bool>) -> Option<Gene> {
 make_instruction_aux!(code, exec, _if, Gene, 2, boolean, 1, bool);
 make_instruction_aux!(exec, exec, _if, Gene, 2, boolean, 1, bool);
 
+/// Evaluates the top code item if the top code is true, else pops it.
+pub fn code_when(state: &mut PushState) {
+    if state.code.is_empty() || state.boolean.is_empty() {
+        return;
+    }
+    let code = state.code.pop().unwrap();
+    if state.boolean.pop().unwrap() {
+        state.exec.push(code);
+    }
+}
+
+/// Pops the next item on the exec stack without evaluating it if the top
+/// bool is False, otherwise has no effect.
+pub fn exec_when(state: &mut PushState) {
+    if state.exec.is_empty() || state.boolean.is_empty() {
+        return;
+    }
+    if !state.boolean.pop().unwrap() {
+        state.exec.pop();
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -777,5 +799,41 @@ mod tests {
         exec_if(&mut test_state);
         assert_eq!(vec![Gene::GeneInt(0)], test_state.exec);
         test_state.exec.clear();
+    }
+
+    #[test]
+    fn when_test() {
+        let mut test_state = EMPTY_STATE;
+
+        // Code stack
+        test_state.code = vec![Gene::GeneInt(0), Gene::GeneInt(1)];
+        test_state.boolean = vec![true];
+        code_when(&mut test_state);
+        assert_eq!(vec![Gene::GeneInt(1)], test_state.exec);
+        test_state.exec.clear();
+
+        test_state.code = vec![Gene::GeneInt(0), Gene::GeneInt(1)];
+        test_state.boolean = vec![false];
+        code_when(&mut test_state);
+        let empty_vec: Vec<Gene> = Vec::new();
+        assert_eq!(empty_vec, test_state.exec);
+        drop(empty_vec);
+        test_state.exec.clear();
+
+        // Exec stack
+        test_state.exec = vec![Gene::GeneInt(0), Gene::GeneInt(1)];
+        test_state.boolean = vec![true];
+        exec_when(&mut test_state);
+        assert_eq!(vec![Gene::GeneInt(0), Gene::GeneInt(1)], test_state.exec);
+
+        test_state.exec = vec![Gene::GeneInt(0), Gene::GeneInt(1)];
+        test_state.boolean = vec![false];
+        exec_when(&mut test_state);
+        assert_eq!(vec![Gene::GeneInt(0)], test_state.exec);
+
+        test_state.exec = vec![Gene::GeneInt(0), Gene::GeneInt(1)];
+        test_state.boolean.clear(); // testing nothing on this one
+        exec_when(&mut test_state);
+        assert_eq!(vec![Gene::GeneInt(0), Gene::GeneInt(1)], test_state.exec);
     }
 }
