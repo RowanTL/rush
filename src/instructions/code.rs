@@ -390,6 +390,30 @@ pub fn _nth(vals: Vec<Gene>, auxs: Vec<i128>) -> Option<Gene> {
 }
 make_instruction_aux!(code, code, _nth, Gene, 1, int, 1, i128);
 
+/// Pushes an empty block to the top of a stack.
+pub fn _make_empty_block<T>(_: Vec<T>) -> Option<Gene> {
+    Some(Gene::Block(Box::new(vec![])))
+}
+make_instruction_clone!(code, code, _make_empty_block, Gene, 0);
+make_instruction_clone!(exec, exec, _make_empty_block, Gene, 0);
+
+/// Checks to see if the top item on the code/exec stack is an empty block.
+/// True if is, False if not.
+pub fn _is_empty_block(vals: Vec<Gene>) -> Option<bool> {
+    Some(match vals[0].clone() {
+        Gene::Block(val) => {
+            if val.is_empty() {
+                true
+            } else {
+                false
+            }
+        }
+        _ => false,
+    })
+}
+make_instruction_clone!(code, boolean, _is_empty_block, Gene, 1);
+make_instruction_clone!(exec, boolean, _is_empty_block, Gene, 1);
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -910,5 +934,55 @@ mod tests {
         test_state.int = vec![4];
         code_nth(&mut test_state);
         assert_eq!(vec![Gene::GeneInt(1)], test_state.code);
+    }
+
+    #[test]
+    fn code_exec_make_empty_block_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.code = vec![Gene::GeneInt(0)];
+        code_make_empty_block(&mut test_state);
+        let empty_vec: Vec<Gene> = Vec::new();
+        assert_eq!(
+            vec![Gene::GeneInt(0), Gene::Block(Box::new(empty_vec.clone()))],
+            test_state.code
+        );
+        test_state.code.clear();
+
+        exec_make_empty_block(&mut test_state);
+        assert_eq!(empty_vec, test_state.code);
+    }
+
+    #[test]
+    fn code_exec_is_empty_block_test() {
+        let mut test_state = EMPTY_STATE;
+
+        // code
+        test_state.code = vec![Gene::GeneInt(0)];
+        code_is_empty_block(&mut test_state);
+        assert_eq!(vec![false], test_state.boolean);
+        test_state.boolean.clear();
+
+        let empty_vec: Vec<Gene> = Vec::new();
+        test_state.code = vec![Gene::Block(Box::new(empty_vec.clone()))];
+        code_is_empty_block(&mut test_state);
+        assert_eq!(vec![true], test_state.boolean);
+        test_state.boolean.clear();
+
+        test_state.code = vec![Gene::Block(Box::new(vec![Gene::GeneBoolean(false)]))];
+        code_is_empty_block(&mut test_state);
+        assert_eq!(vec![false], test_state.boolean);
+        test_state.boolean.clear();
+
+        // exec
+        test_state.exec = vec![Gene::GeneInt(0)];
+        exec_is_empty_block(&mut test_state);
+        assert_eq!(vec![false], test_state.boolean);
+        test_state.boolean.clear();
+
+        let empty_vec: Vec<Gene> = Vec::new();
+        test_state.exec = vec![Gene::Block(Box::new(empty_vec.clone()))];
+        exec_is_empty_block(&mut test_state);
+        assert_eq!(vec![true], test_state.boolean);
     }
 }
