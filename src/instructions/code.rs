@@ -207,7 +207,7 @@ pub fn code_do_count(state: &mut PushState) {
         Gene::GeneInt(count - 1),
         Gene::StateFunc(code_from_exec),
         code,
-        Gene::StateFunc(code_do_range)
+        Gene::StateFunc(code_do_range),
     ])));
 }
 
@@ -226,7 +226,7 @@ pub fn exec_do_count(state: &mut PushState) {
         Gene::GeneInt(0),
         Gene::GeneInt(count - 1),
         Gene::StateFunc(exec_do_range),
-        code
+        code,
     ])));
 }
 
@@ -241,10 +241,7 @@ pub fn code_do_times(state: &mut PushState) {
     }
     let code = state.code.pop().unwrap();
     let times = state.int.pop().unwrap();
-    let nested_block = Gene::Block(Box::new(vec![
-        Gene::StateFunc(int_pop),
-        code,
-    ]));
+    let nested_block = Gene::Block(Box::new(vec![Gene::StateFunc(int_pop), code]));
     state.exec.push(Gene::Block(Box::new(vec![
         Gene::GeneInt(0),
         Gene::GeneInt(times - 1),
@@ -264,10 +261,7 @@ pub fn exec_do_times(state: &mut PushState) {
     }
     let code = state.exec.pop().unwrap();
     let times = state.int.pop().unwrap();
-    let nested_block = Gene::Block(Box::new(vec![
-        Gene::StateFunc(int_pop),
-        code,
-    ]));
+    let nested_block = Gene::Block(Box::new(vec![Gene::StateFunc(int_pop), code]));
     state.exec.push(Gene::Block(Box::new(vec![
         Gene::GeneInt(0),
         Gene::GeneInt(times - 1),
@@ -321,11 +315,7 @@ pub fn code_map(state: &mut PushState) {
     let mut contents = Vec::new();
 
     for item in c_vec.clone().into_iter() {
-        let code_block = vec![
-            Gene::StateFunc(code_from_exec),
-            item,
-            e.clone(),
-        ];
+        let code_block = vec![Gene::StateFunc(code_from_exec), item, e.clone()];
         contents.push(Gene::Block(Box::new(code_block)));
     }
 
@@ -341,7 +331,11 @@ pub fn code_map(state: &mut PushState) {
 /// If top bool is true, execute top element of code/exec stack and skip the second.
 /// If false, execute second element and skip the top.
 pub fn _if(vals: Vec<Gene>, auxs: Vec<bool>) -> Option<Gene> {
-    Some(if auxs[0] { vals[0].clone() } else { vals[1].clone() })
+    Some(if auxs[0] {
+        vals[0].clone()
+    } else {
+        vals[1].clone()
+    })
 }
 make_instruction_aux!(code, exec, _if, Gene, 2, boolean, 1, bool);
 make_instruction_aux!(exec, exec, _if, Gene, 2, boolean, 1, bool);
@@ -379,6 +373,22 @@ pub fn _member(vals: Vec<Gene>) -> Option<bool> {
     Some(block.contains(&vals[1]))
 }
 make_instruction_clone!(code, boolean, _member, Gene, 2);
+
+/// Pushes the nth item of the top element of the code stack.
+/// If top code item isn't a block, wrap one around it.
+pub fn _nth(vals: Vec<Gene>, auxs: Vec<i128>) -> Option<Gene> {
+    let gene_vec = match vals[0].clone() {
+        Gene::Block(val) => *val,
+        val => vec![val],
+    };
+    let gene_vec_len = gene_vec.len();
+    if gene_vec_len == 0 {
+        return None;
+    }
+    let ndx = auxs[0].abs() as usize % gene_vec_len;
+    Some(gene_vec[ndx].clone())
+}
+make_instruction_aux!(code, code, _nth, Gene, 1, int, 1, i128);
 
 #[cfg(test)]
 mod tests {
@@ -728,10 +738,7 @@ mod tests {
 
         test_state.boolean = vec![false, true, false, true, true, true];
         test_state.int = vec![1, 1, 1, 1];
-        test_state.exec = vec![
-            Gene::StateFunc(int_add),
-            Gene::StateFunc(exec_while),
-        ];
+        test_state.exec = vec![Gene::StateFunc(int_add), Gene::StateFunc(exec_while)];
         interpret_program(&mut test_state, STEP_LIMIT, MAX_STACK_SIZE);
         assert_eq!(vec![4], test_state.int);
         assert_eq!(vec![false, true], test_state.boolean);
@@ -740,10 +747,7 @@ mod tests {
 
         test_state.boolean = vec![false, true, false, true, true, false];
         test_state.int = vec![1, 1, 1, 1];
-        test_state.exec = vec![
-            Gene::StateFunc(int_add),
-            Gene::StateFunc(exec_while),
-        ];
+        test_state.exec = vec![Gene::StateFunc(int_add), Gene::StateFunc(exec_while)];
         interpret_program(&mut test_state, STEP_LIMIT, MAX_STACK_SIZE);
         assert_eq!(vec![1, 1, 1, 1], test_state.int);
     }
@@ -754,10 +758,7 @@ mod tests {
 
         test_state.boolean = vec![false, true, false, true, true, false];
         test_state.int = vec![1, 1, 1, 1];
-        test_state.exec = vec![
-            Gene::StateFunc(int_add),
-            Gene::StateFunc(exec_do_while),
-        ];
+        test_state.exec = vec![Gene::StateFunc(int_add), Gene::StateFunc(exec_do_while)];
         interpret_program(&mut test_state, STEP_LIMIT, MAX_STACK_SIZE);
         assert_eq!(vec![1, 1, 2], test_state.int);
     }
@@ -770,16 +771,12 @@ mod tests {
         test_state.code = vec![Gene::GeneInt(5)];
         test_state.exec = vec![Gene::GeneInt(-1)];
         code_map(&mut test_state);
-        test_state.exec = vec![
-            Gene::Block(Box::new(vec![
-                Gene::Block(Box::new(vec![
-                    Gene::StateFunc(code_from_exec),
-                    Gene::GeneInt(5),
-                    Gene::GeneInt(-1),
-                    Gene::StateFunc(code_wrap_block)
-                ]))
-            ]))
-        ]
+        test_state.exec = vec![Gene::Block(Box::new(vec![Gene::Block(Box::new(vec![
+            Gene::StateFunc(code_from_exec),
+            Gene::GeneInt(5),
+            Gene::GeneInt(-1),
+            Gene::StateFunc(code_wrap_block),
+        ]))]))]
     }
 
     #[test]
@@ -850,23 +847,29 @@ mod tests {
     }
 
     #[test]
-    fn member_test() {
+    fn code_exec_member_test() {
         let mut test_state = EMPTY_STATE;
 
-        test_state.code = vec![Gene::GeneInt(0), Gene::Block(Box::new(vec![
+        test_state.code = vec![
             Gene::GeneInt(0),
-            Gene::GeneInt(4),
-            Gene::StateFunc(exec_do_range),
-        ]))];
+            Gene::Block(Box::new(vec![
+                Gene::GeneInt(0),
+                Gene::GeneInt(4),
+                Gene::StateFunc(exec_do_range),
+            ])),
+        ];
         code_member(&mut test_state);
         assert_eq!(vec![true], test_state.boolean);
         test_state.boolean.clear();
 
-        test_state.code = vec![Gene::GeneInt(0), Gene::Block(Box::new(vec![
-            Gene::GeneInt(5),
-            Gene::GeneInt(4),
-            Gene::StateFunc(exec_do_range),
-        ]))];
+        test_state.code = vec![
+            Gene::GeneInt(0),
+            Gene::Block(Box::new(vec![
+                Gene::GeneInt(5),
+                Gene::GeneInt(4),
+                Gene::StateFunc(exec_do_range),
+            ])),
+        ];
         code_member(&mut test_state);
         assert_eq!(vec![false], test_state.boolean);
         test_state.boolean.clear();
@@ -879,5 +882,33 @@ mod tests {
         test_state.code = vec![Gene::GeneInt(0), Gene::GeneInt(1)];
         code_member(&mut test_state);
         assert_eq!(vec![false], test_state.boolean);
+    }
+
+    #[test]
+    fn code_exec_nth_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.code = vec![Gene::Block(Box::new(vec![
+            Gene::GeneInt(0),
+            Gene::GeneInt(1),
+            Gene::GeneInt(2),
+        ]))];
+        test_state.int = vec![1];
+        code_nth(&mut test_state);
+        assert_eq!(vec![Gene::GeneInt(1)], test_state.code);
+
+        test_state.code = vec![Gene::GeneInt(1)];
+        test_state.int = vec![0];
+        code_nth(&mut test_state);
+        assert_eq!(vec![Gene::GeneInt(1)], test_state.code);
+
+        test_state.code = vec![Gene::Block(Box::new(vec![
+            Gene::GeneInt(0),
+            Gene::GeneInt(1),
+            Gene::GeneInt(2),
+        ]))];
+        test_state.int = vec![4];
+        code_nth(&mut test_state);
+        assert_eq!(vec![Gene::GeneInt(1)], test_state.code);
     }
 }
