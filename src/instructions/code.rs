@@ -276,6 +276,76 @@ pub fn exec_do_times(state: &mut PushState) {
     ])));
 }
 
+/// Evaluates the top item on the exec stack until the top bool isn't true
+pub fn exec_while(state: &mut PushState) {
+    if state.exec.is_empty() {
+        return;
+    }
+    if state.boolean.is_empty() {
+        state.exec.pop().unwrap();
+        return;
+    }
+    let code = state.exec[state.exec.len() - 1].clone();
+    if state.boolean.pop().unwrap() {
+        state.exec.push(Gene::StateFunc(exec_while));
+        state.exec.push(code);
+    } else {
+        state.exec.pop().unwrap();
+    }
+}
+
+/// Evaluates the top item on the exec stack at least once until the top bool
+/// isn't true
+pub fn exec_do_while(state: &mut PushState) {
+    if state.exec.is_empty() {
+        return;
+    }
+    let code = state.exec[state.exec.len() - 1].clone();
+    state.exec.push(Gene::StateFunc(exec_while));
+    state.exec.push(code);
+}
+
+/// Evaluates the top exec item for each element of the top block on the code stack.
+/// If top item isn't a block, wrapped in one.
+pub fn code_map(state: &mut PushState) {
+    if state.exec.is_empty() || state.code.is_empty() {
+        return;
+    }
+    let e = state.exec.pop().unwrap();
+    let c = state.code.pop().unwrap();
+    let c_vec = match c {
+        Gene::Block(val) => *val,
+        val => vec![val],
+    };
+
+    let mut contents = Vec::new();
+
+    for item in c_vec.clone().into_iter() {
+        let code_block = vec![
+            Gene::StateFunc(code_from_exec),
+            item,
+            e.clone(),
+        ];
+        contents.push(Gene::Block(Box::new(code_block)));
+    }
+
+    contents.push(Gene::StateFunc(code_wrap_block));
+
+    for _ in c_vec.into_iter().skip(1) {
+        contents.push(Gene::StateFunc(code_combine));
+    }
+
+    state.exec.push(Gene::Block(Box::new(contents)));
+}
+
+/// If top bool is true, execute top element of code/exec stack and skip the second.
+/// If false, execute second element and skip the top.
+pub fn _if(vals: Vec<Gene>, auxs: Vec<bool>) -> Option<Gene> {
+    Some(if auxs[0] { vals[0].clone() } else { vals[1].clone() })
+}
+make_instruction_aux!(code, exec, _if, Gene, 2, boolean, 1, bool);
+make_instruction_aux!(exec, exec, _if, Gene, 2, boolean, 1, bool);
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -616,5 +686,96 @@ mod tests {
         ];
         interpret_program(&mut test_state, STEP_LIMIT, MAX_STACK_SIZE);
         assert_eq!(vec![12], test_state.int);
+    }
+
+    #[test]
+    fn exec_while_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.boolean = vec![false, true, false, true, true, true];
+        test_state.int = vec![1, 1, 1, 1];
+        test_state.exec = vec![
+            Gene::StateFunc(int_add),
+            Gene::StateFunc(exec_while),
+        ];
+        interpret_program(&mut test_state, STEP_LIMIT, MAX_STACK_SIZE);
+        assert_eq!(vec![4], test_state.int);
+        assert_eq!(vec![false, true], test_state.boolean);
+        test_state.int.clear();
+        test_state.boolean.clear();
+
+        test_state.boolean = vec![false, true, false, true, true, false];
+        test_state.int = vec![1, 1, 1, 1];
+        test_state.exec = vec![
+            Gene::StateFunc(int_add),
+            Gene::StateFunc(exec_while),
+        ];
+        interpret_program(&mut test_state, STEP_LIMIT, MAX_STACK_SIZE);
+        assert_eq!(vec![1, 1, 1, 1], test_state.int);
+    }
+
+    #[test]
+    fn exec_do_while_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.boolean = vec![false, true, false, true, true, false];
+        test_state.int = vec![1, 1, 1, 1];
+        test_state.exec = vec![
+            Gene::StateFunc(int_add),
+            Gene::StateFunc(exec_do_while),
+        ];
+        interpret_program(&mut test_state, STEP_LIMIT, MAX_STACK_SIZE);
+        assert_eq!(vec![1, 1, 2], test_state.int);
+    }
+
+    #[test]
+    fn code_map_test() {
+        let mut test_state = EMPTY_STATE;
+
+        // Pulled from pyshgp test in instruction_test_specs.py
+        test_state.code = vec![Gene::GeneInt(5)];
+        test_state.exec = vec![Gene::GeneInt(-1)];
+        code_map(&mut test_state);
+        test_state.exec = vec![
+            Gene::Block(Box::new(vec![
+                Gene::Block(Box::new(vec![
+                    Gene::StateFunc(code_from_exec),
+                    Gene::GeneInt(5),
+                    Gene::GeneInt(-1),
+                    Gene::StateFunc(code_wrap_block)
+                ]))
+            ]))
+        ]
+    }
+
+    #[test]
+    fn if_test() {
+        let mut test_state = EMPTY_STATE;
+
+        // Code tests
+        test_state.code = vec![Gene::GeneInt(0), Gene::GeneInt(1)];
+        test_state.boolean = vec![true];
+        code_if(&mut test_state);
+        assert_eq!(vec![Gene::GeneInt(1)], test_state.exec);
+        test_state.exec.clear();
+
+        test_state.code = vec![Gene::GeneInt(0), Gene::GeneInt(1)];
+        test_state.boolean = vec![false];
+        code_if(&mut test_state);
+        assert_eq!(vec![Gene::GeneInt(0)], test_state.exec);
+        test_state.exec.clear();
+
+        // Exec tests
+        test_state.exec = vec![Gene::GeneInt(0), Gene::GeneInt(1)];
+        test_state.boolean = vec![true];
+        exec_if(&mut test_state);
+        assert_eq!(vec![Gene::GeneInt(1)], test_state.exec);
+        test_state.exec.clear();
+
+        test_state.exec = vec![Gene::GeneInt(0), Gene::GeneInt(1)];
+        test_state.boolean = vec![false];
+        exec_if(&mut test_state);
+        assert_eq!(vec![Gene::GeneInt(0)], test_state.exec);
+        test_state.exec.clear();
     }
 }
