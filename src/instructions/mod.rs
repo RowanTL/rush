@@ -153,6 +153,46 @@ pub mod macros {
             }
         };
     }
+
+    /// Same as `make_instruction!` but has two extra parameters.
+    ///
+    /// `aux_stack` is an auxiliary stack to be used as input to internal function.
+    /// `aux_arity` is the amount of the auxiliary stack to use.
+    /// `aux_type` is the type of the auxiliary stack
+    #[macro_export]
+    macro_rules! make_instruction_aux {
+        ($in_stack:ident, $out_stack:ident, $fn_name:ident, $fn_type:ty, $fn_arity:stmt, $aux_stack:ident, $aux_arity:stmt, $aux_type:ty) => {
+            paste::item! {
+                /// Runs the $fn_name function on the top $fn_arity items from
+                /// the $in_stack and places the calculated value on the $out_stack.
+                /// $aux_stack is also used and popped $aux_arity time(s).
+                pub fn [< $in_stack $fn_name >] (state: &mut PushState) {
+                    let in_stack_len = state.$in_stack.len();
+                    let aux_stack_len = state.$aux_stack.len();
+                    if in_stack_len < $fn_arity || aux_stack_len < $aux_arity {
+                        return;
+                    }
+                    let mut inputs: Vec<$fn_type> = Vec::with_capacity($fn_arity);
+                    let mut aux_inputs: Vec<$aux_type> = Vec::with_capacity($aux_arity);
+                    for n in 1..=$fn_arity {
+                        inputs.push(state.$in_stack[in_stack_len - n].clone());
+                    }
+                    for n in 1..=$aux_arity {
+                        aux_inputs.push(state.$aux_stack[aux_stack_len - n].clone());
+                    }
+                    if let Some(result) = $fn_name(inputs, aux_inputs) {
+                        for _ in 0..$fn_arity {
+                            state.$in_stack.pop();
+                        }
+                        for _ in 0..$aux_arity {
+                            state.$aux_stack.pop();
+                        }
+                        state.$out_stack.push(result);
+                    }
+                }
+            }
+        };
+    }
 }
 
 pub mod code;
