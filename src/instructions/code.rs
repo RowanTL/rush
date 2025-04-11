@@ -414,6 +414,31 @@ pub fn _is_empty_block(vals: Vec<Gene>) -> Option<bool> {
 make_instruction_clone!(code, boolean, _is_empty_block, Gene, 1);
 make_instruction_clone!(exec, boolean, _is_empty_block, Gene, 1);
 
+/// Returns the size of the top item on the code/exec stack.
+pub fn _size(vals: Vec<Gene>) -> Option<i128> {
+    Some(match vals[0].clone() {
+        Gene::Block(val) => val.len() as i128,
+        _ => 1,
+    })
+}
+make_instruction_clone!(code, int, _size, Gene, 1);
+make_instruction_clone!(exec, int, _size, Gene, 1);
+
+/// Returns a nested element inside a block based on an int.
+pub fn _extract(vals: Vec<Gene>, auxs: Vec<i128>) -> Option<Gene> {
+    Some(match vals[0].clone() {
+        Gene::Block(val) => {
+            if *val.len() == 0 {
+                return None;
+            } else {
+                let ndx = (auxs[0] % *val.len()).abs();
+                // @TODO: Finish this later!
+            }
+        }
+        val => val,
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -984,5 +1009,22 @@ mod tests {
         test_state.exec = vec![Gene::Block(Box::new(empty_vec.clone()))];
         exec_is_empty_block(&mut test_state);
         assert_eq!(vec![true], test_state.boolean);
+    }
+
+    #[test]
+    fn code_exec_size_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.code = vec![Gene::GeneInt(1)];
+        code_size(&mut test_state);
+        assert_eq!(vec![1], test_state.int);
+        test_state.int.clear();
+
+        test_state.code = vec![Gene::Block(Box::new(vec![
+            Gene::GeneBoolean(false),
+            Gene::GeneInt(42),
+        ]))];
+        code_size(&mut test_state);
+        assert_eq!(vec![2], test_state.int);
     }
 }
