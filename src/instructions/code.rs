@@ -368,6 +368,18 @@ pub fn exec_when(state: &mut PushState) {
     }
 }
 
+/// Pushes true if the second code item is found within the first item.
+/// If the first item isn't a block, coerced into one.
+pub fn _member(vals: Vec<Gene>) -> Option<bool> {
+    let block = match vals[0].clone() {
+        Gene::Block(val) => *val,
+        val => vec![val],
+    };
+
+    Some(block.contains(&vals[1]))
+}
+make_instruction_clone!(code, boolean, _member, Gene, 2);
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -835,5 +847,37 @@ mod tests {
         test_state.boolean.clear(); // testing nothing on this one
         exec_when(&mut test_state);
         assert_eq!(vec![Gene::GeneInt(0), Gene::GeneInt(1)], test_state.exec);
+    }
+
+    #[test]
+    fn member_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.code = vec![Gene::GeneInt(0), Gene::Block(Box::new(vec![
+            Gene::GeneInt(0),
+            Gene::GeneInt(4),
+            Gene::StateFunc(exec_do_range),
+        ]))];
+        code_member(&mut test_state);
+        assert_eq!(vec![true], test_state.boolean);
+        test_state.boolean.clear();
+
+        test_state.code = vec![Gene::GeneInt(0), Gene::Block(Box::new(vec![
+            Gene::GeneInt(5),
+            Gene::GeneInt(4),
+            Gene::StateFunc(exec_do_range),
+        ]))];
+        code_member(&mut test_state);
+        assert_eq!(vec![false], test_state.boolean);
+        test_state.boolean.clear();
+
+        test_state.code = vec![Gene::GeneInt(0), Gene::GeneInt(0)];
+        code_member(&mut test_state);
+        assert_eq!(vec![true], test_state.boolean);
+        test_state.boolean.clear();
+
+        test_state.code = vec![Gene::GeneInt(0), Gene::GeneInt(1)];
+        code_member(&mut test_state);
+        assert_eq!(vec![false], test_state.boolean);
     }
 }
