@@ -200,3 +200,4 @@ pub mod common;
 pub mod logical;
 pub mod numeric;
 pub mod utils;
+pub mod vector;
