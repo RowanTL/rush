@@ -16,6 +16,10 @@ make_instruction_clone!(vector_boolean, vector_boolean, _concat, Vec<bool>, 2);
 make_instruction_clone!(vector_char, vector_char, _concat, Vec<char>, 2);
 make_instruction_clone!(string, string, _concat, Vec<char>, 2);
 
+pub fn _conj<T>(vals: Vec<Vec<T>>) -> Option<Vec<T>> {
+    None // @TODO: This gonna need new instruction macros. Tomorrow issue.
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
