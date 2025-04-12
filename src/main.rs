@@ -1,7 +1,6 @@
 use instructions::utils::NumericTrait;
 use rust_decimal::MathematicalOps;
 use rust_decimal::prelude::*;
-use std::collections::VecDeque;
 
 mod instructions;
 mod push;

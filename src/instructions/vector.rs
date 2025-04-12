@@ -1,6 +1,5 @@
 use crate::push::state::PushState;
 use rust_decimal::Decimal;
-use std::collections::VecDeque;
 
 /// Generates an index between 0 and length. Takes abs(num) and then mods it by length.
 fn bounded_idx(num: i128, length: usize) -> usize {
