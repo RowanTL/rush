@@ -64,7 +64,7 @@ impl Gene {
             Gene::Block(val) => {
                 for el in val.iter() {
                     match el {
-                        iblock @ Gene::Block(val) => size += iblock.rec_len() + 1,
+                        iblock @ Gene::Block(_) => size += iblock.rec_len() + 1,
                         _ => size += 1,
                     }
                 }
