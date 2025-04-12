@@ -1,5 +1,5 @@
-use rust_decimal::Decimal;
 use crate::push::state::PushState;
+use rust_decimal::Decimal;
 
 pub fn _concat<T>(vals: Vec<Vec<T>>) -> Option<Vec<T>>
 where
