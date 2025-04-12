@@ -12,7 +12,8 @@ pub mod macros {
     /// int stack is type: *Vec<i128>*. `fn_type` is *i128* in this case.
     /// The `fn_arity` argument refers to how many popped stack items are needed to
     /// execute the instruction. If the amount of items in the stack is less than
-    /// this value, the instruction does nothing.
+    /// this value, the instruction does nothing. How many items exactly should be passed
+    /// as a list to the functions used for calculations.
     ///
     /// What causes an instruction to NoOp:
     /// 1) There aren't enough values on a stack to execute an instruction.
@@ -59,7 +60,7 @@ pub mod macros {
                     }
                     let mut inputs: Vec<$fn_type> = Vec::with_capacity($fn_arity);
                     for n in 1..=$fn_arity {
-                        inputs.push(state.$in_stack[in_stack_len - n]);
+                        inputs.push(state.$in_stack[in_stack_len - n].clone());
                     }
                     if let Some(result) = $fn_name(inputs) {
                         for _ in 0..$fn_arity {
@@ -81,6 +82,7 @@ pub mod macros {
             paste::item! {
                 /// Runs the $fn_name function on the top $fn_arity items from
                 /// the $in_stack and places the calculated value on the $out_stack.
+                #[allow(clippy::reversed_empty_ranges)]
                 pub fn [< $in_stack $fn_name >] (state: &mut PushState) {
                     let in_stack_len = state.$in_stack.len();
                     if in_stack_len < $fn_arity {
@@ -174,18 +176,67 @@ pub mod macros {
                     }
                     let mut inputs: Vec<$fn_type> = Vec::with_capacity($fn_arity);
                     let mut aux_inputs: Vec<$aux_type> = Vec::with_capacity($aux_arity);
-                    for n in 1..=$fn_arity {
-                        inputs.push(state.$in_stack[in_stack_len - n].clone());
-                    }
                     for n in 1..=$aux_arity {
                         aux_inputs.push(state.$aux_stack[aux_stack_len - n].clone());
                     }
+                    for n in 1..=$fn_arity {
+                        inputs.push(state.$in_stack[in_stack_len - n].clone());
+                    }
                     if let Some(result) = $fn_name(inputs, aux_inputs) {
+                        for _ in 0..$aux_arity {
+                            state.$aux_stack.pop();
+                        }
                         for _ in 0..$fn_arity {
                             state.$in_stack.pop();
                         }
-                        for _ in 0..$aux_arity {
-                            state.$aux_stack.pop();
+                        state.$out_stack.push(result);
+                    }
+                }
+            }
+        };
+    }
+
+    /// Same as `make_instruction!` but can work on two auxiliary stacks. Is there a way
+    /// to generalize even this?
+    ///
+    /// `aux_stack` is an auxiliary stack to be used as input to internal function.
+    /// `aux_arity` is the amount of the auxiliary stack to use.
+    /// `aux_type` is the type of the auxiliary stack
+    #[macro_export]
+    macro_rules! make_instruction_aux2 {
+        ($in_stack:ident, $out_stack:ident, $fn_name:ident, $fn_type:ty, $fn_arity:stmt, $aux0_stack:ident, $aux0_arity:stmt, $aux0_type:ty, $aux1_stack:ident, $aux1_arity:stmt, $aux1_type:ty) => {
+            paste::item! {
+                /// Runs the $fn_name function on the top $fn_arity items from
+                /// the $in_stack and places the calculated value on the $out_stack.
+                /// $aux_stack is also used and popped $aux_arity time(s).
+                pub fn [< $in_stack $fn_name >] (state: &mut PushState) {
+                    let in_stack_len = state.$in_stack.len();
+                    let aux0_stack_len = state.$aux0_stack.len();
+                    let aux1_stack_len = state.$aux1_stack.len();
+                    if in_stack_len < $fn_arity || aux0_stack_len < $aux0_arity || aux1_stack_len < $aux1_arity {
+                        return;
+                    }
+                    let mut inputs: Vec<$fn_type> = Vec::with_capacity($fn_arity);
+                    let mut aux0_inputs: Vec<$aux0_type> = Vec::with_capacity($aux0_arity);
+                    let mut aux1_inputs: Vec<$aux1_type> = Vec::with_capacity($aux1_arity);
+                    for n in 1..=$aux0_arity {
+                        aux0_inputs.push(state.$aux0_stack[aux0_stack_len - n].clone());
+                    }
+                    for n in 1..=$aux1_arity {
+                        aux1_inputs.push(state.$aux1_stack[aux1_stack_len - n].clone());
+                    }
+                    for n in 1..=$fn_arity {
+                        inputs.push(state.$in_stack[in_stack_len - n].clone());
+                    }
+                    if let Some(result) = $fn_name(inputs, aux0_inputs, aux1_inputs) {
+                        for _ in 0..$aux0_arity {
+                            state.$aux0_stack.pop();
+                        }
+                        for _ in 0..$aux1_arity {
+                            state.$aux1_stack.pop();
+                        }
+                        for _ in 0..$fn_arity {
+                            state.$in_stack.pop();
                         }
                         state.$out_stack.push(result);
                     }
