@@ -116,7 +116,7 @@ pub mod macros {
                     }
                     let mut inputs: Vec<$fn_type> = Vec::with_capacity($fn_arity);
                     for n in 1..=$fn_arity {
-                        inputs.push(state.$in_stack[in_stack_len - n]);
+                        inputs.push(state.$in_stack[in_stack_len - n].clone());
                     }
                     if let Some(result) = $fn_name(inputs) {
                         for _ in 0..$fn_arity {
@@ -216,24 +216,29 @@ pub mod macros {
                     if in_stack_len < $fn_arity || aux0_stack_len < $aux0_arity || aux1_stack_len < $aux1_arity {
                         return;
                     }
+                    if $aux0_type == $aux1_type {
+                        if aux0_stack_len + aux1_stack_len < $aux0_arity + $aux1_arity {
+                            return;
+                        }
+                    }
                     let mut inputs: Vec<$fn_type> = Vec::with_capacity($fn_arity);
                     let mut aux0_inputs: Vec<$aux0_type> = Vec::with_capacity($aux0_arity);
                     let mut aux1_inputs: Vec<$aux1_type> = Vec::with_capacity($aux1_arity);
-                    for n in 1..=$aux0_arity {
-                        aux0_inputs.push(state.$aux0_stack[aux0_stack_len - n].clone());
-                    }
                     for n in 1..=$aux1_arity {
                         aux1_inputs.push(state.$aux1_stack[aux1_stack_len - n].clone());
+                    }
+                    for n in 1..=$aux0_arity {
+                        aux0_inputs.push(state.$aux0_stack[aux0_stack_len - n].clone());
                     }
                     for n in 1..=$fn_arity {
                         inputs.push(state.$in_stack[in_stack_len - n].clone());
                     }
                     if let Some(result) = $fn_name(inputs, aux0_inputs, aux1_inputs) {
-                        for _ in 0..$aux0_arity {
-                            state.$aux0_stack.pop();
-                        }
                         for _ in 0..$aux1_arity {
                             state.$aux1_stack.pop();
+                        }
+                        for _ in 0..$aux0_arity {
+                            state.$aux0_stack.pop();
                         }
                         for _ in 0..$fn_arity {
                             state.$in_stack.pop();
