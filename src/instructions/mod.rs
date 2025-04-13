@@ -230,8 +230,13 @@ pub mod macros {
                         aux1_inputs.push(state.$aux1_stack[aux1_stack_len - n].clone());
                     }
                     for n in 1..=$aux0_arity {
-                        aux0_inputs.push(state.$aux0_stack[aux0_stack_len - $aux1_arity - n].clone());
+                        if std::any::type_name::<$aux0_type>() == std::any::type_name::<$aux1_type>() {
+                            aux0_inputs.push(state.$aux0_stack[aux0_stack_len - $aux1_arity - n].clone());
+                        } else {
+                            aux0_inputs.push(state.$aux0_stack[aux0_stack_len - n].clone());
+                        }
                     }
+                    // Stack shouldn't be the same for all three
                     for n in 1..=$fn_arity {
                         inputs.push(state.$in_stack[in_stack_len - n].clone());
                     }

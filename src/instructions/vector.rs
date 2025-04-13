@@ -886,6 +886,70 @@ make_instruction_aux2!(
     i128
 );
 
+/// Replaces all values in a vector with respect to two ints. The first int is the search value
+/// and the second value is the one to replace.
+pub fn _replace<T>(mut vals: Vec<Vec<T>>, auxs: Vec<T>) -> Option<Vec<T>>
+where
+    T: Clone,
+    for<'a> &'a T: Eq,
+    Vec<T>: FromIterator<T>,
+{
+    let temp_vec = &mut vals[0];
+    let ret_vec: Vec<T> = temp_vec
+        .iter()
+        .map(|x| {
+            if x == &auxs[0] {
+                auxs[1].clone()
+            } else {
+                x.clone()
+            }
+        })
+        .collect();
+    Some(ret_vec)
+}
+make_instruction_aux!(vector_int, vector_int, _replace, Vec<i128>, 1, int, 2, i128);
+make_instruction_aux!(
+    vector_float,
+    vector_float,
+    _replace,
+    Vec<Decimal>,
+    1,
+    float,
+    2,
+    Decimal
+);
+make_instruction_aux!(
+    vector_string,
+    vector_string,
+    _replace,
+    Vec<Vec<char>>,
+    1,
+    string,
+    2,
+    Vec<char>
+);
+make_instruction_aux!(
+    vector_boolean,
+    vector_boolean,
+    _replace,
+    Vec<bool>,
+    1,
+    boolean,
+    2,
+    bool
+);
+make_instruction_aux!(
+    vector_char,
+    vector_char,
+    _replace,
+    Vec<char>,
+    1,
+    char,
+    2,
+    char
+);
+make_instruction_aux!(string, string, _replace, Vec<char>, 1, char, 2, char);
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1331,6 +1395,26 @@ mod tests {
         vector_int_set_nth(&mut test_state);
         assert_eq!(vec![vec![0, 99, 1, 2, 3, 4, 5]], test_state.vector_int);
 
-        // Write more tests tmo!
+        test_state.string = vec![vec!['t', 'e', 's', 't']];
+        test_state.int = vec![2];
+        test_state.char = vec!['z'];
+        string_set_nth(&mut test_state);
+        assert_eq!(vec![vec!['t', 'e', 'z', 's', 't']], test_state.string);
+
+        test_state.vector_boolean = vec![vec![true, false, true]];
+        test_state.int = vec![];
+        test_state.boolean = vec![true];
+        vector_boolean_set_nth(&mut test_state);
+        assert_eq!(vec![vec![true, false, true]], test_state.vector_boolean);
+    }
+
+    #[test]
+    fn replace_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.vector_int = vec![vec![0, 1, 2, 3, 4, 5, 2]];
+        test_state.int = vec![3, 2];
+        vector_int_replace(&mut test_state);
+        assert_eq!(vec![vec![0, 1, 3, 3, 4, 5, 3]], test_state.vector_int);
     }
 }

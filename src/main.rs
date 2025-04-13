@@ -1,3 +1,4 @@
+use crate::instructions::vector::_replace;
 use crate::push::state::{EMPTY_STATE, PushState};
 use instructions::utils::NumericTrait;
 use rust_decimal::MathematicalOps;
@@ -47,8 +48,10 @@ fn main() {
 
     //let test_state = EMPTY_STATE;
     //println!("{}", test_state.int == test_state.boolean);
-    println!(
+    /*println!(
         "{}",
         std::any::type_name::<PushState>() == std::any::type_name::<PushState>()
-    );
+    );*/
+
+    let temp: Option<Vec<i128>> = _replace(vec![vec![1, 2, 3]], vec![1, 2]);
 }
