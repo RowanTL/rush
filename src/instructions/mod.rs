@@ -6,7 +6,7 @@ pub mod macros {
     ///
     /// The `in_stack` argument refers to which push stack should this operate on.
     /// The `out_stack` argument refers to which push stack should the result be pushed to.
-    /// The `fn_name` argement refers to the name of the function that is to operate
+    /// The `fn_name` argument refers to the name of the function that is to operate
     /// on the values popped from `in_stack`.
     /// The `fn_type` argument refers to the type of `in_stack`. For example, the
     /// int stack is type: *Vec<i128>*. `fn_type` is *i128* in this case.
@@ -156,7 +156,7 @@ pub mod macros {
         };
     }
 
-    /// Same as `make_instruction!` but has two extra parameters.
+    /// Same as `make_instruction!` but can work on two stacks.
     ///
     /// `aux_stack` is an auxiliary stack to be used as input to internal function.
     /// `aux_arity` is the amount of the auxiliary stack to use.
@@ -196,7 +196,7 @@ pub mod macros {
         };
     }
 
-    /// Same as `make_instruction!` but can work on two auxiliary stacks. Is there a way
+    /// Same as `make_instruction!` but can work on three stacks. Is there a way
     /// to generalize even this?
     ///
     /// `aux_stack` is an auxiliary stack to be used as input to internal function.
