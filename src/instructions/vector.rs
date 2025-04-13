@@ -804,7 +804,7 @@ where
 {
     let mut temp_vec = vals[0].clone();
     let idx = bounded_idx(aux1[0], temp_vec.len());
-    temp_vec.insert(idx, aux0[idx].clone());
+    temp_vec.insert(idx, aux0[0].clone());
     Some(temp_vec)
 }
 make_instruction_aux2!(
@@ -1323,11 +1323,14 @@ mod tests {
     }
 
     #[test]
-    fn set_n_test() {
+    fn set_nth_test() {
         let mut test_state = EMPTY_STATE;
 
         test_state.vector_int = vec![vec![0, 1, 2, 3, 4, 5]];
         test_state.int = vec![99, 1];
         vector_int_set_nth(&mut test_state);
+        assert_eq!(vec![vec![0, 99, 1, 2, 3, 4, 5]], test_state.vector_int);
+
+        // Write more tests tmo!
     }
 }

@@ -1,3 +1,4 @@
+use crate::push::state::{EMPTY_STATE, PushState};
 use instructions::utils::NumericTrait;
 use rust_decimal::MathematicalOps;
 use rust_decimal::prelude::*;
@@ -40,7 +41,14 @@ fn main() {
     //let res = 3 % 2;
     //println!("res is {res}");
 
-    let mut test_vec = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-    test_vec.drain(..15);
-    println!("{:?}", test_vec);
+    //let mut test_vec = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    //test_vec.drain(..15);
+    //println!("{:?}", test_vec);
+
+    //let test_state = EMPTY_STATE;
+    //println!("{}", test_state.int == test_state.boolean);
+    println!(
+        "{}",
+        std::any::type_name::<PushState>() == std::any::type_name::<PushState>()
+    );
 }

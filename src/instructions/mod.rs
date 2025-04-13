@@ -216,7 +216,9 @@ pub mod macros {
                     if in_stack_len < $fn_arity || aux0_stack_len < $aux0_arity || aux1_stack_len < $aux1_arity {
                         return;
                     }
-                    if $aux0_type == $aux1_type {
+                    // This is crazy jank, not meant for use in actual code :)
+                    // https://doc.rust-lang.org/std/any/fn.type_name.html
+                    if std::any::type_name::<$aux0_type>() == std::any::type_name::<$aux1_type>() {
                         if aux0_stack_len + aux1_stack_len < $aux0_arity + $aux1_arity {
                             return;
                         }
@@ -228,7 +230,7 @@ pub mod macros {
                         aux1_inputs.push(state.$aux1_stack[aux1_stack_len - n].clone());
                     }
                     for n in 1..=$aux0_arity {
-                        aux0_inputs.push(state.$aux0_stack[aux0_stack_len - n].clone());
+                        aux0_inputs.push(state.$aux0_stack[aux0_stack_len - $aux1_arity - n].clone());
                     }
                     for n in 1..=$fn_arity {
                         inputs.push(state.$in_stack[in_stack_len - n].clone());
