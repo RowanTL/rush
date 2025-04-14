@@ -36,6 +36,7 @@ pub const EMPTY_STATE: PushState = PushState {
 };
 
 #[derive(PartialEq, Eq, Debug, Clone)]
+#[allow(dead_code)] // remove this later. Is here bc Close, Skip, CrossoverPadding
 pub enum Gene {
     GeneInt(i128),
     GeneFloat(Decimal),
