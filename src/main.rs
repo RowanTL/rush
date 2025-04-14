@@ -1,4 +1,5 @@
 use crate::instructions::*;
+use crate::push::interpreter::interpret_program;
 use crate::push::state::EMPTY_STATE;
 
 mod instructions;
@@ -18,5 +19,6 @@ fn main() {
     vector_char_instructions();
     exec_instructions();
     code_instructions();
-    let _empty_state = EMPTY_STATE;
+    let mut empty_state = EMPTY_STATE;
+    interpret_program(&mut empty_state, 1000, 1000);
 }

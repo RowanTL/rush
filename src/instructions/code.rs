@@ -63,7 +63,7 @@ fn _rest(vals: Vec<Gene>) -> Option<Gene> {
     match &vals[0] {
         Gene::Block(x) => {
             if x.len() > 1 {
-                Some(Gene::Block(Box::new(x[1..].to_vec())))
+                Some(Gene::Block(x[1..].to_vec()))
             } else {
                 None
             }
@@ -79,7 +79,7 @@ fn _but_last(vals: Vec<Gene>) -> Option<Gene> {
         Gene::Block(x) => {
             let x_len = x.len();
             if x_len > 1 {
-                Some(Gene::Block(Box::new(x[..x_len - 1].to_vec())))
+                Some(Gene::Block(x[..x_len - 1].to_vec()))
             } else {
                 None
             }
@@ -91,7 +91,7 @@ make_instruction_clone!(code, code, _but_last, Gene, 1);
 
 /// Returns all the vals wrapped in a code block
 fn _wrap_block(vals: Vec<Gene>) -> Option<Gene> {
-    Some(Gene::Block(Box::new(vals)))
+    Some(Gene::Block(vals))
 }
 make_instruction_clone!(code, code, _wrap_block, Gene, 1);
 
@@ -116,7 +116,7 @@ fn _combine(vals: Vec<Gene>) -> Option<Gene> {
             y_clone.push(x.clone());
             Some(Gene::Block(y_clone))
         }
-        (x, y) => Some(Gene::Block(Box::new(vec![x.clone(), y.clone()]))),
+        (x, y) => Some(Gene::Block(vec![x.clone(), y.clone()])),
     }
 }
 make_instruction_clone!(code, code, _combine, Gene, 2);
@@ -150,13 +150,13 @@ pub fn code_do_range(state: &mut PushState) {
     }
 
     if increment != 0 {
-        state.exec.push(Gene::Block(Box::new(vec![
+        state.exec.push(Gene::Block(vec![
             Gene::GeneInt(current_idx + increment),
             Gene::GeneInt(dest_idx),
             Gene::StateFunc(code_from_exec),
             to_do.clone(),
             Gene::StateFunc(code_do_range),
-        ])));
+        ]));
     }
     state.int.push(current_idx);
     state.exec.push(to_do);
@@ -180,12 +180,12 @@ pub fn exec_do_range(state: &mut PushState) {
     }
 
     if increment != 0 {
-        state.exec.push(Gene::Block(Box::new(vec![
+        state.exec.push(Gene::Block(vec![
             Gene::GeneInt(current_idx + increment),
             Gene::GeneInt(dest_idx),
             Gene::StateFunc(exec_do_range),
             to_do.clone(),
-        ])));
+        ]));
     }
     state.int.push(current_idx);
     state.exec.push(to_do);
@@ -202,13 +202,13 @@ pub fn code_do_count(state: &mut PushState) {
     }
     let code = state.code.pop().unwrap();
     let count = state.int.pop().unwrap();
-    state.exec.push(Gene::Block(Box::new(vec![
+    state.exec.push(Gene::Block(vec![
         Gene::GeneInt(0),
         Gene::GeneInt(count - 1),
         Gene::StateFunc(code_from_exec),
         code,
         Gene::StateFunc(code_do_range),
-    ])));
+    ]));
 }
 
 /// Evaluates the top item on the exec stack n times. N pulled from top
@@ -222,12 +222,12 @@ pub fn exec_do_count(state: &mut PushState) {
     }
     let code = state.exec.pop().unwrap();
     let count = state.int.pop().unwrap();
-    state.exec.push(Gene::Block(Box::new(vec![
+    state.exec.push(Gene::Block(vec![
         Gene::GeneInt(0),
         Gene::GeneInt(count - 1),
         Gene::StateFunc(exec_do_range),
         code,
-    ])));
+    ]));
 }
 
 /// Evaluates the top item on the code stack n times but differently that
@@ -241,17 +241,17 @@ pub fn code_do_times(state: &mut PushState) {
     }
     let code = state.code.pop().unwrap();
     let times = state.int.pop().unwrap();
-    let nested_block = Gene::Block(Box::new(vec![Gene::StateFunc(int_pop), code]));
-    state.exec.push(Gene::Block(Box::new(vec![
+    let nested_block = Gene::Block(vec![Gene::StateFunc(int_pop), code]);
+    state.exec.push(Gene::Block(vec![
         Gene::GeneInt(0),
         Gene::GeneInt(times - 1),
         Gene::StateFunc(code_from_exec),
         nested_block,
         Gene::StateFunc(code_do_range),
-    ])));
+    ]));
 }
 
-/// Evalutes the top item on the code stack n times. Also different :shrug:
+/// Evaluates the top item on the code stack n times, also different :shrug:
 pub fn exec_do_times(state: &mut PushState) {
     if state.exec.is_empty() || state.int.is_empty() {
         return;
@@ -261,13 +261,13 @@ pub fn exec_do_times(state: &mut PushState) {
     }
     let code = state.exec.pop().unwrap();
     let times = state.int.pop().unwrap();
-    let nested_block = Gene::Block(Box::new(vec![Gene::StateFunc(int_pop), code]));
-    state.exec.push(Gene::Block(Box::new(vec![
+    let nested_block = Gene::Block(vec![Gene::StateFunc(int_pop), code]);
+    state.exec.push(Gene::Block(vec![
         Gene::GeneInt(0),
         Gene::GeneInt(times - 1),
         Gene::StateFunc(exec_do_range),
         nested_block,
-    ])));
+    ]));
 }
 
 /// Evaluates the top item on the exec stack until the top bool isn't true
@@ -308,7 +308,7 @@ pub fn code_map(state: &mut PushState) {
     let e = state.exec.pop().unwrap();
     let c = state.code.pop().unwrap();
     let c_vec = match c {
-        Gene::Block(val) => *val,
+        Gene::Block(val) => val,
         val => vec![val],
     };
 
@@ -316,7 +316,7 @@ pub fn code_map(state: &mut PushState) {
 
     for item in c_vec.clone().into_iter() {
         let code_block = vec![Gene::StateFunc(code_from_exec), item, e.clone()];
-        contents.push(Gene::Block(Box::new(code_block)));
+        contents.push(Gene::Block(code_block));
     }
 
     contents.push(Gene::StateFunc(code_wrap_block));
@@ -325,7 +325,7 @@ pub fn code_map(state: &mut PushState) {
         contents.push(Gene::StateFunc(code_combine));
     }
 
-    state.exec.push(Gene::Block(Box::new(contents)));
+    state.exec.push(Gene::Block(contents));
 }
 
 /// If top bool is true, execute top element of code/exec stack and skip the second.
@@ -366,7 +366,7 @@ pub fn exec_when(state: &mut PushState) {
 /// If the first item isn't a block, coerced into one.
 pub fn _member(vals: Vec<Gene>) -> Option<bool> {
     let block = match vals[0].clone() {
-        Gene::Block(val) => *val,
+        Gene::Block(val) => val,
         val => vec![val],
     };
 
@@ -378,7 +378,7 @@ make_instruction_clone!(code, boolean, _member, Gene, 2);
 /// If top code item isn't a block, wrap one around it.
 pub fn _nth(vals: Vec<Gene>, auxs: Vec<i128>) -> Option<Gene> {
     let gene_vec = match vals[0].clone() {
-        Gene::Block(val) => *val,
+        Gene::Block(val) => val,
         val => vec![val],
     };
     let gene_vec_len = gene_vec.len();
@@ -392,7 +392,7 @@ make_instruction_aux!(code, code, _nth, Gene, 1, int, 1, i128);
 
 /// Pushes an empty block to the top of a stack.
 pub fn _make_empty_block<T>(_: Vec<T>) -> Option<Gene> {
-    Some(Gene::Block(Box::new(vec![])))
+    Some(Gene::Block(vec![]))
 }
 make_instruction_clone!(code, code, _make_empty_block, Gene, 0);
 make_instruction_clone!(exec, exec, _make_empty_block, Gene, 0);
@@ -430,7 +430,7 @@ pub fn _extract(vals: Vec<Gene>, auxs: Vec<i128>) -> Option<Gene> {
         block @ Gene::Block(_) => {
             let block_len = block.rec_len();
             if block_len == 0 {
-                return None;
+                None
             } else {
                 let ndx = (auxs[0] % block_len as i128).abs() as usize;
                 Some(vals[0].clone().code_at_point(ndx)?)
@@ -447,7 +447,7 @@ make_instruction_aux!(code, code, _extract, Gene, 1, int, 1, i128);
 pub fn _insert(vals: Vec<Gene>, auxs: Vec<i128>) -> Option<Gene> {
     let mut block = match vals[0].clone() {
         iblock @ Gene::Block(_) => iblock,
-        val => Gene::Block(Box::new(vec![val])),
+        val => Gene::Block(vec![val]),
     };
     if block.rec_len() == 0 {
         return _combine(vec![block, vals[1].clone()]);
@@ -514,12 +514,12 @@ mod tests {
     fn is_block_test() {
         let mut test_state = EMPTY_STATE;
 
-        test_state.code = vec![Gene::Block(Box::new(vec![]))];
+        test_state.code = vec![Gene::Block(vec![])];
         code_is_block(&mut test_state);
         assert_eq!(vec![true], test_state.boolean);
         test_state.boolean.clear();
 
-        test_state.code = vec![(Gene::GeneInt(1))];
+        test_state.code = vec![Gene::GeneInt(1)];
         code_is_block(&mut test_state);
         assert_eq!(vec![false], test_state.boolean);
     }
@@ -528,12 +528,12 @@ mod tests {
     fn is_singular_test() {
         let mut test_state = EMPTY_STATE;
 
-        test_state.code = vec![Gene::Block(Box::new(vec![]))];
+        test_state.code = vec![Gene::Block(vec![])];
         code_is_singular(&mut test_state);
         assert_eq!(vec![false], test_state.boolean);
         test_state.boolean.clear();
 
-        test_state.code = vec![(Gene::GeneInt(1))];
+        test_state.code = vec![Gene::GeneInt(1)];
         code_is_singular(&mut test_state);
         assert_eq!(vec![true], test_state.boolean);
     }
@@ -542,15 +542,15 @@ mod tests {
     fn length_test() {
         let mut test_state = EMPTY_STATE;
 
-        test_state.code = vec![Gene::Block(Box::new(vec![
+        test_state.code = vec![Gene::Block(vec![
             Gene::GeneInt(1),
             Gene::GeneFloat(dec!(3.8)),
-        ]))];
+        ])];
         code_length(&mut test_state);
         assert_eq!(vec![2], test_state.int);
         test_state.int.clear();
 
-        test_state.code = vec![Gene::Block(Box::new(vec![]))];
+        test_state.code = vec![Gene::Block(vec![])];
         code_length(&mut test_state);
         assert_eq!(vec![0], test_state.int);
         test_state.int.clear();
@@ -564,10 +564,10 @@ mod tests {
     fn first_test() {
         let mut test_state = EMPTY_STATE;
 
-        test_state.code = vec![Gene::Block(Box::new(vec![
+        test_state.code = vec![Gene::Block(vec![
             Gene::GeneInt(1),
             Gene::GeneFloat(dec!(3.8)),
-        ]))];
+        ])];
         code_first(&mut test_state);
         assert_eq!(vec![Gene::GeneInt(1)], test_state.code);
 
@@ -586,10 +586,10 @@ mod tests {
     fn last_test() {
         let mut test_state = EMPTY_STATE;
 
-        test_state.code = vec![Gene::Block(Box::new(vec![
+        test_state.code = vec![Gene::Block(vec![
             Gene::GeneInt(1),
             Gene::GeneFloat(dec!(3.8)),
-        ]))];
+        ])];
         code_last(&mut test_state);
         assert_eq!(vec![Gene::GeneFloat(dec!(3.8))], test_state.code);
 
@@ -608,17 +608,17 @@ mod tests {
     fn rest_test() {
         let mut test_state = EMPTY_STATE;
 
-        test_state.code = vec![Gene::Block(Box::new(vec![
+        test_state.code = vec![Gene::Block(vec![
             Gene::GeneInt(1),
             Gene::GeneFloat(dec!(3.8)),
             Gene::GeneBoolean(true),
-        ]))];
+        ])];
         code_rest(&mut test_state);
         assert_eq!(
-            vec![Gene::Block(Box::new(vec![
+            vec![Gene::Block(vec![
                 Gene::GeneFloat(dec!(3.8)),
                 Gene::GeneBoolean(true)
-            ]))],
+            ])],
             test_state.code
         );
 
@@ -637,17 +637,17 @@ mod tests {
     fn but_last_test() {
         let mut test_state = EMPTY_STATE;
 
-        test_state.code = vec![Gene::Block(Box::new(vec![
+        test_state.code = vec![Gene::Block(vec![
             Gene::GeneInt(1),
             Gene::GeneFloat(dec!(3.8)),
             Gene::GeneBoolean(true),
-        ]))];
+        ])];
         code_but_last(&mut test_state);
         assert_eq!(
-            vec![Gene::Block(Box::new(vec![
+            vec![Gene::Block(vec![
                 Gene::GeneInt(1),
                 Gene::GeneFloat(dec!(3.8)),
-            ]))],
+            ])],
             test_state.code
         );
 
@@ -668,58 +668,49 @@ mod tests {
 
         test_state.code = vec![Gene::GeneInt(1)];
         code_wrap_block(&mut test_state);
-        assert_eq!(
-            vec![Gene::Block(Box::new(vec![Gene::GeneInt(1)]))],
-            test_state.code
-        );
+        assert_eq!(vec![Gene::Block(vec![Gene::GeneInt(1)])], test_state.code);
     }
 
     #[test]
     fn combine_test() {
         let mut test_state = EMPTY_STATE;
 
-        test_state
-            .code
-            .push(Gene::Block(Box::new(vec![Gene::GeneInt(1)])));
-        test_state.code.push(Gene::Block(Box::new(vec![
+        test_state.code.push(Gene::Block(vec![Gene::GeneInt(1)]));
+        test_state.code.push(Gene::Block(vec![
             Gene::GeneFloat(dec!(3.8)),
             Gene::GeneBoolean(true),
-        ])));
+        ]));
         code_combine(&mut test_state);
         assert_eq!(
-            vec![Gene::Block(Box::new(vec![
+            vec![Gene::Block(vec![
                 Gene::GeneInt(1),
                 Gene::GeneFloat(dec!(3.8)),
                 Gene::GeneBoolean(true),
-            ]))],
+            ])],
             test_state.code
         );
         test_state.code.clear();
 
-        test_state
-            .code
-            .push(Gene::Block(Box::new(vec![Gene::GeneInt(1)])));
+        test_state.code.push(Gene::Block(vec![Gene::GeneInt(1)]));
         test_state.code.push(Gene::GeneFloat(dec!(4.0)));
         code_combine(&mut test_state);
         assert_eq!(
-            vec![Gene::Block(Box::new(vec![
+            vec![Gene::Block(vec![
                 Gene::GeneInt(1),
                 Gene::GeneFloat(dec!(4.0)),
-            ]))],
+            ])],
             test_state.code
         );
         test_state.code.clear();
 
         test_state.code.push(Gene::GeneFloat(dec!(4.0)));
-        test_state
-            .code
-            .push(Gene::Block(Box::new(vec![Gene::GeneInt(1)])));
+        test_state.code.push(Gene::Block(vec![Gene::GeneInt(1)]));
         code_combine(&mut test_state);
         assert_eq!(
-            vec![Gene::Block(Box::new(vec![
+            vec![Gene::Block(vec![
                 Gene::GeneInt(1),
                 Gene::GeneFloat(dec!(4.0)),
-            ]))],
+            ])],
             test_state.code
         );
         test_state.code.clear();
@@ -728,10 +719,10 @@ mod tests {
         test_state.code.push(Gene::GeneChar('z'));
         code_combine(&mut test_state);
         assert_eq!(
-            vec![Gene::Block(Box::new(vec![
+            vec![Gene::Block(vec![
                 Gene::GeneChar('z'),
                 Gene::GeneFloat(dec!(4.0)),
-            ]))],
+            ])],
             test_state.code
         );
     }
@@ -879,12 +870,12 @@ mod tests {
         test_state.code = vec![Gene::GeneInt(5)];
         test_state.exec = vec![Gene::GeneInt(-1)];
         code_map(&mut test_state);
-        test_state.exec = vec![Gene::Block(Box::new(vec![Gene::Block(Box::new(vec![
+        test_state.exec = vec![Gene::Block(vec![Gene::Block(vec![
             Gene::StateFunc(code_from_exec),
             Gene::GeneInt(5),
             Gene::GeneInt(-1),
             Gene::StateFunc(code_wrap_block),
-        ]))]))]
+        ])])]
     }
 
     #[test]
@@ -960,11 +951,11 @@ mod tests {
 
         test_state.code = vec![
             Gene::GeneInt(0),
-            Gene::Block(Box::new(vec![
+            Gene::Block(vec![
                 Gene::GeneInt(0),
                 Gene::GeneInt(4),
                 Gene::StateFunc(exec_do_range),
-            ])),
+            ]),
         ];
         code_member(&mut test_state);
         assert_eq!(vec![true], test_state.boolean);
@@ -972,11 +963,11 @@ mod tests {
 
         test_state.code = vec![
             Gene::GeneInt(0),
-            Gene::Block(Box::new(vec![
+            Gene::Block(vec![
                 Gene::GeneInt(5),
                 Gene::GeneInt(4),
                 Gene::StateFunc(exec_do_range),
-            ])),
+            ]),
         ];
         code_member(&mut test_state);
         assert_eq!(vec![false], test_state.boolean);
@@ -996,11 +987,11 @@ mod tests {
     fn code_exec_nth_test() {
         let mut test_state = EMPTY_STATE;
 
-        test_state.code = vec![Gene::Block(Box::new(vec![
+        test_state.code = vec![Gene::Block(vec![
             Gene::GeneInt(0),
             Gene::GeneInt(1),
             Gene::GeneInt(2),
-        ]))];
+        ])];
         test_state.int = vec![1];
         code_nth(&mut test_state);
         assert_eq!(vec![Gene::GeneInt(1)], test_state.code);
@@ -1010,11 +1001,11 @@ mod tests {
         code_nth(&mut test_state);
         assert_eq!(vec![Gene::GeneInt(1)], test_state.code);
 
-        test_state.code = vec![Gene::Block(Box::new(vec![
+        test_state.code = vec![Gene::Block(vec![
             Gene::GeneInt(0),
             Gene::GeneInt(1),
             Gene::GeneInt(2),
-        ]))];
+        ])];
         test_state.int = vec![4];
         code_nth(&mut test_state);
         assert_eq!(vec![Gene::GeneInt(1)], test_state.code);
@@ -1028,7 +1019,7 @@ mod tests {
         code_make_empty_block(&mut test_state);
         let empty_vec: Vec<Gene> = Vec::new();
         assert_eq!(
-            vec![Gene::GeneInt(0), Gene::Block(Box::new(empty_vec.clone()))],
+            vec![Gene::GeneInt(0), Gene::Block(empty_vec.clone())],
             test_state.code
         );
         test_state.code.clear();
@@ -1048,12 +1039,12 @@ mod tests {
         test_state.boolean.clear();
 
         let empty_vec: Vec<Gene> = Vec::new();
-        test_state.code = vec![Gene::Block(Box::new(empty_vec.clone()))];
+        test_state.code = vec![Gene::Block(empty_vec.clone())];
         code_is_empty_block(&mut test_state);
         assert_eq!(vec![true], test_state.boolean);
         test_state.boolean.clear();
 
-        test_state.code = vec![Gene::Block(Box::new(vec![Gene::GeneBoolean(false)]))];
+        test_state.code = vec![Gene::Block(vec![Gene::GeneBoolean(false)])];
         code_is_empty_block(&mut test_state);
         assert_eq!(vec![false], test_state.boolean);
         test_state.boolean.clear();
@@ -1065,7 +1056,7 @@ mod tests {
         test_state.boolean.clear();
 
         let empty_vec: Vec<Gene> = Vec::new();
-        test_state.exec = vec![Gene::Block(Box::new(empty_vec.clone()))];
+        test_state.exec = vec![Gene::Block(empty_vec.clone())];
         exec_is_empty_block(&mut test_state);
         assert_eq!(vec![true], test_state.boolean);
     }
@@ -1079,10 +1070,10 @@ mod tests {
         assert_eq!(vec![1], test_state.int);
         test_state.int.clear();
 
-        test_state.code = vec![Gene::Block(Box::new(vec![
+        test_state.code = vec![Gene::Block(vec![
             Gene::GeneBoolean(false),
             Gene::GeneInt(42),
-        ]))];
+        ])];
         code_size(&mut test_state);
         assert_eq!(vec![2], test_state.int);
     }
@@ -1091,17 +1082,17 @@ mod tests {
     fn extract_test() {
         let mut test_state = EMPTY_STATE;
 
-        let test_code = vec![Gene::Block(Box::new(vec![
+        let test_code = vec![Gene::Block(vec![
             Gene::GeneBoolean(true),
             Gene::GeneInt(1),
-            Gene::Block(Box::new(vec![
+            Gene::Block(vec![
                 Gene::GeneInt(4),
                 Gene::GeneFloat(dec!(6.0)),
-                Gene::Block(Box::new(vec![Gene::GeneString(vec!['t'])])),
-            ])),
+                Gene::Block(vec![Gene::GeneString(vec!['t'])]),
+            ]),
             Gene::GeneInt(10),
-            Gene::Block(Box::new(vec![Gene::GeneBoolean(false)])),
-        ]))];
+            Gene::Block(vec![Gene::GeneBoolean(false)]),
+        ])];
 
         test_state.code = test_code.clone();
         test_state.int = vec![0];
@@ -1122,7 +1113,7 @@ mod tests {
         test_state.int = vec![9];
         code_extract(&mut test_state);
         assert_eq!(
-            vec![Gene::Block(Box::new(vec![Gene::GeneBoolean(false)]))],
+            vec![Gene::Block(vec![Gene::GeneBoolean(false)])],
             test_state.code
         );
     }
@@ -1133,47 +1124,47 @@ mod tests {
 
         test_state.code = vec![
             Gene::GeneInt(20),
-            Gene::Block(Box::new(vec![
+            Gene::Block(vec![
                 Gene::GeneInt(1),
-                Gene::Block(Box::new(vec![Gene::GeneInt(1), Gene::GeneInt(1)])),
-            ])),
+                Gene::Block(vec![Gene::GeneInt(1), Gene::GeneInt(1)]),
+            ]),
         ];
         test_state.int = vec![1];
-        let inserted_block = vec![Gene::Block(Box::new(vec![
+        let inserted_block = vec![Gene::Block(vec![
             Gene::GeneInt(1),
             Gene::GeneInt(20),
-            Gene::Block(Box::new(vec![Gene::GeneInt(1), Gene::GeneInt(1)])),
-        ]))];
+            Gene::Block(vec![Gene::GeneInt(1), Gene::GeneInt(1)]),
+        ])];
         code_insert(&mut test_state);
         assert_eq!(inserted_block, test_state.code);
 
         test_state.code = vec![
             Gene::GeneInt(20),
-            Gene::Block(Box::new(vec![
+            Gene::Block(vec![
                 Gene::GeneBoolean(true),
                 Gene::GeneInt(1),
-                Gene::Block(Box::new(vec![
+                Gene::Block(vec![
                     Gene::GeneInt(4),
                     Gene::GeneFloat(dec!(6.0)),
-                    Gene::Block(Box::new(vec![Gene::GeneString(vec!['t'])])),
-                ])),
+                    Gene::Block(vec![Gene::GeneString(vec!['t'])]),
+                ]),
                 Gene::GeneInt(10),
-                Gene::Block(Box::new(vec![Gene::GeneBoolean(false)])),
-            ])),
+                Gene::Block(vec![Gene::GeneBoolean(false)]),
+            ]),
         ];
         test_state.int = vec![4];
-        let inserted_block = vec![Gene::Block(Box::new(vec![
+        let inserted_block = vec![Gene::Block(vec![
             Gene::GeneBoolean(true),
             Gene::GeneInt(1),
-            Gene::Block(Box::new(vec![
+            Gene::Block(vec![
                 Gene::GeneInt(4),
                 Gene::GeneInt(20),
                 Gene::GeneFloat(dec!(6.0)),
-                Gene::Block(Box::new(vec![Gene::GeneString(vec!['t'])])),
-            ])),
+                Gene::Block(vec![Gene::GeneString(vec!['t'])]),
+            ]),
             Gene::GeneInt(10),
-            Gene::Block(Box::new(vec![Gene::GeneBoolean(false)])),
-        ]))];
+            Gene::Block(vec![Gene::GeneBoolean(false)]),
+        ])];
         code_insert(&mut test_state);
         assert_eq!(inserted_block, test_state.code);
     }
@@ -1184,12 +1175,12 @@ mod tests {
 
         test_state.code = vec![
             Gene::GeneInt(20),
-            Gene::Block(Box::new(vec![
+            Gene::Block(vec![
                 Gene::GeneBoolean(true),
                 Gene::GeneInt(1),
                 Gene::GeneInt(20),
                 Gene::GeneFloat(dec!(6.0)),
-            ])),
+            ]),
         ];
         code_first_position(&mut test_state);
         assert_eq!(vec![2], test_state.int);
@@ -1207,12 +1198,12 @@ mod tests {
 
         test_state.code = vec![
             Gene::GeneInt(-6),
-            Gene::Block(Box::new(vec![
+            Gene::Block(vec![
                 Gene::GeneBoolean(true),
                 Gene::GeneInt(1),
                 Gene::GeneInt(20),
                 Gene::GeneFloat(dec!(6.0)),
-            ])),
+            ]),
         ];
         code_first_position(&mut test_state);
         assert_eq!(vec![-1], test_state.int);
@@ -1227,18 +1218,18 @@ mod tests {
         code_reverse(&mut test_state);
         assert_eq!(vec![Gene::GeneInt(1)], test_state.code);
 
-        test_state.code = vec![Gene::Block(Box::new(vec![
+        test_state.code = vec![Gene::Block(vec![
             Gene::GeneBoolean(false),
             Gene::GeneInt(1),
             Gene::GeneInt(20),
-        ]))];
+        ])];
         code_reverse(&mut test_state);
         assert_eq!(
-            vec![Gene::Block(Box::new(vec![
+            vec![Gene::Block(vec![
                 Gene::GeneInt(20),
                 Gene::GeneInt(1),
                 Gene::GeneBoolean(false),
-            ]))],
+            ])],
             test_state.code
         );
     }

@@ -1326,7 +1326,6 @@ mod tests {
     #[test]
     fn contains_test() {
         let mut test_state = EMPTY_STATE;
-        let empty_vec: Vec<i128> = vec![];
 
         test_state.vector_int = vec![vec![0, 1, 2, 3, 4, 5]];
         test_state.int = vec![2];

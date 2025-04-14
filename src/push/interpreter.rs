@@ -26,6 +26,26 @@ pub fn gene_to_stack(state: &mut PushState, gene: Gene) {
     }
 }
 
+/// Ensures the stacks don't go over a set size. Removes the oldest values first.
+/// Unsure how to make this function prettier yet.
+macro_rules! ensure_boundaries {
+    ($state:expr, $max_stack_size:expr, $stack:ident) => {
+        if $state.$stack.len() > $max_stack_size {
+            $state
+                .$stack
+                .drain(0..($state.$stack.len() - $max_stack_size));
+        }
+    };
+    ($state:expr, $max_stack_size:expr, $stack:ident, $($other_stacks:ident), +) => {
+        if $state.$stack.len() > $max_stack_size {
+            $state
+                .$stack
+                .drain(0..($state.$stack.len() - $max_stack_size));
+        }
+        ensure_boundaries!($state, $max_stack_size, $($other_stacks), +);
+    };
+}
+
 /// Where a push program's exec stack is interpreted to completion.
 /// TODO: Decide where to place loading in a push program.
 pub fn interpret_program(state: &mut PushState, step_limit: usize, max_stack_size: usize) {
@@ -35,6 +55,21 @@ pub fn interpret_program(state: &mut PushState, step_limit: usize, max_stack_siz
             gene_to_stack(state, gene);
             steps += 1;
         }
+        // If adding any more stacks in the future, must be added to this list
+        ensure_boundaries!(
+            state,
+            max_stack_size,
+            int,
+            float,
+            string,
+            boolean,
+            char,
+            vector_int,
+            vector_float,
+            vector_string,
+            vector_boolean,
+            vector_char
+        );
     }
 }
 
@@ -126,20 +161,14 @@ mod tests {
         );
         test_state.vector_char.clear();
 
-        let test_block: Gene = Gene::Block(Box::new(vec![
+        let test_block: Gene = Gene::Block(vec![
             Gene::GeneInt(1),
             Gene::GeneFloat(dec!(2.3)),
             Gene::StateFunc(int_add),
-        ]));
+        ]);
         test_state.exec.push(Gene::GeneInt(2));
         gene_to_stack(&mut test_state, test_block);
         assert_eq!(
-            //vec![
-            //    Gene::GeneInt(2),
-            //    Gene::GeneInt(1),
-            //    Gene::GeneFloat(dec!(2.3)),
-            //    Gene::StateFunc(int_add)
-            //],
             vec![
                 Gene::GeneInt(2),
                 Gene::StateFunc(int_add),
@@ -165,5 +194,16 @@ mod tests {
         ];
         interpret_program(&mut test_state, 1000, 1000);
         assert_eq!(vec![9], test_state.int);
+    }
+
+    #[test]
+    fn boundary_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.int = vec![1, 2, 3, 4, 5];
+        test_state.char = vec!['a', 'b', 'c', 'd', 'f', 'z', 'g'];
+        ensure_boundaries!(test_state, 3, int, char);
+        assert_eq!(vec!['f', 'z', 'g'], test_state.char);
+        assert_eq!(vec![3, 4, 5], test_state.int);
     }
 }

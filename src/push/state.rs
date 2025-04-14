@@ -51,7 +51,7 @@ pub enum Gene {
     Close,
     Open(u8),
     Skip,
-    Block(Box<Vec<Gene>>),
+    Block(Vec<Gene>),
     CrossoverPadding,
 }
 
@@ -157,66 +157,66 @@ mod tests {
 
     #[test]
     fn rec_len_test() {
-        let block = Gene::Block(Box::new(vec![
+        let block = Gene::Block(vec![
             Gene::GeneInt(1),
-            Gene::Block(Box::new(vec![Gene::GeneInt(1), Gene::GeneInt(1)])),
-        ]));
+            Gene::Block(vec![Gene::GeneInt(1), Gene::GeneInt(1)]),
+        ]);
         assert_eq!(4, block.rec_len());
 
-        let block = Gene::Block(Box::new(vec![
+        let block = Gene::Block(vec![
             Gene::GeneBoolean(true),
             Gene::GeneInt(1),
-            Gene::Block(Box::new(vec![
+            Gene::Block(vec![
                 Gene::GeneInt(4),
                 Gene::GeneFloat(dec!(6.0)),
-                Gene::Block(Box::new(vec![Gene::GeneString(vec!['t'])])),
-            ])),
+                Gene::Block(vec![Gene::GeneString(vec!['t'])]),
+            ]),
             Gene::GeneInt(10),
-            Gene::Block(Box::new(vec![Gene::GeneBoolean(false)])),
-        ]));
+            Gene::Block(vec![Gene::GeneBoolean(false)]),
+        ]);
         assert_eq!(10, block.rec_len());
 
-        let block = Gene::Block(Box::new(vec![]));
+        let block = Gene::Block(vec![]);
         assert_eq!(0, block.rec_len());
     }
 
     #[test]
     fn insert_test() {
-        let mut block = Gene::Block(Box::new(vec![
+        let mut block = Gene::Block(vec![
             Gene::GeneInt(1),
-            Gene::Block(Box::new(vec![Gene::GeneInt(1), Gene::GeneInt(1)])),
-        ]));
-        let inserted_block = Gene::Block(Box::new(vec![
+            Gene::Block(vec![Gene::GeneInt(1), Gene::GeneInt(1)]),
+        ]);
+        let inserted_block = Gene::Block(vec![
             Gene::GeneInt(1),
             Gene::GeneInt(20),
-            Gene::Block(Box::new(vec![Gene::GeneInt(1), Gene::GeneInt(1)])),
-        ]));
+            Gene::Block(vec![Gene::GeneInt(1), Gene::GeneInt(1)]),
+        ]);
         block.with_code_inserted_at_point(Gene::GeneInt(20), 1);
         assert_eq!(inserted_block, block);
 
-        let mut block = Gene::Block(Box::new(vec![
+        let mut block = Gene::Block(vec![
             Gene::GeneBoolean(true),
             Gene::GeneInt(1),
-            Gene::Block(Box::new(vec![
+            Gene::Block(vec![
                 Gene::GeneInt(4),
                 Gene::GeneFloat(dec!(6.0)),
-                Gene::Block(Box::new(vec![Gene::GeneString(vec!['t'])])),
-            ])),
+                Gene::Block(vec![Gene::GeneString(vec!['t'])]),
+            ]),
             Gene::GeneInt(10),
-            Gene::Block(Box::new(vec![Gene::GeneBoolean(false)])),
-        ]));
-        let inserted_block = Gene::Block(Box::new(vec![
+            Gene::Block(vec![Gene::GeneBoolean(false)]),
+        ]);
+        let inserted_block = Gene::Block(vec![
             Gene::GeneBoolean(true),
             Gene::GeneInt(1),
-            Gene::Block(Box::new(vec![
+            Gene::Block(vec![
                 Gene::GeneInt(4),
                 Gene::GeneInt(20),
                 Gene::GeneFloat(dec!(6.0)),
-                Gene::Block(Box::new(vec![Gene::GeneString(vec!['t'])])),
-            ])),
+                Gene::Block(vec![Gene::GeneString(vec!['t'])]),
+            ]),
             Gene::GeneInt(10),
-            Gene::Block(Box::new(vec![Gene::GeneBoolean(false)])),
-        ]));
+            Gene::Block(vec![Gene::GeneBoolean(false)]),
+        ]);
         block.with_code_inserted_at_point(Gene::GeneInt(20), 4);
         assert_eq!(inserted_block, block);
     }
