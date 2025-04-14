@@ -30,7 +30,7 @@ pub fn gene_to_stack(state: &mut PushState, gene: Gene) {
 /// TODO: Decide where to place loading in a push program.
 pub fn interpret_program(state: &mut PushState, step_limit: usize, max_stack_size: usize) {
     let mut steps: usize = 0;
-    while state.exec.len() > 0 && steps < step_limit {
+    while !state.exec.is_empty() && steps < step_limit {
         if let Some(gene) = state.exec.pop() {
             gene_to_stack(state, gene);
             steps += 1;

@@ -9,6 +9,12 @@ fn _noop<T>(_: Vec<T>) -> Option<T> {
 make_instruction_clone!(code, code, _noop, Gene, 0);
 make_instruction_clone!(exec, exec, _noop, Gene, 0);
 
+fn _noop_block<T>(_: Vec<T>) -> Option<T> {
+    None
+}
+make_instruction_clone!(code, code, _noop_block, Gene, 0);
+make_instruction_clone!(exec, exec, _noop_block, Gene, 0);
+
 /// Pops the top value from the stack
 fn _pop<T>(vals: Vec<T>) -> Option<T>
 where

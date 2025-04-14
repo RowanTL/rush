@@ -76,19 +76,6 @@ where
 }
 make_instruction_out!(float, boolean, _from_float, Decimal, 1);
 
-pub fn boolean_instructions() -> Vec<fn(&mut PushState)> {
-    vec![
-        boolean_and,
-        boolean_or,
-        boolean_not,
-        boolean_xor,
-        boolean_invert_first_then_and,
-        boolean_invert_second_then_and,
-        boolean_from_int,
-        boolean_from_float,
-    ]
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
