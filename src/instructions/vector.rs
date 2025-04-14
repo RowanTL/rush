@@ -1,5 +1,7 @@
 use crate::push::state::PushState;
 use rust_decimal::Decimal;
+use std::collections::HashSet;
+use std::hash::Hash;
 
 /// Generates an index between 0 and length. Takes abs(num) and then mods it by length.
 fn bounded_idx(num: i128, length: usize) -> usize {
@@ -589,6 +591,70 @@ make_instruction_aux!(
 make_instruction_aux!(vector_char, vector_char, _drop, Vec<char>, 1, int, 1, i128);
 make_instruction_aux!(string, string, _drop, Vec<char>, 1, int, 1, i128);
 
+pub fn _drop_last<T>(vals: Vec<Vec<T>>, auxs: Vec<i128>) -> Option<Vec<T>>
+where
+    T: Clone,
+{
+    let mut ret_vec = vals[0].clone();
+    let rvlen = ret_vec.len(); //Ret_Vec Len
+    if ret_vec.is_empty() {
+        return None;
+    }
+    ret_vec.drain((rvlen - (auxs[0].abs().min(rvlen as i128) as usize))..rvlen);
+    Some(ret_vec)
+}
+make_instruction_aux!(
+    vector_int,
+    vector_int,
+    _drop_last,
+    Vec<i128>,
+    1,
+    int,
+    1,
+    i128
+);
+make_instruction_aux!(
+    vector_float,
+    vector_float,
+    _drop_last,
+    Vec<Decimal>,
+    1,
+    int,
+    1,
+    i128
+);
+make_instruction_aux!(
+    vector_string,
+    vector_string,
+    _drop_last,
+    Vec<Vec<char>>,
+    1,
+    int,
+    1,
+    i128
+);
+make_instruction_aux!(
+    vector_boolean,
+    vector_boolean,
+    _drop_last,
+    Vec<bool>,
+    1,
+    int,
+    1,
+    i128
+);
+make_instruction_aux!(
+    vector_char,
+    vector_char,
+    _drop_last,
+    Vec<char>,
+    1,
+    int,
+    1,
+    i128
+);
+make_instruction_aux!(string, string, _drop_last, Vec<char>, 1, int, 1, i128);
+
 /// Takes the length of a vector.
 pub fn _length<T>(vals: Vec<Vec<T>>) -> Option<i128> {
     Some(vals[0].len() as i128)
@@ -694,6 +760,104 @@ make_instruction_aux!(
 make_instruction_aux!(vector_char, boolean, _contains, Vec<char>, 1, char, 1, char);
 make_instruction_aux!(string, boolean, _contains, Vec<char>, 1, char, 1, char);
 
+/// Checks if a vector contains another vector in no order. True if does, false otherwise
+pub fn _contains_vector_non_contiguous<T>(vals: Vec<Vec<T>>) -> Option<bool>
+where
+    T: Eq + Hash,
+{
+    let hashset: HashSet<&T> = vals[1].iter().collect();
+    Some(vals[0].iter().all(|x| hashset.contains(x)))
+}
+make_instruction_clone!(
+    vector_int,
+    boolean,
+    _contains_vector_non_contiguous,
+    Vec<i128>,
+    2
+);
+make_instruction_clone!(
+    vector_float,
+    boolean,
+    _contains_vector_non_contiguous,
+    Vec<Decimal>,
+    2
+);
+make_instruction_clone!(
+    vector_string,
+    boolean,
+    _contains_vector_non_contiguous,
+    Vec<Vec<char>>,
+    2
+);
+make_instruction_clone!(
+    vector_boolean,
+    boolean,
+    _contains_vector_non_contiguous,
+    Vec<bool>,
+    2
+);
+make_instruction_clone!(
+    vector_char,
+    boolean,
+    _contains_vector_non_contiguous,
+    Vec<char>,
+    2
+);
+make_instruction_clone!(
+    string,
+    boolean,
+    _contains_vector_non_contiguous,
+    Vec<char>,
+    2
+);
+
+/// Checks if a vector contains another contiguous vector. True if does, false otherwise
+pub fn _contains_vector_contiguous<T>(vals: Vec<Vec<T>>) -> Option<bool>
+where
+    T: Eq,
+{
+    if vals[0].is_empty() {
+        return Some(true); // would argue the empty set is in everything
+    }
+    Some(vals[1].windows(vals[0].len()).any(|x| x == vals[0]))
+}
+make_instruction_clone!(
+    vector_int,
+    boolean,
+    _contains_vector_contiguous,
+    Vec<i128>,
+    2
+);
+make_instruction_clone!(
+    vector_float,
+    boolean,
+    _contains_vector_contiguous,
+    Vec<Decimal>,
+    2
+);
+make_instruction_clone!(
+    vector_string,
+    boolean,
+    _contains_vector_contiguous,
+    Vec<Vec<char>>,
+    2
+);
+make_instruction_clone!(
+    vector_boolean,
+    boolean,
+    _contains_vector_contiguous,
+    Vec<bool>,
+    2
+);
+make_instruction_clone!(
+    vector_char,
+    boolean,
+    _contains_vector_contiguous,
+    Vec<char>,
+    2
+);
+make_instruction_clone!(string, boolean, _contains_vector_contiguous, Vec<char>, 2);
+
 /// Returns the index of a primitive in a vector, pushes result to int stack
 pub fn _index_of<T>(vals: Vec<Vec<T>>, auxs: Vec<T>) -> Option<i128>
 where
@@ -740,17 +904,36 @@ make_instruction_aux!(
 make_instruction_aux!(vector_char, int, _index_of, Vec<char>, 1, char, 1, char);
 make_instruction_aux!(string, int, _index_of, Vec<char>, 1, char, 1, char);
 
+/// Finds the index of the start of one vector in another. Searches in contiguous space.
+pub fn _index_of_vector<T>(vals: Vec<Vec<T>>) -> Option<i128>
+where
+    T: Eq,
+{
+    if vals[0].is_empty() {
+        return Some(0);
+    }
+    if let Some(val) = vals[1].windows(vals[0].len()).position(|x| x == vals[0]) {
+        return Some(val as i128);
+    }
+    Some(-1)
+}
+make_instruction_clone!(vector_int, int, _index_of_vector, Vec<i128>, 2);
+make_instruction_clone!(vector_float, int, _index_of_vector, Vec<Decimal>, 2);
+make_instruction_clone!(vector_string, int, _index_of_vector, Vec<Vec<char>>, 2);
+make_instruction_clone!(vector_boolean, int, _index_of_vector, Vec<bool>, 2);
+make_instruction_clone!(vector_char, int, _index_of_vector, Vec<char>, 2);
+make_instruction_clone!(string, int, _index_of_vector, Vec<char>, 2);
+
 /// Counts the amount of a primitive in a vector
 pub fn _occurrences_of<T>(vals: Vec<Vec<T>>, auxs: Vec<T>) -> Option<i128>
 where
     T: Clone + Eq,
 {
-    let temp_aux = &auxs[0];
     Some(
         vals[0]
             .clone()
             .into_iter()
-            .filter(|r| r == temp_aux)
+            .filter(|r| r == &auxs[0])
             .count() as i128,
     )
 }
@@ -796,6 +979,41 @@ make_instruction_aux!(
     char
 );
 make_instruction_aux!(string, int, _occurrences_of, Vec<char>, 1, char, 1, char);
+
+pub fn _occurrences_of_vector<T>(vals: Vec<Vec<T>>) -> Option<i128>
+where
+    T: Eq + Hash,
+{
+    if vals[0].is_empty() {
+        return Some(0);
+    }
+    Some(
+        vals[1]
+            .windows(vals[0].len())
+            .filter(|x| x == &vals[0])
+            .count() as i128,
+    )
+}
+make_instruction_clone!(vector_int, int, _occurrences_of_vector, Vec<i128>, 2);
+make_instruction_clone!(vector_float, int, _occurrences_of_vector, Vec<Decimal>, 2);
+make_instruction_clone!(
+    vector_string,
+    int,
+    _occurrences_of_vector,
+    Vec<Vec<char>>,
+    2
+);
+make_instruction_clone!(vector_boolean, int, _occurrences_of_vector, Vec<bool>, 2);
+make_instruction_clone!(vector_char, int, _occurrences_of_vector, Vec<char>, 2);
+make_instruction_clone!(string, int, _occurrences_of_vector, Vec<char>, 2);
+
+/// Pushes the values inside a vector to a primitive stack.
+pub fn _parse_to_prim<T>(vals: Vec<Vec<T>>) -> Option<Vec<T>>
+where
+    T: Clone,
+{
+    Some(vals[0].clone())
+}
 
 /// Sets the nth index in a vector. N from the int stack.
 pub fn _set_nth<T>(vals: Vec<Vec<T>>, aux0: Vec<T>, aux1: Vec<i128>) -> Option<Vec<T>>
@@ -1268,6 +1486,32 @@ mod tests {
     }
 
     #[test]
+    fn vector_drop_last_test() {
+        let mut test_state = EMPTY_STATE;
+        let empty_vec: Vec<i128> = vec![];
+
+        test_state.vector_int = vec![vec![0, 1, 2, 3, 4, 5]];
+        test_state.int = vec![2];
+        vector_int_drop_last(&mut test_state);
+        assert_eq!(vec![vec![0, 1, 2, 3]], test_state.vector_int);
+
+        test_state.vector_int = vec![vec![0]];
+        test_state.int = vec![2];
+        vector_int_drop_last(&mut test_state);
+        assert_eq!(vec![empty_vec.clone()], test_state.vector_int);
+
+        test_state.vector_int = vec![vec![1, 2, 3, 4]];
+        test_state.int = vec![4];
+        vector_int_drop_last(&mut test_state);
+        assert_eq!(vec![empty_vec.clone()], test_state.vector_int);
+
+        test_state.vector_int = vec![empty_vec.clone()];
+        test_state.int = vec![30];
+        vector_int_drop_last(&mut test_state);
+        assert_eq!(vec![empty_vec], test_state.vector_int);
+    }
+
+    #[test]
     fn vector_length_test() {
         let mut test_state = EMPTY_STATE;
         let empty_vec: Vec<i128> = vec![];
@@ -1346,6 +1590,49 @@ mod tests {
     }
 
     #[test]
+    fn contains_vector_non_contiguous_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.vector_int = vec![vec![0, 1, 2, 3, 4, 5, 6, 7, 8], vec![0, 2, 3, 4, 5, 1]];
+        vector_int_contains_vector_non_contiguous(&mut test_state);
+        assert_eq!(vec![true], test_state.boolean);
+        test_state.boolean.clear();
+
+        test_state.vector_int = vec![vec![], vec![]];
+        vector_int_contains_vector_non_contiguous(&mut test_state);
+        assert_eq!(vec![true], test_state.boolean);
+        test_state.boolean.clear();
+
+        test_state.vector_int = vec![vec![1, 2, 3], vec![0, 1, 2, 3, 4, 5]];
+        vector_int_contains_vector_non_contiguous(&mut test_state);
+        assert_eq!(vec![false], test_state.boolean);
+    }
+
+    #[test]
+    fn contains_vector_contiguous() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.vector_int = vec![vec![0, 1, 2, 3, 4, 5, 6, 7, 8], vec![0, 1, 2, 3, 4, 5]];
+        vector_int_contains_vector_contiguous(&mut test_state);
+        assert_eq!(vec![true], test_state.boolean);
+        test_state.boolean.clear();
+
+        test_state.vector_int = vec![vec![0, 1, 2, 3, 4, 5, 6, 7, 8], vec![0, 2, 3, 4, 5, 1]];
+        vector_int_contains_vector_contiguous(&mut test_state);
+        assert_eq!(vec![false], test_state.boolean);
+        test_state.boolean.clear();
+
+        test_state.vector_int = vec![vec![], vec![]];
+        vector_int_contains_vector_contiguous(&mut test_state);
+        assert_eq!(vec![true], test_state.boolean);
+        test_state.boolean.clear();
+
+        test_state.vector_int = vec![vec![1, 2, 3], vec![0, 1, 2, 3, 4, 5]];
+        vector_int_contains_vector_contiguous(&mut test_state);
+        assert_eq!(vec![false], test_state.boolean);
+    }
+
+    #[test]
     fn index_of_test() {
         let mut test_state = EMPTY_STATE;
 
@@ -1366,6 +1653,25 @@ mod tests {
     }
 
     #[test]
+    fn index_of_vector_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.vector_int = vec![vec![0, 1, 2, 3, 4, 5], vec![1, 2, 3]];
+        vector_int_index_of_vector(&mut test_state);
+        assert_eq!(vec![1], test_state.int);
+        test_state.int.clear();
+
+        test_state.vector_int = vec![vec![0, 1, 2, 3, 4, 5], vec![10]];
+        vector_int_index_of_vector(&mut test_state);
+        assert_eq!(vec![-1], test_state.int);
+        test_state.int.clear();
+
+        test_state.vector_int = vec![vec![], vec![]];
+        vector_int_index_of_vector(&mut test_state);
+        assert_eq!(vec![0], test_state.int);
+    }
+
+    #[test]
     fn occurrences_of_test() {
         let mut test_state = EMPTY_STATE;
 
@@ -1382,6 +1688,25 @@ mod tests {
         test_state.vector_int = vec![vec![]];
         test_state.int = vec![1];
         vector_int_occurrences_of(&mut test_state);
+        assert_eq!(vec![0], test_state.int);
+    }
+
+    #[test]
+    fn occurrences_of_vector_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.vector_int = vec![vec![0, 1, 2, 3, 4, 5, 1, 2], vec![1, 2]];
+        vector_int_occurrences_of_vector(&mut test_state);
+        assert_eq!(vec![2], test_state.int);
+        test_state.int.clear();
+
+        test_state.vector_int = vec![vec![1], vec![1, 2, 3, 2, 2, 5], vec![2, 2]];
+        vector_int_occurrences_of_vector(&mut test_state);
+        assert_eq!(vec![1], test_state.int);
+        test_state.int.clear();
+
+        test_state.vector_int = vec![vec![], vec![]];
+        vector_int_occurrences_of_vector(&mut test_state);
         assert_eq!(vec![0], test_state.int);
     }
 
