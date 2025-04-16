@@ -1,4 +1,4 @@
-use crate::push::state::PushState;
+use crate::push::state::{Gene, PushState};
 use rust_decimal::Decimal;
 use std::collections::HashSet;
 use std::hash::Hash;
@@ -1362,9 +1362,45 @@ make_instruction_aux!(
 );
 make_instruction_aux!(string, string, _remove, Vec<char>, 1, char, 1, char);
 
+/// Iterates over a vector using an instruction from the exec stack.
+macro_rules! make_iterate {
+    ($vec_stack:ident, $prim_stack:ident, $vec_gene:ident) => {
+        paste::item! {
+            pub fn [< $vec_stack _iterate >] (state: &mut PushState) {
+                if state.$vec_stack.is_empty() || state.exec.is_empty() {
+                    return;
+                }
+                let first_vec = state.$vec_stack.pop().unwrap();
+                if first_vec.is_empty() {
+                    state.exec.pop();
+                    return;
+                } else if first_vec.len() == 1 {
+                    state.$prim_stack.push(first_vec[0]);
+                    return;
+                } else {
+                    let top_exec = state.exec[state.exec.len() - 1].clone();
+                    let first_prim = first_vec[0];
+                    state.exec.push(Gene::StateFunc([< $vec_stack _iterate >]));
+                    state.exec.push(Gene::$vec_gene(first_vec[1..].to_vec()));
+                    state.exec.push(top_exec);
+                    state.$prim_stack.push(first_prim);
+                }
+            }
+        }
+    };
+}
+make_iterate!(vector_int, int, GeneVectorInt);
+make_iterate!(vector_float, float, GeneVectorFloat);
+//make_iterate!(vector_string, string, GeneVectorString);
+make_iterate!(vector_boolean, boolean, GeneVectorBoolean);
+make_iterate!(vector_char, char, GeneVectorChar);
+//make_iterate!(string, string, GeneString);
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::instructions::numeric::int_inc;
+    use crate::push::interpreter::interpret_program;
     use crate::push::state::EMPTY_STATE;
 
     #[test]
@@ -1993,5 +2029,19 @@ mod tests {
         test_state.int = vec![9];
         vector_int_remove(&mut test_state);
         assert_eq!(vec![vec![0, 1, 2, 3, 4, 5, 2]], test_state.vector_int);
+    }
+
+    #[test]
+    fn iterate_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.vector_int = vec![vec![0, 1, 2, 3, 4, 5, 2]];
+        test_state.exec = vec![
+            Gene::StateFunc(int_inc),
+            Gene::StateFunc(vector_int_iterate),
+        ];
+        interpret_program(&mut test_state, 1000, 1000);
+        println!("{:?}", test_state);
+        assert_eq!(vec![1, 2, 3, 4, 5, 6, 3], test_state.int);
     }
 }

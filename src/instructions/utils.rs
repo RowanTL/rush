@@ -8,7 +8,7 @@ use std::ops::Div;
 ///
 /// Trig functions named safe rather than checked to not overlap
 /// with Decimal library's checked function names.
-pub trait NumericTrait: Sized + Div<Output = Self> {
+pub trait NumericTrait: Sized + Div<Output = Self> + Ord {
     fn checked_div(self, v: Self) -> Option<Self>;
     fn checked_mod(self, v: Self) -> Option<Self>;
     fn increment(self) -> Self;
@@ -183,9 +183,9 @@ impl CastingTrait for bool {
         Some(v)
     }
     fn from_int(v: i128) -> Option<Self> {
-        Some(if v != 0 { true } else { false })
+        Some(v != 0)
     }
     fn from_float(v: Decimal) -> Option<Self> {
-        Some(if v != dec!(0.0) { true } else { false })
+        Some(v != dec!(0.0))
     }
 }
