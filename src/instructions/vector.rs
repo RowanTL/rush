@@ -1,7 +1,7 @@
 use crate::instructions::utils::NumericTrait;
 use crate::push::state::{Gene, PushState};
 use rust_decimal::Decimal;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 
 /// Generates an index between 0 and length. Takes abs(num) and then mods it by length.
@@ -1573,6 +1573,9 @@ make_instruction_aux!(string, string, _insert_vector, Vec<char>, 2, int, 1, i128
 
 /// Takes the mean of a vector
 pub fn _mean<T: NumericTrait + Clone>(vals: Vec<Vec<T>>) -> Option<T> {
+    if vals[0].is_empty() {
+        return Some(T::zero());
+    }
     let mut fin_num = T::zero();
     for num in vals[0].clone().into_iter() {
         fin_num = fin_num + num;
@@ -1581,6 +1584,115 @@ pub fn _mean<T: NumericTrait + Clone>(vals: Vec<Vec<T>>) -> Option<T> {
 }
 make_instruction_clone!(vector_int, int, _mean, Vec<i128>, 1);
 make_instruction_clone!(vector_float, float, _mean, Vec<Decimal>, 1);
+
+/// Takes the max of a vector
+pub fn _maximum<T: NumericTrait + Clone>(vals: Vec<Vec<T>>) -> Option<T> {
+    if vals[0].is_empty() {
+        return Some(T::zero());
+    }
+    Some(vals[0].iter().max()?.clone())
+}
+make_instruction_clone!(vector_int, int, _maximum, Vec<i128>, 1);
+make_instruction_clone!(vector_float, float, _maximum, Vec<Decimal>, 1);
+
+/// Takes the min of a vector
+pub fn _minimum<T: NumericTrait + Clone>(vals: Vec<Vec<T>>) -> Option<T> {
+    if vals[0].is_empty() {
+        return Some(T::zero());
+    }
+    Some(vals[0].iter().min()?.clone())
+}
+make_instruction_clone!(vector_int, int, _minimum, Vec<i128>, 1);
+make_instruction_clone!(vector_float, float, _minimum, Vec<Decimal>, 1);
+
+/// Takes the sum of a vector
+pub fn _sum<T: NumericTrait + Clone>(vals: Vec<Vec<T>>) -> Option<T> {
+    if vals[0].is_empty() {
+        return Some(T::zero());
+    }
+    let mut fin_num = T::zero();
+    for num in vals[0].clone().into_iter() {
+        fin_num = fin_num + num;
+    }
+    Some(fin_num)
+}
+make_instruction_clone!(vector_int, int, _sum, Vec<i128>, 1);
+make_instruction_clone!(vector_float, float, _sum, Vec<Decimal>, 1);
+
+/// Takes the mode of a vector
+pub fn _mode<T: NumericTrait + Clone + Hash + Copy>(vals: Vec<Vec<T>>) -> Option<T> {
+    if vals[0].is_empty() {
+        return Some(T::zero());
+    }
+    let mut counts = HashMap::new();
+    vals[0]
+        .iter()
+        .max_by_key(|&x| {
+            let count = counts.entry(x).or_insert(0);
+            *count += 1;
+            *count
+        })
+        .copied()
+}
+make_instruction_clone!(vector_int, int, _mode, Vec<i128>, 1);
+make_instruction_clone!(vector_float, float, _mode, Vec<Decimal>, 1);
+
+/// Adds the squares of all values in a vector and then takes the square root
+pub fn _two_norm<T: NumericTrait + Clone>(vals: Vec<Vec<T>>) -> Option<T> {
+    if vals[0].is_empty() {
+        return Some(T::zero());
+    }
+    let mut fin_num = T::zero();
+    for num in vals[0].clone().into_iter() {
+        fin_num = fin_num + (num.clone() * num);
+    }
+    fin_num.safe_sqrt()
+}
+make_instruction_clone!(vector_int, int, _two_norm, Vec<i128>, 1);
+make_instruction_clone!(vector_float, float, _two_norm, Vec<Decimal>, 1);
+
+/// Takes the cumulative sum of a vector
+pub fn _cumulative_sum<T: NumericTrait + Clone>(vals: Vec<Vec<T>>) -> Option<Vec<T>> {
+    if vals[0].is_empty() {
+        return Some(vec![]);
+    }
+    let mut fin_num = T::zero();
+    let mut ret_vec = vec![];
+    for num in vals[0].clone().into_iter() {
+        fin_num = fin_num + num;
+        ret_vec.push(fin_num.clone());
+    }
+    Some(ret_vec)
+}
+make_instruction_clone!(vector_int, vector_int, _cumulative_sum, Vec<i128>, 1);
+make_instruction_clone!(vector_float, vector_float, _cumulative_sum, Vec<Decimal>, 1);
+
+/* /// Takes the cumulative mean of a vector
+pub fn _cumulative_mean<T: NumericTrait + Clone>(vals: Vec<Vec<T>>) -> Option<Vec<T>> {
+    if vals[0].is_empty() {
+        return Some(vec![]);
+    }
+    // This is not an efficient implementation
+    let mut ret_vec = vec![];
+    let mut cum_vec = vec![];
+    for (idx, val) in vals[0].iter().enumerate() {
+        cum_vec.push(val.clone());
+        let mut temp_sum = T::zero();
+        for num in &cum_vec {
+            temp_sum = temp_sum + num.clone();
+        }
+        temp_sum
+    }
+    Some(ret_vec)
+}
+make_instruction_clone!(vector_int, vector_int, _cumulative_mean, Vec<i128>, 1);
+make_instruction_clone!(
+    vector_float,
+    vector_float,
+    _cumulative_mean,
+    Vec<Decimal>,
+    1
+);*/
 
 #[cfg(test)]
 mod tests {
@@ -2329,5 +2441,65 @@ mod tests {
         test_state.vector_float = vec![vec![dec!(6.0), dec!(5.0), dec!(4.0)]];
         vector_float_mean(&mut test_state);
         assert_eq!(vec![dec!(5.0)], test_state.float);
+    }
+
+    #[test]
+    fn minimum_maximum_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.vector_int = vec![vec![0, 1, 2, 3, 4, 5, 2]];
+        vector_int_maximum(&mut test_state);
+        assert_eq!(vec![5], test_state.int);
+        test_state.int.clear();
+
+        test_state.vector_int = vec![vec![0, 1, 2, 3, 4, 5, 2]];
+        vector_int_minimum(&mut test_state);
+        assert_eq!(vec![0], test_state.int);
+    }
+
+    #[test]
+    fn sum_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.vector_int = vec![vec![0, 1, 2, 3, 4, 5, 2]];
+        vector_int_sum(&mut test_state);
+        assert_eq!(vec![17], test_state.int);
+    }
+
+    #[test]
+    fn mode_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.vector_int = vec![vec![0, 1, 2, 3, 4, 5, 2]];
+        vector_int_mode(&mut test_state);
+        assert_eq!(vec![2], test_state.int);
+        test_state.int.clear();
+
+        // returns the last mode to be calculated
+        test_state.vector_int = vec![vec![0, 1, 2, 3, 4, 5, 2, 4, 3]];
+        vector_int_mode(&mut test_state);
+        assert_eq!(vec![3], test_state.int);
+    }
+
+    #[test]
+    fn sqrt_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.vector_int = vec![vec![5, 5, 5, 5]];
+        vector_int_two_norm(&mut test_state);
+        assert_eq!(vec![10], test_state.int);
+
+        test_state.vector_float = vec![vec![dec!(5.0), dec!(5.0), dec!(5.0), dec!(5.0)]];
+        vector_float_two_norm(&mut test_state);
+        assert_eq!(vec!(dec!(10.0)), test_state.float);
+    }
+
+    #[test]
+    fn cumulative_sum_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.vector_int = vec![vec![0, 1, 2, 3, 4, 5, 2]];
+        vector_int_cumulative_sum(&mut test_state);
+        assert_eq!(vec![vec![0, 1, 3, 6, 10, 15, 17]], test_state.vector_int);
     }
 }

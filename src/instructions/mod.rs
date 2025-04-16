@@ -487,6 +487,13 @@ pub fn vector_int_instructions() -> Vec<fn(&mut PushState)> {
         vector_int_sort_reverse,
         vector_int_insert,
         vector_int_insert_vector,
+        vector_int_mean,
+        vector_int_maximum,
+        vector_int_minimum,
+        vector_int_sum,
+        vector_int_mode,
+        vector_int_two_norm,
+        vector_int_cumulative_sum,
         // common.rs
         vector_int_pop,
     ]
@@ -533,6 +540,13 @@ pub fn vector_float_instructions() -> Vec<fn(&mut PushState)> {
         vector_float_sort_reverse,
         vector_float_insert,
         vector_float_insert_vector,
+        vector_float_mean,
+        vector_float_maximum,
+        vector_float_minimum,
+        vector_float_sum,
+        vector_float_mode,
+        vector_float_two_norm,
+        vector_float_cumulative_sum,
         // common.rs
         vector_float_pop,
     ]
