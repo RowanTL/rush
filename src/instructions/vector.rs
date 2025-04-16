@@ -980,9 +980,10 @@ make_instruction_aux!(
 );
 make_instruction_aux!(string, int, _occurrences_of, Vec<char>, 1, char, 1, char);
 
+/// Counts the amount of continuous occurrences one vector appears in another.
 pub fn _occurrences_of_vector<T>(vals: Vec<Vec<T>>) -> Option<i128>
 where
-    T: Eq + Hash,
+    T: Eq,
 {
     if vals[0].is_empty() {
         return Some(0);
@@ -1007,13 +1008,27 @@ make_instruction_clone!(vector_boolean, int, _occurrences_of_vector, Vec<bool>, 
 make_instruction_clone!(vector_char, int, _occurrences_of_vector, Vec<char>, 2);
 make_instruction_clone!(string, int, _occurrences_of_vector, Vec<char>, 2);
 
-/// Pushes the values inside a vector to a primitive stack.
-pub fn _parse_to_prim<T>(vals: Vec<Vec<T>>) -> Option<Vec<T>>
+/// Pushes the values inside a vector separated into individual vectors back to
+/// the stack.
+pub fn _parse_to_prim<T>(vals: Vec<Vec<T>>) -> Option<Vec<Vec<T>>>
 where
     T: Clone,
+    Vec<T>: FromIterator<T>,
 {
-    Some(vals[0].clone())
+    Some(vals[0].clone().into_iter().map(|x| vec![x]).collect())
 }
+make_instruction_mult!(vector_int, vector_int, _parse_to_prim, Vec<i128>, 1);
+make_instruction_mult!(vector_float, vector_float, _parse_to_prim, Vec<Decimal>, 1);
+make_instruction_mult!(
+    vector_string,
+    vector_string,
+    _parse_to_prim,
+    Vec<Vec<char>>,
+    1
+);
+make_instruction_mult!(vector_boolean, vector_boolean, _parse_to_prim, Vec<bool>, 1);
+make_instruction_mult!(vector_char, vector_char, _parse_to_prim, Vec<char>, 1);
+make_instruction_mult!(string, string, _parse_to_prim, Vec<char>, 1);
 
 /// Sets the nth index in a vector. N from the int stack.
 pub fn _set_nth<T>(vals: Vec<Vec<T>>, aux0: Vec<T>, aux1: Vec<i128>) -> Option<Vec<T>>
@@ -1104,8 +1119,129 @@ make_instruction_aux2!(
     i128
 );
 
-/// Replaces all values in a vector with respect to two ints. The first int is the search value
-/// and the second value is the one to replace.
+/// Splits a vector based the first occurence of a primitive
+pub fn _split_on<T>(vals: Vec<Vec<T>>, auxs: Vec<T>) -> Option<Vec<Vec<T>>>
+where
+    T: Clone + Eq,
+    Vec<T>: FromIterator<T>,
+{
+    let mut final_vec = vec![];
+    let mut temp_vec = vec![];
+    for val in vals[0].iter() {
+        if &auxs[0] == val {
+            final_vec.push(temp_vec.clone());
+            temp_vec.clear();
+            continue;
+        }
+        temp_vec.push(val.clone());
+    }
+    if !temp_vec.is_empty() {
+        final_vec.push(temp_vec);
+    }
+    Some(final_vec)
+}
+make_instruction_mult_aux!(
+    vector_int,
+    vector_int,
+    _split_on,
+    Vec<i128>,
+    1,
+    int,
+    1,
+    i128
+);
+make_instruction_mult_aux!(
+    vector_float,
+    vector_float,
+    _split_on,
+    Vec<Decimal>,
+    1,
+    float,
+    1,
+    Decimal
+);
+make_instruction_mult_aux!(
+    vector_string,
+    vector_string,
+    _split_on,
+    Vec<Vec<char>>,
+    1,
+    string,
+    1,
+    Vec<char>
+);
+make_instruction_mult_aux!(
+    vector_boolean,
+    vector_boolean,
+    _split_on,
+    Vec<bool>,
+    1,
+    boolean,
+    1,
+    bool
+);
+make_instruction_mult_aux!(
+    vector_char,
+    vector_char,
+    _split_on,
+    Vec<char>,
+    1,
+    char,
+    1,
+    char
+);
+make_instruction_mult_aux!(string, string, _split_on, Vec<char>, 1, char, 1, char);
+
+/*/// Splits a vector based the first occurence of a primitive
+pub fn _split_on_vector<T>(vals: Vec<Vec<T>>) -> Option<Vec<Vec<T>>>
+where
+    T: Clone + Eq,
+{
+    if vals[0].is_empty() {
+        return Some(vec![vals[1]]);
+    }
+    let mut final_vec = vec![];
+    let mut temp_vec = vec![];
+    for val in vals[1].windows(vals[0].len()) {
+        if &auxs[0] == val {
+            final_vec.push(temp_vec.clone());
+            temp_vec.clear();
+            continue;
+        }
+        temp_vec.push(val.clone());
+    }
+    if !temp_vec.is_empty() {
+        final_vec.push(temp_vec);
+    }
+    Some(final_vec)
+}
+make_instruction_mult!(vector_int, vector_int, _split_on_vector, Vec<i128>, 1);
+make_instruction_mult!(
+    vector_float,
+    vector_float,
+    _split_on_vector,
+    Vec<Decimal>,
+    1
+);
+make_instruction_mult!(
+    vector_string,
+    vector_string,
+    _split_on_vector,
+    Vec<Vec<char>>,
+    1
+);
+make_instruction_mult!(
+    vector_boolean,
+    vector_boolean,
+    _split_on_vector,
+    Vec<bool>,
+    1
+);
+make_instruction_mult!(vector_char, vector_char, _split_on_vector, Vec<char>, 1);
+make_instruction_mult!(string, string, _split_on_vector, Vec<char>, 1);*/
+
+/// Replaces all values in a vector with respect to two primitives. The first primitive is
+/// the search value and the second value is the one to replace.
 pub fn _replace<T>(mut vals: Vec<Vec<T>>, auxs: Vec<T>) -> Option<Vec<T>>
 where
     T: Clone,
@@ -1167,6 +1303,64 @@ make_instruction_aux!(
     char
 );
 make_instruction_aux!(string, string, _replace, Vec<char>, 1, char, 2, char);
+
+/// Removes all values in a vector with respect to a primitives. If is equal, remove it.
+pub fn _remove<T>(vals: Vec<Vec<T>>, auxs: Vec<T>) -> Option<Vec<T>>
+where
+    T: Clone,
+    for<'a> &'a T: Eq,
+    Vec<T>: FromIterator<T>,
+{
+    let temp_vec = &vals[0];
+    let ret_vec = temp_vec
+        .iter()
+        .filter(|&x| x != &auxs[0])
+        .cloned()
+        .collect();
+    Some(ret_vec)
+}
+make_instruction_aux!(vector_int, vector_int, _remove, Vec<i128>, 1, int, 1, i128);
+make_instruction_aux!(
+    vector_float,
+    vector_float,
+    _remove,
+    Vec<Decimal>,
+    1,
+    float,
+    1,
+    Decimal
+);
+make_instruction_aux!(
+    vector_string,
+    vector_string,
+    _remove,
+    Vec<Vec<char>>,
+    1,
+    string,
+    1,
+    Vec<char>
+);
+make_instruction_aux!(
+    vector_boolean,
+    vector_boolean,
+    _remove,
+    Vec<bool>,
+    1,
+    boolean,
+    1,
+    bool
+);
+make_instruction_aux!(
+    vector_char,
+    vector_char,
+    _remove,
+    Vec<char>,
+    1,
+    char,
+    1,
+    char
+);
+make_instruction_aux!(string, string, _remove, Vec<char>, 1, char, 1, char);
 
 #[cfg(test)]
 mod tests {
@@ -1733,6 +1927,45 @@ mod tests {
     }
 
     #[test]
+    fn parse_to_prim_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.vector_int = vec![vec![0, 1, 2]];
+        vector_int_parse_to_prim(&mut test_state);
+        assert_eq!(vec![vec![0], vec![1], vec![2]], test_state.vector_int);
+    }
+
+    #[test]
+    fn split_on_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.vector_int = vec![vec![0, 1, 2]];
+        test_state.int = vec![1];
+        vector_int_split_on(&mut test_state);
+        assert_eq!(vec![vec![0], vec![2]], test_state.vector_int);
+
+        test_state.vector_int = vec![vec![0, 1, 2, 1, 5]];
+        test_state.int = vec![1];
+        vector_int_split_on(&mut test_state);
+        assert_eq!(vec![vec![0], vec![2], vec![5]], test_state.vector_int);
+
+        test_state.vector_int = vec![vec![0, 1, 2, 1]];
+        test_state.int = vec![1];
+        vector_int_split_on(&mut test_state);
+        assert_eq!(vec![vec![0], vec![2]], test_state.vector_int);
+
+        test_state.vector_int = vec![vec![0, 1, 2, 1]];
+        test_state.int = vec![9];
+        vector_int_split_on(&mut test_state);
+        assert_eq!(vec![vec![0, 1, 2, 1]], test_state.vector_int);
+
+        test_state.vector_int = vec![vec![0, 1, 2, 3]];
+        test_state.int = vec![3];
+        vector_int_split_on(&mut test_state);
+        assert_eq!(vec![vec![0, 1, 2]], test_state.vector_int);
+    }
+
+    #[test]
     fn replace_test() {
         let mut test_state = EMPTY_STATE;
 
@@ -1740,5 +1973,25 @@ mod tests {
         test_state.int = vec![3, 2];
         vector_int_replace(&mut test_state);
         assert_eq!(vec![vec![0, 1, 3, 3, 4, 5, 3]], test_state.vector_int);
+    }
+
+    #[test]
+    fn remove_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.vector_int = vec![vec![0, 1, 2, 3, 4, 5, 2]];
+        test_state.int = vec![3];
+        vector_int_remove(&mut test_state);
+        assert_eq!(vec![vec![0, 1, 2, 4, 5, 2]], test_state.vector_int);
+
+        test_state.vector_int = vec![vec![0, 1, 2, 3, 4, 5, 2]];
+        test_state.int = vec![2];
+        vector_int_remove(&mut test_state);
+        assert_eq!(vec![vec![0, 1, 3, 4, 5]], test_state.vector_int);
+
+        test_state.vector_int = vec![vec![0, 1, 2, 3, 4, 5, 2]];
+        test_state.int = vec![9];
+        vector_int_remove(&mut test_state);
+        assert_eq!(vec![vec![0, 1, 2, 3, 4, 5, 2]], test_state.vector_int);
     }
 }

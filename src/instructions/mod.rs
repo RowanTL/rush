@@ -129,7 +129,7 @@ pub mod macros {
                         for _ in 0..$fn_arity {
                             state.$in_stack.pop();
                         }
-                        state.$out_stack.extend(result.iter());
+                        state.$out_stack.extend(result.into_iter());
                     }
                 }
             }
@@ -198,6 +198,42 @@ pub mod macros {
                             state.$in_stack.pop();
                         }
                         state.$out_stack.push(result);
+                    }
+                }
+            }
+        };
+    }
+
+    /// Same as make_instruction_mult but can handle one auxiliary variable.
+    #[macro_export]
+    macro_rules! make_instruction_mult_aux {
+        ($in_stack:ident, $out_stack:ident, $fn_name:ident, $fn_type:ty, $fn_arity:stmt, $aux_stack:ident, $aux_arity:stmt, $aux_type:ty) => {
+            paste::item! {
+                /// Runs the $fn_name function on the top $fn_arity items from
+                /// the $in_stack and places the calculated value on the $out_stack.
+                /// $aux_stack is also used and popped $aux_arity time(s).
+                pub fn [< $in_stack $fn_name >] (state: &mut PushState) {
+                    let in_stack_len = state.$in_stack.len();
+                    let aux_stack_len = state.$aux_stack.len();
+                    if in_stack_len < $fn_arity || aux_stack_len < $aux_arity {
+                        return;
+                    }
+                    let mut inputs: Vec<$fn_type> = Vec::with_capacity($fn_arity);
+                    let mut aux_inputs: Vec<$aux_type> = Vec::with_capacity($aux_arity);
+                    for n in 1..=$aux_arity {
+                        aux_inputs.push(state.$aux_stack[aux_stack_len - n].clone());
+                    }
+                    for n in 1..=$fn_arity {
+                        inputs.push(state.$in_stack[in_stack_len - n].clone());
+                    }
+                    if let Some(result) = $fn_name(inputs, aux_inputs) {
+                        for _ in 0..$aux_arity {
+                            state.$aux_stack.pop();
+                        }
+                        for _ in 0..$fn_arity {
+                            state.$in_stack.pop();
+                        }
+                        state.$out_stack.extend(result.into_iter());
                     }
                 }
             }
@@ -377,8 +413,11 @@ pub fn string_instructions() -> Vec<fn(&mut PushState)> {
         string_index_of_vector,
         string_occurrences_of,
         string_occurrences_of_vector,
+        string_parse_to_prim,
         string_set_nth,
+        string_split_on,
         string_replace,
+        string_remove,
         // common.rs
         string_pop,
     ]
@@ -436,8 +475,11 @@ pub fn vector_int_instructions() -> Vec<fn(&mut PushState)> {
         vector_int_index_of_vector,
         vector_int_occurrences_of,
         vector_int_occurrences_of_vector,
+        vector_int_parse_to_prim,
         vector_int_set_nth,
+        vector_int_split_on,
         vector_int_replace,
+        vector_int_remove,
         // common.rs
         vector_int_pop,
     ]
@@ -474,8 +516,11 @@ pub fn vector_float_instructions() -> Vec<fn(&mut PushState)> {
         vector_float_index_of_vector,
         vector_float_occurrences_of,
         vector_float_occurrences_of_vector,
+        vector_float_parse_to_prim,
         vector_float_set_nth,
+        vector_float_split_on,
         vector_float_replace,
+        vector_float_remove,
         // common.rs
         vector_float_pop,
     ]
@@ -511,8 +556,11 @@ pub fn vector_string_instructions() -> Vec<fn(&mut PushState)> {
         vector_string_index_of_vector,
         vector_string_occurrences_of,
         vector_string_occurrences_of_vector,
+        vector_string_parse_to_prim,
         vector_string_set_nth,
+        vector_string_split_on,
         vector_string_replace,
+        vector_string_remove,
         // common.rs
         vector_string_pop,
     ]
@@ -549,8 +597,11 @@ pub fn vector_boolean_instructions() -> Vec<fn(&mut PushState)> {
         vector_boolean_index_of_vector,
         vector_boolean_occurrences_of,
         vector_boolean_occurrences_of_vector,
+        vector_boolean_parse_to_prim,
         vector_boolean_set_nth,
+        vector_boolean_split_on,
         vector_boolean_replace,
+        vector_boolean_remove,
         // common.rs
         vector_boolean_pop,
     ]
@@ -587,8 +638,11 @@ pub fn vector_char_instructions() -> Vec<fn(&mut PushState)> {
         vector_char_index_of_vector,
         vector_char_occurrences_of,
         vector_char_occurrences_of_vector,
+        vector_char_parse_to_prim,
         vector_char_set_nth,
+        vector_char_split_on,
         vector_char_replace,
+        vector_char_remove,
         // common.rs
         vector_char_pop,
     ]
