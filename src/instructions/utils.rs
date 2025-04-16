@@ -1,6 +1,6 @@
 use rust_decimal::Decimal;
 use rust_decimal::prelude::*;
-use std::ops::Div;
+use std::ops::{Add, Div};
 
 /// This trait houses various methods for making instructions
 /// more generic instead of declaring a separate function for each
@@ -8,7 +8,7 @@ use std::ops::Div;
 ///
 /// Trig functions named safe rather than checked to not overlap
 /// with Decimal library's checked function names.
-pub trait NumericTrait: Sized + Div<Output = Self> + Ord {
+pub trait NumericTrait: Sized + Add<Output = Self> + Div<Output = Self> + Ord {
     fn checked_div(self, v: Self) -> Option<Self>;
     fn checked_mod(self, v: Self) -> Option<Self>;
     fn increment(self) -> Self;
@@ -23,6 +23,8 @@ pub trait NumericTrait: Sized + Div<Output = Self> + Ord {
     fn safe_sqrt(self) -> Option<Self>;
     fn sign_reverse(self) -> Self;
     fn square(self) -> Self;
+    fn zero() -> Self;
+    fn from_usize(num: usize) -> Self;
 }
 
 impl NumericTrait for Decimal {
@@ -67,6 +69,12 @@ impl NumericTrait for Decimal {
     }
     fn square(self) -> Self {
         self * self
+    }
+    fn zero() -> Self {
+        dec!(0.0)
+    }
+    fn from_usize(num: usize) -> Self {
+        Decimal::new(num as i64, 0)
     }
 }
 
@@ -117,6 +125,12 @@ impl NumericTrait for i128 {
     }
     fn square(self) -> Self {
         self * self
+    }
+    fn zero() -> Self {
+        0
+    }
+    fn from_usize(num: usize) -> Self {
+        num as Self
     }
 }
 

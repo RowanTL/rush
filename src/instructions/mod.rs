@@ -418,6 +418,8 @@ pub fn string_instructions() -> Vec<fn(&mut PushState)> {
         string_split_on,
         string_replace,
         string_remove,
+        string_insert,
+        string_insert_vector,
         // common.rs
         string_pop,
     ]
@@ -480,6 +482,11 @@ pub fn vector_int_instructions() -> Vec<fn(&mut PushState)> {
         vector_int_split_on,
         vector_int_replace,
         vector_int_remove,
+        vector_int_iterate,
+        vector_int_sort,
+        vector_int_sort_reverse,
+        vector_int_insert,
+        vector_int_insert_vector,
         // common.rs
         vector_int_pop,
     ]
@@ -521,6 +528,11 @@ pub fn vector_float_instructions() -> Vec<fn(&mut PushState)> {
         vector_float_split_on,
         vector_float_replace,
         vector_float_remove,
+        vector_float_iterate,
+        vector_float_sort,
+        vector_float_sort_reverse,
+        vector_float_insert,
+        vector_float_insert_vector,
         // common.rs
         vector_float_pop,
     ]
@@ -561,6 +573,8 @@ pub fn vector_string_instructions() -> Vec<fn(&mut PushState)> {
         vector_string_split_on,
         vector_string_replace,
         vector_string_remove,
+        vector_string_insert,
+        vector_string_insert_vector,
         // common.rs
         vector_string_pop,
     ]
@@ -602,6 +616,9 @@ pub fn vector_boolean_instructions() -> Vec<fn(&mut PushState)> {
         vector_boolean_split_on,
         vector_boolean_replace,
         vector_boolean_remove,
+        vector_boolean_iterate,
+        vector_boolean_insert,
+        vector_boolean_insert_vector,
         // common.rs
         vector_boolean_pop,
     ]
@@ -643,6 +660,9 @@ pub fn vector_char_instructions() -> Vec<fn(&mut PushState)> {
         vector_char_split_on,
         vector_char_replace,
         vector_char_remove,
+        vector_char_iterate,
+        vector_char_insert,
+        vector_char_insert_vector,
         // common.rs
         vector_char_pop,
     ]

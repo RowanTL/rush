@@ -1,3 +1,4 @@
+use crate::instructions::utils::NumericTrait;
 use crate::push::state::{Gene, PushState};
 use rust_decimal::Decimal;
 use std::collections::HashSet;
@@ -1396,12 +1397,198 @@ make_iterate!(vector_boolean, boolean, GeneVectorBoolean);
 make_iterate!(vector_char, char, GeneVectorChar);
 //make_iterate!(string, string, GeneString);
 
+/// Sorts a vector
+pub fn _sort<T>(mut vals: Vec<Vec<T>>) -> Option<Vec<T>>
+where
+    T: NumericTrait + Clone,
+{
+    vals[0].sort();
+    Some(vals[0].clone())
+}
+make_instruction_clone!(vector_int, vector_int, _sort, Vec<i128>, 1);
+make_instruction_clone!(vector_float, vector_float, _sort, Vec<Decimal>, 1);
+
+/// Sorts a vector and reverses it
+pub fn _sort_reverse<T>(mut vals: Vec<Vec<T>>) -> Option<Vec<T>>
+where
+    T: NumericTrait + Clone,
+{
+    vals[0].sort();
+    vals[0].reverse();
+    Some(vals[0].clone())
+}
+make_instruction_clone!(vector_int, vector_int, _sort_reverse, Vec<i128>, 1);
+make_instruction_clone!(vector_float, vector_float, _sort_reverse, Vec<Decimal>, 1);
+
+/// Inserts a primitive into a vector at a given point from the int stack
+pub fn _insert<T>(mut vals: Vec<Vec<T>>, auxs: Vec<T>, auxs2: Vec<i128>) -> Option<Vec<T>>
+where
+    T: Clone,
+{
+    let vec_len = vals[0].len();
+    vals[0].insert(bounded_idx(auxs2[0], vec_len), auxs[0].clone());
+    Some(vals[0].clone())
+}
+make_instruction_aux2!(
+    vector_int,
+    vector_int,
+    _insert,
+    Vec<i128>,
+    1,
+    int,
+    1,
+    i128,
+    int,
+    1,
+    i128
+);
+make_instruction_aux2!(
+    vector_float,
+    vector_float,
+    _insert,
+    Vec<Decimal>,
+    1,
+    float,
+    1,
+    Decimal,
+    int,
+    1,
+    i128
+);
+make_instruction_aux2!(
+    vector_string,
+    vector_string,
+    _insert,
+    Vec<Vec<char>>,
+    1,
+    string,
+    1,
+    Vec<char>,
+    int,
+    1,
+    i128
+);
+make_instruction_aux2!(
+    vector_boolean,
+    vector_boolean,
+    _insert,
+    Vec<bool>,
+    1,
+    boolean,
+    1,
+    bool,
+    int,
+    1,
+    i128
+);
+make_instruction_aux2!(
+    vector_char,
+    vector_char,
+    _insert,
+    Vec<char>,
+    1,
+    char,
+    1,
+    char,
+    int,
+    1,
+    i128
+);
+make_instruction_aux2!(
+    string,
+    string,
+    _insert,
+    Vec<char>,
+    1,
+    char,
+    1,
+    char,
+    int,
+    1,
+    i128
+);
+
+/// Inserts one vector into another based on an index.
+pub fn _insert_vector<T>(mut vals: Vec<Vec<T>>, auxs: Vec<i128>) -> Option<Vec<T>>
+where
+    T: Clone,
+{
+    let vec_len = vals[0].len();
+    let idx = bounded_idx(auxs[0], vec_len);
+    let insert_list = vals[0].clone();
+    vals[1].splice(idx..idx, insert_list);
+    Some(vals[1].clone())
+}
+make_instruction_aux!(
+    vector_int,
+    vector_int,
+    _insert_vector,
+    Vec<i128>,
+    2,
+    int,
+    1,
+    i128
+);
+make_instruction_aux!(
+    vector_float,
+    vector_float,
+    _insert_vector,
+    Vec<Decimal>,
+    2,
+    int,
+    1,
+    i128
+);
+make_instruction_aux!(
+    vector_string,
+    vector_string,
+    _insert_vector,
+    Vec<Vec<char>>,
+    2,
+    int,
+    1,
+    i128
+);
+make_instruction_aux!(
+    vector_boolean,
+    vector_boolean,
+    _insert_vector,
+    Vec<bool>,
+    2,
+    int,
+    1,
+    i128
+);
+make_instruction_aux!(
+    vector_char,
+    vector_char,
+    _insert_vector,
+    Vec<char>,
+    2,
+    int,
+    1,
+    i128
+);
+make_instruction_aux!(string, string, _insert_vector, Vec<char>, 2, int, 1, i128);
+
+/// Takes the mean of a vector
+pub fn _mean<T: NumericTrait + Clone>(vals: Vec<Vec<T>>) -> Option<T> {
+    let mut fin_num = T::zero();
+    for num in vals[0].clone().into_iter() {
+        fin_num = fin_num + num;
+    }
+    Some(fin_num.div(T::from_usize(vals[0].len())))
+}
+make_instruction_clone!(vector_int, int, _mean, Vec<i128>, 1);
+make_instruction_clone!(vector_float, float, _mean, Vec<Decimal>, 1);
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::instructions::numeric::int_inc;
     use crate::push::interpreter::interpret_program;
     use crate::push::state::EMPTY_STATE;
+    use rust_decimal::dec;
 
     #[test]
     fn vector_concat_test() {
@@ -2041,7 +2228,106 @@ mod tests {
             Gene::StateFunc(vector_int_iterate),
         ];
         interpret_program(&mut test_state, 1000, 1000);
-        println!("{:?}", test_state);
         assert_eq!(vec![1, 2, 3, 4, 5, 6, 3], test_state.int);
+    }
+
+    #[test]
+    fn sort_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.vector_int = vec![vec![0, 1, 2, 3, 4, 5, 2]];
+        vector_int_sort(&mut test_state);
+        assert_eq!(vec![vec![0, 1, 2, 2, 3, 4, 5]], test_state.vector_int);
+
+        test_state.vector_float = vec![vec![dec!(0.0), dec!(1.2), dec!(-3.4)]];
+        vector_float_sort(&mut test_state);
+        assert_eq!(
+            vec![vec![dec!(-3.4), dec!(0.0), dec!(1.2)]],
+            test_state.vector_float
+        );
+
+        test_state.vector_int = vec![vec![]];
+        vector_int_sort(&mut test_state);
+        assert_eq!(vec![Vec::<i128>::new()], test_state.vector_int);
+    }
+
+    #[test]
+    fn sort_reverse_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.vector_int = vec![vec![0, 1, 2, 3, 4, 5, 2]];
+        vector_int_sort_reverse(&mut test_state);
+        assert_eq!(vec![vec![5, 4, 3, 2, 2, 1, 0]], test_state.vector_int);
+
+        test_state.vector_float = vec![vec![dec!(0.0), dec!(1.2), dec!(-3.4)]];
+        vector_float_sort_reverse(&mut test_state);
+        assert_eq!(
+            vec![vec![dec!(1.2), dec!(0.0), dec!(-3.4)]],
+            test_state.vector_float
+        );
+
+        test_state.vector_int = vec![vec![]];
+        vector_int_sort_reverse(&mut test_state);
+        assert_eq!(vec![Vec::<i128>::new()], test_state.vector_int);
+    }
+
+    #[test]
+    fn insert_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.vector_int = vec![vec![0, 1, 2, 3]];
+        test_state.int = vec![9, 1];
+        vector_int_insert(&mut test_state);
+        assert_eq!(vec![vec![0, 9, 1, 2, 3]], test_state.vector_int);
+
+        test_state.vector_boolean = vec![vec![false, true, false]];
+        test_state.int = vec![0];
+        test_state.boolean = vec![false];
+        vector_boolean_insert(&mut test_state);
+        assert_eq!(
+            vec![vec![false, false, true, false]],
+            test_state.vector_boolean
+        );
+
+        test_state.vector_int = vec![vec![0, 1, 2, 3]];
+        test_state.int = vec![9, 5];
+        vector_int_insert(&mut test_state);
+        assert_eq!(vec![vec![0, 9, 1, 2, 3]], test_state.vector_int);
+    }
+
+    #[test]
+    fn insert_vector_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.vector_int = vec![vec![0, 1, 2, 3], vec![69, 69]];
+        test_state.int = vec![1];
+        vector_int_insert_vector(&mut test_state);
+        assert_eq!(vec![vec![0, 69, 69, 1, 2, 3]], test_state.vector_int);
+
+        test_state.vector_boolean = vec![vec![false, true, false], vec![false, true]];
+        test_state.int = vec![0];
+        vector_boolean_insert_vector(&mut test_state);
+        assert_eq!(
+            vec![vec![false, true, false, true, false]],
+            test_state.vector_boolean
+        );
+
+        test_state.vector_int = vec![vec![0, 1, 2, 3], vec![69, 69]];
+        test_state.int = vec![5];
+        vector_int_insert_vector(&mut test_state);
+        assert_eq!(vec![vec![0, 69, 69, 1, 2, 3]], test_state.vector_int);
+    }
+
+    #[test]
+    fn mean_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.vector_int = vec![vec![6, 5, 4]];
+        vector_int_mean(&mut test_state);
+        assert_eq!(vec![5], test_state.int);
+
+        test_state.vector_float = vec![vec![dec!(6.0), dec!(5.0), dec!(4.0)]];
+        vector_float_mean(&mut test_state);
+        assert_eq!(vec![dec!(5.0)], test_state.float);
     }
 }
