@@ -224,7 +224,12 @@ pub mod macros {
                         aux_inputs.push(state.$aux_stack[aux_stack_len - n].clone());
                     }
                     for n in 1..=$fn_arity {
-                        inputs.push(state.$in_stack[in_stack_len - n].clone());
+                        if std::any::type_name::<$fn_type>() == std::any::type_name::<$aux_type>() {
+                            inputs.push(state.$in_stack[in_stack_len - $aux_arity - n].clone());
+                        } else {
+                            inputs.push(state.$in_stack[in_stack_len - n].clone());
+                        }
+                        //inputs.push(state.$in_stack[in_stack_len - n].clone());
                     }
                     if let Some(result) = $fn_name(inputs, aux_inputs) {
                         for _ in 0..$aux_arity {
