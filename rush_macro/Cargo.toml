@@ -1,0 +1,9 @@
+[package]
+name = "rush_macro"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+syn = { version = "2.0.100" }
+quote = { version = "1.0.40" }
+proc_macro2 = { version = "1.0.95" }
