@@ -328,7 +328,7 @@ pub mod macros {
 
     /// Runs a given function passed in the first argument with all the sequential arguments
     /// in order.
-    macro_rules! run_func {
+    macro_rules! run_func_old {
         () => {};
         ($func:ident, $($args:expr), *) => {
             $func($($args), *)
@@ -794,7 +794,7 @@ mod tests {
         }
 
         pub fn make_instruction_expr_test() -> usize {
-            run_func!(uadd, 1, 2, 3)
+            run_func_old!(uadd, 1, 2, 3)
         }
 
         let res = make_instruction_expr_test();

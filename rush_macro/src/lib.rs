@@ -1,5 +1,13 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
+use crate::utils::varfunc::VarFunc;
+use quote::quote;
+use syn::parse_macro_input;
+
+mod utils;
+
+#[proc_macro]
+pub fn run_func(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let f = parse_macro_input!(input as VarFunc);
+    quote! { #f }.into()
 }
 
 #[cfg(test)]
@@ -8,7 +16,6 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+        assert!(true);
     }
 }
