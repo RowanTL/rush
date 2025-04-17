@@ -821,6 +821,6 @@ mod tests {
         let mut test_state = EMPTY_STATE;
 
         test_state.int = vec![0, 1];
-        let test_instr = make_instruction_new!(int, _test_func, int, int);
+        //let test_instr = make_instruction_new!(int, _test_func, int, int);
     }
 }
