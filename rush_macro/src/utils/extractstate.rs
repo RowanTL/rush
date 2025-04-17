@@ -12,7 +12,7 @@ use quote::{ToTokens, quote};
 use std::cmp::PartialEq;
 use syn::parse::{Parse, ParseStream};
 
-struct Extract {
+pub struct Extract {
     state: State,
     stacks: Vec<Stack>,
 }
@@ -27,8 +27,23 @@ impl Parse for Extract {
 
 impl ToTokens for Extract {
     fn to_tokens(&self, tokens: &mut TokenStream2) {
-        let state = &self.state;
+        let inner_state = &self.state.0;
         let stacks = &self.stacks;
+
+        let mut counts = Vec::new();
+        for stack in stacks {
+            match counts.iter_mut().find(|(x, _)| x == stack) {
+                Some((_, count)) => *count += 1,
+                None => counts.push((stack, 1)),
+            }
+        }
+
+        for (stack, count) in counts {
+            let inner_stack = &stack.0;
+            tokens.extend(quote! {
+                #inner_state.#inner_stack < #count
+            })
+        }
     }
 }
 
