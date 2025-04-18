@@ -64,7 +64,6 @@ impl ToTokens for Extract {
             }
         }
 
-        // Ensure stacks have enough values
         let conditions = counts.iter().map(|(stack, count)| {
             let inner_stack = &stack.0;
             quote! { #inner_state.#inner_stack.len() >= #count }
@@ -77,7 +76,7 @@ impl ToTokens for Extract {
             quote! { let #var_name = #inner_state.#inner_stack.pop().unwrap(); }
         });
 
-        // Create slices of variable names for restoration
+        // Create slices of variable names for restoration and function call
         let value_vars = (0..stacks.len())
             .map(|i| quote::format_ident!("val_{}", i))
             .collect::<Vec<_>>();
@@ -88,13 +87,12 @@ impl ToTokens for Extract {
             .zip(value_vars.iter().rev())
             .map(|(stack, var)| {
                 let inner_stack = &&stack.0;
-                quote! { #inner_state.#inner_stack.push(#var); }
+                quote! { #inner_state.#inner_stack.push(#var.clone()); }
             });
 
-        // Run the function using auxiliary mode if needed
         let aux_run = match aux {
             true => quote! {
-                let result = #inner_func(#(#value_vars),*);
+                let result = #inner_func(#(#value_vars.clone()),*);
                 if let Some(result) = result {
                     #inner_state.#inner_out_stack.extend(result.iter());
                 } else {
@@ -102,7 +100,7 @@ impl ToTokens for Extract {
                 }
             },
             false => quote! {
-                let result = #inner_func(#(#value_vars),*);
+                let result = #inner_func(#(#value_vars.clone()),*);
                 if let Some(result) = result {
                     #inner_state.#inner_out_stack.push(result);
                 } else {

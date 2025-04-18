@@ -9,6 +9,10 @@ fn aux_iadd(x: i128, y: i128) -> Option<Vec<i128>> {
     Some(vec![x + y, x - y])
 }
 
+fn two_stacks(x: i128, y: i128, cond: bool) -> Option<i128> {
+    if cond { Some(x + y) } else { Some(x - y) }
+}
+
 #[test]
 fn run_extract_test() {
     let mut test_state = EMPTY_STATE;
@@ -26,4 +30,8 @@ fn run_extract_test() {
     test_state.int = vec![1, 2];
     run_instruction!(aux_iadd, int, test_state, int, int;);
     assert_eq!(vec![3, 1], test_state.int);
+
+    test_state.int = vec![1, 2];
+    test_state.boolean = vec![true];
+    run_instruction!(two_stacks, int, test_state, int, int, boolean);
 }
