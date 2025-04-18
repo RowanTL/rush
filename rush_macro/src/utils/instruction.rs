@@ -76,12 +76,14 @@ impl ToTokens for Extract {
 
         let aux_run = match aux {
             true => quote! {
-                let result = #inner_func(#(#values),*);
-                #inner_state.#inner_out_stack.extend(result.iter());
+                if let Some(result) = #inner_func(#(#values),*) {
+                    #inner_state.#inner_out_stack.extend(result.iter());
+                }
             },
             false => quote! {
-                let result = #inner_func(#(#values),*);
-                #inner_state.#inner_out_stack.push(result);
+                if let Some(result) = #inner_func(#(#values),*) {
+                    #inner_state.#inner_out_stack.push(result);
+                }
             },
         };
 

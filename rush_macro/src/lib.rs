@@ -24,10 +24,10 @@ mod utils;
 /// If there are not enough items in the stack to run the function, it
 /// will not be called.
 ///
-/// An function with multiple outputs, for example this one:
+/// A function with multiple outputs, for example this one:
 /// ```
-/// fn aux_iadd(x: i128, y: i128) -> Vec<i128> {
-///     vec![x + y, x - y]
+/// fn aux_iadd(x: i128, y: i128) -> Option<Vec<i128>> {
+///     Some(vec![x + y, x - y])
 /// }
 ///
 /// run_instruction!(aux_iadd, int, state, int, int;);

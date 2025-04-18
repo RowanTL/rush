@@ -1,12 +1,12 @@
 use rush::push::state::EMPTY_STATE;
 use rush_macro::run_instruction;
 
-fn iadd(x: i128, y: i128) -> i128 {
-    x + y
+fn iadd(x: i128, y: i128) -> Option<i128> {
+    Some(x + y)
 }
 
-fn aux_iadd(x: i128, y: i128) -> Vec<i128> {
-    vec![x + y, x - y]
+fn aux_iadd(x: i128, y: i128) -> Option<Vec<i128>> {
+    Some(vec![x + y, x - y])
 }
 
 #[test]

@@ -13,14 +13,13 @@ use std::ops::{Add, Div, Mul, Sub};
 use super::utils::{CastingTrait, NumericTrait};
 
 /// Adds two addable values together.
-fn _add<T>(vals: Vec<T>) -> Option<T>
+fn _add<T>(b: T, a: T) -> Option<T>
 where
     T: Add<Output = T> + Copy,
 {
-    Some(vals[1] + vals[0])
+    Some(b + a)
 }
-make_instruction!(int, int, _add, i128, 2);
-make_instruction!(float, float, _add, Decimal, 2);
+make_instruction_new!(_add, int, int, int, int);
 
 /// Subtracts two subtractable values from each other.
 fn _sub<T>(vals: Vec<T>) -> Option<T>
