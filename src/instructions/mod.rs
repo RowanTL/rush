@@ -4,7 +4,7 @@ use crate::instructions::logical::*;
 use crate::instructions::numeric::*;
 use crate::instructions::vector::*;
 use crate::push::state::PushState;
-use rush_macro::{run_canextract, run_extractidents, run_func};
+use rush_macro::run_instruction;
 
 #[macro_use]
 pub mod macros {
@@ -307,12 +307,10 @@ pub mod macros {
 
     /// Runs a function and ensures needed variables are extracted from a state without error
     macro_rules! make_instruction_new {
-        ($prefix:ident, $func:ident, $($stacks:ident), *) => {
+        ($func:ident, $prefix:ident, $out_stack:ident, $($stacks:ident), *) => {
             paste::item! {
                 pub fn [< $prefix $func >] (state: &mut PushState) {
-                    if run_canextract!(state, run_extractidents!($($stacks), *)) {
-                        $func extract_state_vals!(state, $($stacks), *)
-                    }
+                    run_instruction!($func, $out_stack, state, $($stacks), *);
                 }
             }
         };
@@ -799,7 +797,9 @@ mod tests {
 
         let mut test_state = EMPTY_STATE;
 
-        test_state.int = vec![0, 1];
-        let test_instr = make_instruction_new!(int, _test_func, int, int);
+        test_state.int = vec![1, 2];
+        make_instruction_new!(_test_func, int, int, int, int);
+        int_test_func(&mut test_state);
+        assert_eq!(vec![3], test_state.int);
     }
 }
