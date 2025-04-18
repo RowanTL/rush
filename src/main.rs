@@ -21,4 +21,10 @@ fn main() {
     code_instructions();
     let mut empty_state = EMPTY_STATE;
     interpret_program(&mut empty_state, 1000, 1000);
+
+    let mut counts: Vec<(&str, usize)> = vec![];
+    counts.push(("int", 2));
+    counts.push(("float", 1));
+
+    // counts.iter().map()
 }

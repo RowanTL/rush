@@ -4,6 +4,7 @@ use crate::instructions::logical::*;
 use crate::instructions::numeric::*;
 use crate::instructions::vector::*;
 use crate::push::state::PushState;
+use rush_macro::{run_canextract, run_extractidents, run_func};
 
 #[macro_use]
 pub mod macros {
@@ -309,7 +310,9 @@ pub mod macros {
         ($prefix:ident, $func:ident, $($stacks:ident), *) => {
             paste::item! {
                 pub fn [< $prefix $func >] (state: &mut PushState) {
-                    run_func!($func, extract_state_vals!(state, $($stacks), *))
+                    if run_canextract!(state, run_extractidents!($($stacks), *)) {
+                        $func extract_state_vals!(state, $($stacks), *)
+                    }
                 }
             }
         };
@@ -324,16 +327,6 @@ pub mod macros {
         ($state:ident, $stack:ident, $($rest:ident), *) => {
             ($state.$stack.pop().unwrap(), $(extract_state_vals!($state, $rest)), *)
         };
-    }
-
-    /// Runs a given function passed in the first argument with all the sequential arguments
-    /// in order.
-    macro_rules! run_func_old {
-        () => {};
-        ($func:ident, $($args:expr), *) => {
-            $func($($args), *)
-        };
-        ($($args:expr), *) => { $args, run_func!(*) };
     }
 }
 
@@ -788,20 +781,6 @@ mod tests {
     use crate::push::state::EMPTY_STATE;
 
     #[test]
-    fn run_func_test() {
-        pub fn uadd(x: usize, y: usize, z: usize) -> usize {
-            x + y + z
-        }
-
-        pub fn make_instruction_expr_test() -> usize {
-            run_func_old!(uadd, 1, 2, 3)
-        }
-
-        let res = make_instruction_expr_test();
-        assert_eq!(res, 6);
-    }
-
-    #[test]
     fn extract_state_vals_test() {
         let mut test_state = EMPTY_STATE;
 
@@ -821,6 +800,6 @@ mod tests {
         let mut test_state = EMPTY_STATE;
 
         test_state.int = vec![0, 1];
-        //let test_instr = make_instruction_new!(int, _test_func, int, int);
+        let test_instr = make_instruction_new!(int, _test_func, int, int);
     }
 }

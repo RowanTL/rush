@@ -1,6 +1,8 @@
 use syn::parse::{Parse, ParseStream};
 
-pub mod extractstate;
+pub mod canextractstate;
+pub mod extractidents;
+mod extractstate;
 pub mod varfunc;
 
 fn parse_zero_or_more<T: Parse>(input: ParseStream) -> Vec<T> {
