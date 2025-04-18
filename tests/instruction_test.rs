@@ -5,6 +5,10 @@ fn iadd(x: i128, y: i128) -> i128 {
     x + y
 }
 
+fn aux_iadd(x: i128, y: i128) -> Vec<i128> {
+    vec![x + y, x - y]
+}
+
 #[test]
 fn run_extract_test() {
     let mut test_state = EMPTY_STATE;
@@ -13,7 +17,13 @@ fn run_extract_test() {
     run_instruction!(iadd, int, test_state, int, int);
     assert_eq!(vec![3], test_state.int);
 
-    /*test_state.int = vec![1];
+    test_state.int = vec![1];
     run_instruction!(iadd, int, test_state, int, int);
-    assert_eq!(vec![1], test_state.int);*/
+    assert_eq!(vec![1], test_state.int);
+
+    // If you're coming from the run_instruction docs, this is
+    // the one.
+    test_state.int = vec![1, 2];
+    run_instruction!(aux_iadd, int, test_state, int, int;);
+    assert_eq!(vec![3, 1], test_state.int);
 }

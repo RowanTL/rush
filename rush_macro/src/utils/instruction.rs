@@ -1,11 +1,13 @@
-// This Stack that isn't repeated is the desired output stack.
-// Extract: Function, Stack, State, (`,` Stack)*
-//
-// Function: identifier
-//
-// State: identifier
-//
-// Stack: identifier
+//! This Stack that isn't repeated is the desired output stack.
+//! Extract: Function, Stack, State, (`,` Stack)* ;?
+//!
+//! Function: identifier
+//!
+//! State: identifier
+//!
+//! Stack: identifier
+//!
+//! Aux: expression
 
 use crate::utils::parse_zero_or_more;
 use proc_macro2::TokenStream as TokenStream2;
@@ -13,11 +15,20 @@ use quote::{ToTokens, quote};
 use std::cmp::PartialEq;
 use syn::parse::{Parse, ParseStream};
 
+/// Checks if there is a semicolon at the end
+fn parse_aux<T: Parse>(input: ParseStream) -> bool {
+    if let Ok(_) = input.parse::<syn::Token![;]>() {
+        return true;
+    }
+    false
+}
+
 pub struct Extract {
     func: Function,
     out_stack: Stack,
     state: State,
     stacks: Vec<Stack>,
+    aux: bool,
 }
 
 impl Parse for Extract {
@@ -26,11 +37,13 @@ impl Parse for Extract {
         let out_stack = input.parse()?;
         let state = input.parse()?;
         let stacks = parse_zero_or_more(input);
+        let aux = parse_aux::<syn::Token![,]>(input);
         Ok(Extract {
             func,
             out_stack,
             state,
             stacks,
+            aux,
         })
     }
 }
@@ -41,6 +54,7 @@ impl ToTokens for Extract {
         let inner_out_stack = &self.out_stack.0;
         let inner_state = &self.state.0;
         let stacks = &self.stacks;
+        let aux = &self.aux;
 
         let mut counts = Vec::new();
         for stack in stacks {
@@ -60,10 +74,20 @@ impl ToTokens for Extract {
             quote! { #inner_state.#inner_stack.pop().unwrap() }
         });
 
+        let aux_run = match aux {
+            true => quote! {
+                let result = #inner_func(#(#values),*);
+                #inner_state.#inner_out_stack.extend(result.iter());
+            },
+            false => quote! {
+                let result = #inner_func(#(#values),*);
+                #inner_state.#inner_out_stack.push(result);
+            },
+        };
+
         tokens.extend(quote! {
             if true #(&& (#conditions))* {
-                let result = vec![#inner_func(#(#values, )*)];
-                #inner_state.#inner_out_stack.extend(result.iter());
+                #aux_run
             }
         });
     }

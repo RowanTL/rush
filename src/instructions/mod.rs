@@ -316,14 +316,15 @@ pub mod macros {
         };
     }
 
-    /// Extracts values from passed state based on an amount of stacks passed.
-    macro_rules! extract_state_vals {
-        ($state:ident) => {};
-        ($state:ident, $stack:ident) => {
-            $state.$stack.pop().unwrap()
-        };
-        ($state:ident, $stack:ident, $($rest:ident), *) => {
-            ($state.$stack.pop().unwrap(), $(extract_state_vals!($state, $rest)), *)
+    /// Runs a function and ensures needed variables are extracted from a state without error while
+    /// returning multiple variables from the function
+    macro_rules! make_instruction_new_aux {
+        ($func:ident, $prefix:ident, $out_stack:ident, $($stacks:ident), *) => {
+            paste::item! {
+                pub fn [< $prefix $func >] (state: &mut PushState) {
+                    run_instruction!($func, $out_stack, state, $($stacks), *, ;);
+                }
+            }
         };
     }
 }
@@ -779,20 +780,13 @@ mod tests {
     use crate::push::state::EMPTY_STATE;
 
     #[test]
-    fn extract_state_vals_test() {
-        let mut test_state = EMPTY_STATE;
-
-        test_state.int = vec![0, 1];
-        test_state.boolean = vec![true];
-
-        let res = extract_state_vals!(test_state, int, int, boolean);
-        assert_eq!((1, 0, true), res);
-    }
-
-    #[test]
     fn make_instruction_new_test() {
         fn _test_func(x: i128, y: i128) -> i128 {
             x + y
+        }
+
+        fn _aux_test_func(x: i128, y: i128) -> Vec<i128> {
+            vec![x + y, x - y]
         }
 
         let mut test_state = EMPTY_STATE;
@@ -801,5 +795,10 @@ mod tests {
         make_instruction_new!(_test_func, int, int, int, int);
         int_test_func(&mut test_state);
         assert_eq!(vec![3], test_state.int);
+
+        test_state.int = vec![1, 2];
+        make_instruction_new_aux!(_aux_test_func, int, int, int, int);
+        int_aux_test_func(&mut test_state);
+        assert_eq!(vec![3, 1], test_state.int);
     }
 }
