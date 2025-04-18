@@ -12,17 +12,15 @@ use std::ops::{Add, Div, Mul, Sub};
 
 use super::utils::{CastingTrait, NumericTrait};
 
-/// Adds two addable values together.
+/// Adds two values together.
 fn _add<T>(a: T, b: T) -> Option<T>
 where
     T: Add<Output = T> + Copy,
 {
     Some(b + a)
 }
-make_instruction_new!(_add, int, int, int, int);
-make_instruction_new!(_add, float, float, float, float);
 
-/// Subtracts two subtractable values from each other.
+/// Subtracts two values from each other.
 fn _sub<T>(vals: Vec<T>) -> Option<T>
 where
     T: Sub<Output = T> + Copy,
@@ -32,7 +30,7 @@ where
 make_instruction!(int, int, _sub, i128, 2);
 make_instruction!(float, float, _sub, Decimal, 2);
 
-/// Multiplies two multipliable values together.
+/// Multiplies two values with each other.
 fn _mult<T>(vals: Vec<T>) -> Option<T>
 where
     T: Mul<Output = T> + Copy,
@@ -302,6 +300,17 @@ where
 }
 make_instruction!(int, int, _square, i128, 1);
 make_instruction!(float, float, _square, Decimal, 1);
+
+macro_rules! make_instructions {
+    ($stack:ident) => {
+        paste::item! {
+            make_instruction_new!(_add, $stack, $stack, $stack, $stack);
+        }
+    };
+}
+
+make_instructions!(int);
+make_instructions!(float);
 
 #[cfg(test)]
 mod tests {
