@@ -13,13 +13,14 @@ use std::ops::{Add, Div, Mul, Sub};
 use super::utils::{CastingTrait, NumericTrait};
 
 /// Adds two addable values together.
-fn _add<T>(b: T, a: T) -> Option<T>
+fn _add<T>(a: T, b: T) -> Option<T>
 where
     T: Add<Output = T> + Copy,
 {
     Some(b + a)
 }
 make_instruction_new!(_add, int, int, int, int);
+make_instruction_new!(_add, float, float, float, float);
 
 /// Subtracts two subtractable values from each other.
 fn _sub<T>(vals: Vec<T>) -> Option<T>
@@ -311,11 +312,8 @@ mod tests {
     /// Tests the _add function.
     #[test]
     fn add_test() {
-        let vals: Vec<i64> = vec![1, 2];
-        assert_eq!(Some(3), _add(vals));
-
-        let vals: Vec<Decimal> = vec![dec!(1.1), dec!(2.2)];
-        assert_eq!(Some(dec!(3.3)), _add(vals));
+        assert_eq!(Some(3), _add(1, 2));
+        assert_eq!(Some(dec!(3.3)), _add(dec!(1.1), dec!(2.2)));
     }
 
     /// Tests the _sub function.
