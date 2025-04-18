@@ -1,11 +1,3 @@
-use crate::instructions::code::*;
-use crate::instructions::common::*;
-use crate::instructions::logical::*;
-use crate::instructions::numeric::*;
-use crate::instructions::vector::*;
-use crate::push::state::PushState;
-use rush_macro::run_instruction;
-
 #[macro_use]
 pub mod macros {
     /// A macro that makes a push instruction given: the name of the input stack to use,
@@ -305,7 +297,7 @@ pub mod macros {
         };
     }
 
-    /// Runs a function and ensures needed variables are extracted from a state without error
+    /// Runs a function and ensures the necessary variables are extracted from a state without error
     macro_rules! make_instruction_new {
         ($func:ident, $prefix:ident, $out_stack:ident, $($stacks:ident), *) => {
             paste::item! {
@@ -338,8 +330,8 @@ pub mod vector;
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::push::state::EMPTY_STATE;
+    //use super::*;
+    use crate::push::state::{EMPTY_STATE, PushState};
 
     #[test]
     fn make_instruction_new_test() {

@@ -34,6 +34,9 @@ mod utils;
 /// ```
 /// would have the ; placed at the end of the instruction. Check rush's `tests/instruction_test.rs`
 /// file for an example using this code.
+///
+/// Suggestion: If you need to pull an index from the int stack, make it the first argument
+/// to your function.
 #[proc_macro]
 pub fn run_instruction(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let f = parse_macro_input!(input as Extract);

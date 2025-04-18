@@ -7,74 +7,86 @@ use crate::push::state::PushState;
 use rust_decimal::Decimal;
 
 /// Runs logical and on two values
-fn _and<T>(vals: Vec<T>) -> Option<T>
+fn _and<T>(a: T, b: T) -> Option<T>
 where
-    T: Copy + LogicalTrait,
+    T: LogicalTrait,
 {
-    Some(vals[0].logical_and(vals[1]))
+    Some(b.logical_and(a))
 }
-make_instruction!(boolean, boolean, _and, bool, 2);
 
 /// Runs logical or on two values
-fn _or<T>(vals: Vec<T>) -> Option<T>
+fn _or<T>(a: T, b: T) -> Option<T>
 where
-    T: Copy + LogicalTrait,
+    T: LogicalTrait,
 {
-    Some(vals[0].logical_or(vals[1]))
+    Some(b.logical_or(a))
 }
-make_instruction!(boolean, boolean, _or, bool, 2);
 
 /// Runs logical not on two values
-fn _not<T>(vals: Vec<T>) -> Option<T>
+fn _not<T>(a: T) -> Option<T>
 where
-    T: Copy + LogicalTrait,
+    T: LogicalTrait,
 {
-    Some(vals[0].logical_not())
+    Some(a.logical_not())
 }
-make_instruction!(boolean, boolean, _not, bool, 1);
 
 /// Runs logical xor on two values
-fn _xor<T>(vals: Vec<T>) -> Option<T>
+fn _xor<T>(a: T, b: T) -> Option<T>
 where
-    T: Copy + LogicalTrait,
+    T: LogicalTrait,
 {
-    Some(vals[0].logical_xor(vals[1]))
+    Some(b.logical_xor(a))
 }
-make_instruction!(boolean, boolean, _xor, bool, 2);
 
 /// Inverts the first value and runs logical and on two values
-fn _invert_first_then_and<T>(vals: Vec<T>) -> Option<T>
+fn _invert_first_then_and<T>(a: T, b: T) -> Option<T>
 where
-    T: Copy + LogicalTrait,
+    T: LogicalTrait,
 {
-    Some(vals[0].logical_not().logical_and(vals[1]))
+    Some(a.logical_not().logical_and(b))
 }
-make_instruction!(boolean, boolean, _invert_first_then_and, bool, 2);
 
 /// Inverts the second value and runs logical and on two values
-fn _invert_second_then_and<T>(vals: Vec<T>) -> Option<T>
+fn _invert_second_then_and<T>(a: T, b: T) -> Option<T>
 where
-    T: Copy + LogicalTrait,
+    T: LogicalTrait,
 {
-    Some(vals[0].logical_and(vals[1].logical_not()))
+    Some(a.logical_and(b.logical_not()))
 }
-make_instruction!(boolean, boolean, _invert_second_then_and, bool, 2);
 
-fn _from_int<T>(vals: Vec<i128>) -> Option<T>
+fn _from_int<T>(a: i128) -> Option<T>
 where
-    T: Copy + CastingTrait,
+    T: CastingTrait,
 {
-    T::from_int(vals[0])
+    T::from_int(a)
 }
-make_instruction_out!(int, boolean, _from_int, i128, 1);
 
-fn _from_float<T>(vals: Vec<Decimal>) -> Option<T>
+fn _from_float<T>(a: Decimal) -> Option<T>
 where
-    T: Copy + CastingTrait,
+    T: CastingTrait,
 {
-    T::from_float(vals[0])
+    T::from_float(a)
 }
-make_instruction_out!(float, boolean, _from_float, Decimal, 1);
+
+macro_rules! make_logical_instructions {
+    ($stack:ident) => {
+        make_instruction_new!(_and, $stack, $stack, $stack, $stack);
+        make_instruction_new!(_or, $stack, $stack, $stack, $stack);
+        make_instruction_new!(_not, $stack, $stack, $stack);
+        make_instruction_new!(_xor, $stack, $stack, $stack, $stack);
+        make_instruction_new!(_invert_first_then_and, $stack, $stack, $stack, $stack);
+        make_instruction_new!(_invert_second_then_and, $stack, $stack, $stack, $stack);
+        make_instruction_new!(_from_int, $stack, $stack, int);
+        make_instruction_new!(_from_float, $stack, $stack, float);
+    };
+}
+
+macro_rules! all_logical_instructions {
+    () => {
+        make_logical_instructions!(boolean);
+    };
+}
+all_logical_instructions!();
 
 #[cfg(test)]
 mod tests {

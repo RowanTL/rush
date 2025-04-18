@@ -45,269 +45,249 @@ where
 }
 
 /// Takes the remainder of two values
-fn _rem<T>(vals: Vec<T>) -> Option<T>
+fn _rem<T>(a: T, b: T) -> Option<T>
 where
     T: Div<Output = T> + Copy + NumericTrait,
 {
-    vals[1].checked_mod(vals[0])
+    b.checked_mod(a)
 }
-make_instruction!(int, int, _rem, i128, 2);
-make_instruction!(float, float, _rem, Decimal, 2);
 
 /// Takes the max of two values
-fn _max<T>(vals: Vec<T>) -> Option<T>
+fn _max<T>(a: T, b: T) -> Option<T>
 where
-    T: Ord + Copy,
+    T: Ord,
 {
-    Some(max(vals[1], vals[0]))
+    Some(max(a, b))
 }
-make_instruction!(int, int, _max, i128, 2);
-make_instruction!(float, float, _max, Decimal, 2);
 
 /// Takes the min of two values
-fn _min<T>(vals: Vec<T>) -> Option<T>
+fn _min<T>(a: T, b: T) -> Option<T>
 where
-    T: Ord + Copy,
+    T: Ord,
 {
-    Some(min(vals[1], vals[0]))
+    Some(min(a, b))
 }
-make_instruction!(int, int, _min, i128, 2);
-make_instruction!(float, float, _min, Decimal, 2);
 
 /// Increments a single value by 1
-fn _inc<T>(vals: Vec<T>) -> Option<T>
+fn _inc<T>(a: T) -> Option<T>
 where
     T: NumericTrait + Copy,
 {
-    Some(vals[0].increment())
+    Some(a.increment())
 }
-make_instruction!(int, int, _inc, i128, 1);
-make_instruction!(float, float, _inc, Decimal, 1);
 
 /// Decrements a single value by 1
-fn _dec<T>(vals: Vec<T>) -> Option<T>
+fn _dec<T>(a: T) -> Option<T>
 where
-    T: NumericTrait + Copy,
+    T: NumericTrait,
 {
-    Some(vals[0].decrement())
+    Some(a.decrement())
 }
-make_instruction!(int, int, _dec, i128, 1);
-make_instruction!(float, float, _dec, Decimal, 1);
 
 /// Checks if the 2nd to top value is less than the top value
-fn _lt<T>(vals: Vec<T>) -> Option<bool>
+fn _lt<T>(a: T, b: T) -> Option<bool>
 where
-    T: Ord + Copy,
+    T: Ord,
 {
-    Some(vals[1] < vals[0])
+    Some(b < a)
 }
-make_instruction!(int, boolean, _lt, i128, 2);
-make_instruction!(float, boolean, _lt, Decimal, 2);
 
 /// Checks if the 2nd to top value is greater than the top value
-fn _gt<T>(vals: Vec<T>) -> Option<bool>
+fn _gt<T>(a: T, b: T) -> Option<bool>
 where
-    T: Ord + Copy,
+    T: Ord,
 {
-    Some(vals[1] > vals[0])
+    Some(b > a)
 }
-make_instruction!(int, boolean, _gt, i128, 2);
-make_instruction!(float, boolean, _gt, Decimal, 2);
 
 /// Checks if the 2nd to top value is less than or equal to the top value
-fn _lte<T>(vals: Vec<T>) -> Option<bool>
+fn _lte<T>(a: T, b: T) -> Option<bool>
 where
     T: Ord + Copy,
 {
-    Some(vals[1] <= vals[0])
+    Some(b <= a)
 }
-make_instruction!(int, boolean, _lte, i128, 2);
-make_instruction!(float, boolean, _lte, Decimal, 2);
 
 /// Checks if the 2nd to top value is greater than or equal to the top value
-fn _gte<T>(vals: Vec<T>) -> Option<bool>
+fn _gte<T>(a: T, b: T) -> Option<bool>
 where
-    T: Ord + Copy,
+    T: Ord,
 {
-    Some(vals[1] >= vals[0])
+    Some(b >= a)
 }
-make_instruction!(int, boolean, _gte, i128, 2);
-make_instruction!(float, boolean, _gte, Decimal, 2);
 
 /// Runs sin on a single item.
-fn _sin<T>(vals: Vec<T>) -> Option<T>
+fn _sin<T>(a: T) -> Option<T>
 where
-    T: Copy + NumericTrait,
+    T: NumericTrait,
 {
-    vals[0].safe_sin()
+    a.safe_sin()
 }
-make_instruction!(int, int, _sin, i128, 1);
-make_instruction!(float, float, _sin, Decimal, 1);
 
 /// Runs arcsin on a single item.
-fn _arcsin<T>(vals: Vec<T>) -> Option<T>
+fn _arcsin<T>(a: T) -> Option<T>
 where
-    T: Copy + NumericTrait,
+    T: NumericTrait,
 {
-    vals[0].safe_sin()?.inverse()
+    a.safe_sin()?.inverse()
 }
-make_instruction!(int, int, _arcsin, i128, 1);
-make_instruction!(float, float, _arcsin, Decimal, 1);
 
 /// Runs cos on a single item.
-fn _cos<T>(vals: Vec<T>) -> Option<T>
+fn _cos<T>(a: T) -> Option<T>
 where
-    T: Copy + NumericTrait,
+    T: NumericTrait,
 {
-    vals[0].safe_cos()
+    a.safe_cos()
 }
-make_instruction!(int, int, _cos, i128, 1);
-make_instruction!(float, float, _cos, Decimal, 1);
 
 /// Runs arcsin on a single item.
-fn _arccos<T>(vals: Vec<T>) -> Option<T>
+fn _arccos<T>(a: T) -> Option<T>
 where
-    T: Copy + NumericTrait,
+    T: NumericTrait,
 {
-    vals[0].safe_cos()?.inverse()
+    a.safe_cos()?.inverse()
 }
-make_instruction!(int, int, _arccos, i128, 1);
-make_instruction!(float, float, _arccos, Decimal, 1);
 
 /// Runs tan on a single item.
-fn _tan<T>(vals: Vec<T>) -> Option<T>
+fn _tan<T>(a: T) -> Option<T>
 where
-    T: Copy + NumericTrait,
+    T: NumericTrait,
 {
-    vals[0].safe_tan()
+    a.safe_tan()
 }
-make_instruction!(int, int, _tan, i128, 1);
-make_instruction!(float, float, _tan, Decimal, 1);
 
 /// Runs arctan on a single item.
-fn _arctan<T>(vals: Vec<T>) -> Option<T>
+fn _arctan<T>(a: T) -> Option<T>
 where
-    T: Copy + NumericTrait,
+    T: NumericTrait,
 {
-    vals[0].safe_tan()?.inverse()
+    a.safe_tan()?.inverse()
 }
-make_instruction!(int, int, _arctan, i128, 1);
-make_instruction!(float, float, _arctan, Decimal, 1);
+
+/// Converts a single value from an int to an arbitrary type.
+fn _from_int<T>(a: i128) -> Option<T>
+where
+    T: CastingTrait,
+{
+    T::from_int(a)
+}
 
 /// Converts a single value from a float to an arbitrary type.
-fn _from_int<T>(vals: Vec<i128>) -> Option<T>
+fn _from_float<T>(a: Decimal) -> Option<T>
 where
-    T: Copy + CastingTrait,
+    T: CastingTrait,
 {
-    T::from_int(vals[0])
+    T::from_float(a)
 }
-make_instruction_out!(int, float, _from_int, i128, 1);
 
-/// Converts a single value from a float to an arbitrary type.
-fn _from_float<T>(vals: Vec<Decimal>) -> Option<T>
+/// Converts a bool to a new type.
+fn _from_boolean<T>(a: bool) -> Option<T>
 where
-    T: Copy + CastingTrait,
+    T: CastingTrait,
 {
-    T::from_float(vals[0])
+    T::from_bool(a)
 }
-make_instruction_out!(float, int, _from_float, Decimal, 1);
 
-/// Converts a bool to a to a new type.
-fn _from_boolean<T>(vals: Vec<bool>) -> Option<T>
-where
-    T: Copy + CastingTrait,
-{
-    T::from_bool(vals[0])
-}
-make_instruction_out!(boolean, int, _from_boolean, bool, 1);
-make_instruction_out!(boolean, float, _from_boolean, bool, 1);
-
-/// Takes the log base 10 of a single Decimal. Acts as a
+/// Takes log base 10 of a single Decimal. Acts as a
 /// NoOp if the value is 0. If the value is negative, takes
 /// the absolute value of the number.
-fn _log<T>(vals: Vec<T>) -> Option<T>
+fn _log<T>(a: T) -> Option<T>
 where
-    T: Copy + NumericTrait,
+    T: NumericTrait,
 {
-    vals[0].absolute().safe_log10()
+    a.absolute().safe_log10()
 }
-make_instruction!(int, int, _log, i128, 1);
-make_instruction!(float, float, _log, Decimal, 1);
 
 /// Takes the exp of a single value. Ints get truncated.
-fn _exp<T>(vals: Vec<T>) -> Option<T>
+fn _exp<T>(a: T) -> Option<T>
 where
-    T: Copy + NumericTrait,
+    T: NumericTrait,
 {
-    vals[0].safe_exp()
+    a.safe_exp()
 }
-make_instruction!(int, int, _exp, i128, 1);
-make_instruction!(float, float, _exp, Decimal, 1);
 
 /// Takes the square root of the absolute value of a single value.
-fn _sqrt<T>(vals: Vec<T>) -> Option<T>
+fn _sqrt<T>(a: T) -> Option<T>
 where
-    T: Copy + NumericTrait,
+    T: NumericTrait,
 {
-    vals[0].safe_sqrt()
+    a.safe_sqrt()
 }
-make_instruction!(int, int, _sqrt, i128, 1);
-make_instruction!(float, float, _sqrt, Decimal, 1);
 
 /// Takes the inverse of a single value. If the number is 0,
 /// does nothing (returns None). Truncates an int to 0.
-fn _inv<T>(vals: Vec<T>) -> Option<T>
+fn _inv<T>(a: T) -> Option<T>
 where
-    T: Copy + NumericTrait,
+    T: NumericTrait,
 {
-    vals[0].inverse()
+    a.inverse()
 }
-make_instruction!(int, int, _inv, i128, 1);
-make_instruction!(float, float, _inv, Decimal, 1);
 
 /// Takes the absolute value of the top number
-fn _abs<T>(vals: Vec<T>) -> Option<T>
+fn _abs<T>(a: T) -> Option<T>
 where
-    T: Copy + NumericTrait,
+    T: NumericTrait,
 {
-    Some(vals[0].absolute())
+    Some(a.absolute())
 }
-make_instruction!(int, int, _abs, i128, 1);
-make_instruction!(float, float, _abs, Decimal, 1);
 
 /// Reverses the sign of the top number
-fn _sign_reverse<T>(vals: Vec<T>) -> Option<T>
+fn _sign_reverse<T>(a: T) -> Option<T>
 where
-    T: Copy + NumericTrait,
+    T: NumericTrait,
 {
-    Some(vals[0].sign_reverse())
+    Some(a.sign_reverse())
 }
-make_instruction!(int, int, _sign_reverse, i128, 1);
-make_instruction!(float, float, _sign_reverse, Decimal, 1);
 
 /// Squares the top number
-fn _square<T>(vals: Vec<T>) -> Option<T>
+fn _square<T>(a: T) -> Option<T>
 where
-    T: Copy + NumericTrait,
+    T: NumericTrait,
 {
-    Some(vals[0].square())
+    Some(a.square())
 }
-make_instruction!(int, int, _square, i128, 1);
-make_instruction!(float, float, _square, Decimal, 1);
 
-macro_rules! make_instructions {
+macro_rules! make_numeric_instructions {
     ($stack:ident) => {
-        paste::item! {
-            make_instruction_new!(_add, $stack, $stack, $stack, $stack);
-            make_instruction_new!(_sub, $stack, $stack, $stack, $stack);
-            make_instruction_new!(_mult, $stack, $stack, $stack, $stack);
-            make_instruction_new!(_div, $stack, $stack, $stack, $stack);
-        }
+        make_instruction_new!(_add, $stack, $stack, $stack, $stack);
+        make_instruction_new!(_sub, $stack, $stack, $stack, $stack);
+        make_instruction_new!(_mult, $stack, $stack, $stack, $stack);
+        make_instruction_new!(_div, $stack, $stack, $stack, $stack);
+        make_instruction_new!(_rem, $stack, $stack, $stack, $stack);
+        make_instruction_new!(_max, $stack, $stack, $stack, $stack);
+        make_instruction_new!(_min, $stack, $stack, $stack, $stack);
+        make_instruction_new!(_inc, $stack, $stack, $stack);
+        make_instruction_new!(_dec, $stack, $stack, $stack);
+        make_instruction_new!(_lt, $stack, boolean, $stack, $stack);
+        make_instruction_new!(_gt, $stack, boolean, $stack, $stack);
+        make_instruction_new!(_lte, $stack, boolean, $stack, $stack);
+        make_instruction_new!(_gte, $stack, boolean, $stack, $stack);
+        make_instruction_new!(_sin, $stack, $stack, $stack);
+        make_instruction_new!(_arcsin, $stack, $stack, $stack);
+        make_instruction_new!(_cos, $stack, $stack, $stack);
+        make_instruction_new!(_arccos, $stack, $stack, $stack);
+        make_instruction_new!(_tan, $stack, $stack, $stack);
+        make_instruction_new!(_arctan, $stack, $stack, $stack);
+        make_instruction_new!(_from_boolean, $stack, $stack, boolean);
+        make_instruction_new!(_log, $stack, $stack, $stack);
+        make_instruction_new!(_exp, $stack, $stack, $stack);
+        make_instruction_new!(_sqrt, $stack, $stack, $stack);
+        make_instruction_new!(_inv, $stack, $stack, $stack);
+        make_instruction_new!(_abs, $stack, $stack, $stack);
+        make_instruction_new!(_sign_reverse, $stack, $stack, $stack);
+        make_instruction_new!(_square, $stack, $stack, $stack);
     };
 }
 
-make_instructions!(int);
-make_instructions!(float);
+macro_rules! all_numeric_instructions {
+    () => {
+        make_numeric_instructions!(int);
+        make_numeric_instructions!(float);
+        make_instruction_new!(_from_int, float, float, int);
+        make_instruction_new!(_from_float, int, int, float);
+    };
+}
+all_numeric_instructions!();
 
 #[cfg(test)]
 mod tests {
@@ -348,124 +328,70 @@ mod tests {
     /// Tests the _rem function
     #[test]
     fn rem_test() {
-        let vals: Vec<i128> = vec![3, 20];
-        assert_eq!(Some(2), _rem(vals));
-
-        let vals: Vec<i128> = vec![20, 20];
-        assert_eq!(Some(0), _rem(vals));
-
-        let vals: Vec<i128> = vec![0, 9];
-        assert_eq!(None, _rem(vals));
+        assert_eq!(Some(2), _rem(3, 20));
+        assert_eq!(Some(0), _rem(20, 20));
+        assert_eq!(None, _rem(0, 9));
     }
 
     /// Tests the _max function
     #[test]
     fn max_test() {
-        let vals: Vec<i128> = vec![1, 2];
-        assert_eq!(Some(2), _max(vals));
-
-        let vals: Vec<i128> = vec![3, 0];
-        assert_eq!(Some(3), _max(vals));
-
-        let vals: Vec<Decimal> = vec![dec!(2.2), dec!(1.1)];
-        assert_eq!(Some(dec!(2.2)), _max(vals));
-
-        let vals: Vec<Decimal> = vec![dec!(3.3), dec!(-1.1)];
-        assert_eq!(Some(dec!(3.3)), _max(vals));
+        assert_eq!(Some(2), _max(1, 2));
+        assert_eq!(Some(3), _max(3, 0));
+        assert_eq!(Some(dec!(2.2)), _max(dec!(2.2), dec!(1.1)));
+        assert_eq!(Some(dec!(3.3)), _max(dec!(3.3), dec!(-1.1)));
     }
 
     /// Tests the _min function
     #[test]
     fn min_test() {
-        let vals: Vec<i128> = vec![1, 2];
-        assert_eq!(Some(1), _min(vals));
-
-        let vals: Vec<i128> = vec![3, 0];
-        assert_eq!(Some(0), _min(vals));
-
-        let vals: Vec<Decimal> = vec![dec!(2.2), dec!(1.1)];
-        assert_eq!(Some(dec!(1.1)), _min(vals));
-
-        let vals: Vec<Decimal> = vec![dec!(3.3), dec!(-1.1)];
-        assert_eq!(Some(dec!(-1.1)), _min(vals));
+        assert_eq!(Some(1), _min(1, 2));
+        assert_eq!(Some(0), _min(3, 0));
+        assert_eq!(Some(dec!(1.1)), _min(dec!(2.2), dec!(1.1)));
+        assert_eq!(Some(dec!(-1.1)), _min(dec!(3.3), dec!(-1.1)));
     }
 
     /// Tests the _inc and _dec functions
     #[test]
     fn inc_dec_test() {
-        let vals: Vec<i128> = vec![2];
-        assert_eq!(Some(3), _inc(vals));
-
-        let vals: Vec<i128> = vec![10];
-        assert_eq!(Some(9), _dec(vals));
-
-        let vals: Vec<Decimal> = vec![dec!(2.2)];
-        assert_eq!(Some(dec!(3.2)), _inc(vals));
-
-        let vals: Vec<Decimal> = vec![dec!(5.6)];
-        assert_eq!(Some(dec!(4.6)), _dec(vals));
+        assert_eq!(Some(3), _inc(2));
+        assert_eq!(Some(9), _dec(10));
+        assert_eq!(Some(dec!(3.2)), _inc(dec!(2.2)));
+        assert_eq!(Some(dec!(4.6)), _dec(dec!(5.6)));
     }
 
     /// Tests the _lt, _gt, _lte, and _gte functions
     #[test]
     fn lt_gt_lte_gte_test() {
-        let vals: Vec<i128> = vec![3, 2];
-        assert_eq!(Some(true), _lt(vals));
-
-        let vals: Vec<i128> = vec![1, 4];
-        assert_eq!(Some(false), _lt(vals));
-
-        let vals: Vec<i128> = vec![3, 3];
-        assert_eq!(Some(false), _lt(vals));
-
-        let vals: Vec<i128> = vec![2, 3];
-        assert_eq!(Some(true), _gt(vals));
-
-        let vals: Vec<i128> = vec![4, 1];
-        assert_eq!(Some(false), _gt(vals));
-
-        let vals: Vec<i128> = vec![3, 3];
-        assert_eq!(Some(false), _gt(vals));
-
-        let vals: Vec<i128> = vec![3, 2];
-        assert_eq!(Some(true), _lte(vals));
-
-        let vals: Vec<i128> = vec![1, 4];
-        assert_eq!(Some(false), _lte(vals));
-
-        let vals: Vec<i128> = vec![3, 3];
-        assert_eq!(Some(true), _lte(vals));
-
-        let vals: Vec<i128> = vec![2, 3];
-        assert_eq!(Some(true), _gte(vals));
-
-        let vals: Vec<i128> = vec![4, 1];
-        assert_eq!(Some(false), _gte(vals));
-
-        let vals: Vec<i128> = vec![3, 3];
-        assert_eq!(Some(true), _gte(vals));
+        assert_eq!(Some(true), _lt(3, 2));
+        assert_eq!(Some(false), _lt(1, 4));
+        assert_eq!(Some(false), _lt(3, 3));
+        assert_eq!(Some(true), _gt(2, 3));
+        assert_eq!(Some(false), _gt(4, 1));
+        assert_eq!(Some(false), _gt(3, 3));
+        assert_eq!(Some(true), _lte(3, 2));
+        assert_eq!(Some(false), _lte(1, 4));
+        assert_eq!(Some(true), _lte(3, 3));
+        assert_eq!(Some(true), _gte(2, 3));
+        assert_eq!(Some(false), _gte(4, 1));
+        assert_eq!(Some(true), _gte(3, 3));
     }
 
     /// Tests the various trig functions.
     #[test]
     fn trig_tests() {
-        let vals = vec![Decimal::PI];
-        assert_eq!(Some(dec!(0.0)), _sin(vals));
-
-        let vals = vec![Decimal::QUARTER_PI];
-        assert_eq!(Some(dec!(1.4142135623869512272301701717)), _arcsin(vals));
-
-        let vals = vec![Decimal::PI];
-        assert_eq!(Some(dec!(-1.0)), _cos(vals));
-
-        let vals = vec![Decimal::QUARTER_PI];
-        assert_eq!(Some(dec!(1.4142135626023406165042434783)), _arccos(vals));
-
-        let vals = vec![Decimal::PI];
-        assert_eq!(Some(dec!(0.0)), _tan(vals));
-
-        let vals = vec![Decimal::QUARTER_PI];
-        assert_eq!(Some(dec!(1.0000000043184676055890307049)), _arctan(vals));
+        assert_eq!(Some(dec!(0.0)), _sin(Decimal::PI));
+        assert_eq!(
+            Some(dec!(1.4142135623869512272301701717)),
+            _arcsin(Decimal::QUARTER_PI)
+        );
+        assert_eq!(Some(dec!(-1.0)), _cos(Decimal::PI));
+        assert_eq!(Some(dec!(-1.0)), _arccos(Decimal::PI));
+        assert_eq!(Some(dec!(0.0)), _tan(Decimal::PI));
+        assert_eq!(
+            Some(dec!(1.0000000043184676055890307049)),
+            _arctan(Decimal::QUARTER_PI)
+        );
     }
 
     /// Tests that the various addition functions.
@@ -714,6 +640,13 @@ mod tests {
         test_state.float = vec![dec!(2.1)];
         int_from_float(&mut test_state);
         assert_eq!(vec![2], test_state.int);
+        test_state.float.clear();
+        test_state.int.clear();
+
+        test_state.boolean = vec![true];
+        int_from_boolean(&mut test_state);
+        assert_eq!(vec![1], test_state.int);
+        test_state.boolean.clear();
     }
 
     /// Tests the log function

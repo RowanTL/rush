@@ -64,31 +64,56 @@ impl ToTokens for Extract {
             }
         }
 
+        // Ensure stacks have enough values
         let conditions = counts.iter().map(|(stack, count)| {
             let inner_stack = &stack.0;
             quote! { #inner_state.#inner_stack.len() >= #count }
         });
 
-        let values = stacks.iter().map(|stack| {
+        // Create variables to store popped values
+        let store_values = stacks.iter().enumerate().map(|(i, stack)| {
             let inner_stack = &&stack.0;
-            quote! { #inner_state.#inner_stack.pop().unwrap() }
+            let var_name = quote::format_ident!("val_{}", i);
+            quote! { let #var_name = #inner_state.#inner_stack.pop().unwrap(); }
         });
 
+        // Create slices of variable names for restoration
+        let value_vars = (0..stacks.len())
+            .map(|i| quote::format_ident!("val_{}", i))
+            .collect::<Vec<_>>();
+
+        // Create restore operations for each stack
+        let restore_values = stacks
+            .iter()
+            .zip(value_vars.iter().rev())
+            .map(|(stack, var)| {
+                let inner_stack = &&stack.0;
+                quote! { #inner_state.#inner_stack.push(#var); }
+            });
+
+        // Run the function using auxiliary mode if needed
         let aux_run = match aux {
             true => quote! {
-                if let Some(result) = #inner_func(#(#values),*) {
+                let result = #inner_func(#(#value_vars),*);
+                if let Some(result) = result {
                     #inner_state.#inner_out_stack.extend(result.iter());
+                } else {
+                    #(#restore_values)*
                 }
             },
             false => quote! {
-                if let Some(result) = #inner_func(#(#values),*) {
+                let result = #inner_func(#(#value_vars),*);
+                if let Some(result) = result {
                     #inner_state.#inner_out_stack.push(result);
+                } else {
+                    #(#restore_values)*
                 }
             },
         };
 
         tokens.extend(quote! {
             if true #(&& (#conditions))* {
+                #(#store_values)*
                 #aux_run
             }
         });
