@@ -111,12 +111,17 @@ impl ToTokens for Extract {
             true => quote! {
                 let result = #inner_func(#(#value_vars.clone()),*);
                 if let Some(result) = result {
-                    #inner_state.#inner_out_stack.extend(result.iter());
+                    // Transforming the result vector into an iterator with .iter() was
+                    // causing problems with the vector_string stack. Iterating this way
+                    // fixes the problem.
+                    for n in 0..result.len() {
+                        #inner_state.#inner_out_stack.push(result[n].clone())
+                    }
                 } else {
                     #(#restore_values)*
                 }
             },
-            false => quote! {
+            false => quote! { // This arm is used most of the time
                 let result = #inner_func(#(#value_vars.clone()),*);
                 if let Some(result) = result {
                     #inner_state.#inner_out_stack.push(result);

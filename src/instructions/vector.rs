@@ -213,438 +213,121 @@ fn _push_all<T>(vals: Vec<T>) -> Option<Vec<T>> {
 }
 
 /// Creates an empty vector
-fn _make_empty<T>(_: Vec<Vec<T>>) -> Option<Vec<T>> {
+fn _make_empty<T>() -> Option<Vec<T>> {
     let empty_vec: Vec<T> = Vec::new();
     Some(empty_vec)
 }
-make_instruction_clone!(vector_int, vector_int, _make_empty, Vec<i128>, 0);
-make_instruction_clone!(vector_float, vector_float, _make_empty, Vec<Decimal>, 0);
-make_instruction_clone!(vector_string, vector_string, _make_empty, Vec<Vec<char>>, 0);
-make_instruction_clone!(vector_boolean, vector_boolean, _make_empty, Vec<bool>, 0);
-make_instruction_clone!(vector_char, vector_char, _make_empty, Vec<char>, 0);
-make_instruction_clone!(string, string, _make_empty, Vec<char>, 0);
 
 /// Checks if a vector is empty. Pushes true if is, false otherwise
-fn _is_empty<T>(vals: Vec<Vec<T>>) -> Option<bool> {
-    Some(vals[0].is_empty())
+fn _is_empty<T>(vals: Vec<T>) -> Option<bool> {
+    Some(vals.is_empty())
 }
-make_instruction_clone!(vector_int, boolean, _is_empty, Vec<i128>, 1);
-make_instruction_clone!(vector_float, boolean, _is_empty, Vec<Decimal>, 1);
-make_instruction_clone!(vector_string, boolean, _is_empty, Vec<Vec<char>>, 1);
-make_instruction_clone!(vector_boolean, boolean, _is_empty, Vec<bool>, 1);
-make_instruction_clone!(vector_char, boolean, _is_empty, Vec<char>, 1);
-make_instruction_clone!(string, boolean, _is_empty, Vec<char>, 1);
 
 /// Checks if a vector contains a primitive. True if does, false otherwise
-fn _contains<T>(vals: Vec<Vec<T>>, auxs: Vec<T>) -> Option<bool>
+fn _contains<T>(vals: Vec<T>, prim: T) -> Option<bool>
 where
     T: Eq,
 {
-    Some(vals[0].contains(&auxs[0]))
+    Some(vals.contains(&prim))
 }
-make_instruction_aux!(vector_int, boolean, _contains, Vec<i128>, 1, int, 1, i128);
-make_instruction_aux!(
-    vector_float,
-    boolean,
-    _contains,
-    Vec<Decimal>,
-    1,
-    float,
-    1,
-    Decimal
-);
-make_instruction_aux!(
-    vector_string,
-    boolean,
-    _contains,
-    Vec<Vec<char>>,
-    1,
-    string,
-    1,
-    Vec<char>
-);
-make_instruction_aux!(
-    vector_boolean,
-    boolean,
-    _contains,
-    Vec<bool>,
-    1,
-    boolean,
-    1,
-    bool
-);
-make_instruction_aux!(vector_char, boolean, _contains, Vec<char>, 1, char, 1, char);
-make_instruction_aux!(string, boolean, _contains, Vec<char>, 1, char, 1, char);
 
 /// Checks if a vector contains another vector in no order. True if does, false otherwise
-fn _contains_vector_non_contiguous<T>(vals: Vec<Vec<T>>) -> Option<bool>
+fn _contains_vector_non_contiguous<T>(vec0: Vec<T>, vec1: Vec<T>) -> Option<bool>
 where
     T: Eq + Hash,
 {
-    let hashset: HashSet<&T> = vals[1].iter().collect();
-    Some(vals[0].iter().all(|x| hashset.contains(x)))
+    let hashset: HashSet<&T> = vec1.iter().collect();
+    Some(vec0.iter().all(|x| hashset.contains(x)))
 }
-make_instruction_clone!(
-    vector_int,
-    boolean,
-    _contains_vector_non_contiguous,
-    Vec<i128>,
-    2
-);
-make_instruction_clone!(
-    vector_float,
-    boolean,
-    _contains_vector_non_contiguous,
-    Vec<Decimal>,
-    2
-);
-make_instruction_clone!(
-    vector_string,
-    boolean,
-    _contains_vector_non_contiguous,
-    Vec<Vec<char>>,
-    2
-);
-make_instruction_clone!(
-    vector_boolean,
-    boolean,
-    _contains_vector_non_contiguous,
-    Vec<bool>,
-    2
-);
-make_instruction_clone!(
-    vector_char,
-    boolean,
-    _contains_vector_non_contiguous,
-    Vec<char>,
-    2
-);
-make_instruction_clone!(
-    string,
-    boolean,
-    _contains_vector_non_contiguous,
-    Vec<char>,
-    2
-);
 
 /// Checks if a vector contains another contiguous vector. True if does, false otherwise
-fn _contains_vector_contiguous<T>(vals: Vec<Vec<T>>) -> Option<bool>
+fn _contains_vector_contiguous<T>(vec0: Vec<T>, vec1: Vec<T>) -> Option<bool>
 where
     T: Eq,
 {
-    if vals[0].is_empty() {
+    if vec0.is_empty() {
         return Some(true); // would argue the empty set is in everything
     }
-    Some(vals[1].windows(vals[0].len()).any(|x| x == vals[0]))
+    Some(vec1.windows(vec0.len()).any(|x| x == vec0))
 }
-make_instruction_clone!(
-    vector_int,
-    boolean,
-    _contains_vector_contiguous,
-    Vec<i128>,
-    2
-);
-make_instruction_clone!(
-    vector_float,
-    boolean,
-    _contains_vector_contiguous,
-    Vec<Decimal>,
-    2
-);
-make_instruction_clone!(
-    vector_string,
-    boolean,
-    _contains_vector_contiguous,
-    Vec<Vec<char>>,
-    2
-);
-make_instruction_clone!(
-    vector_boolean,
-    boolean,
-    _contains_vector_contiguous,
-    Vec<bool>,
-    2
-);
-make_instruction_clone!(
-    vector_char,
-    boolean,
-    _contains_vector_contiguous,
-    Vec<char>,
-    2
-);
-make_instruction_clone!(string, boolean, _contains_vector_contiguous, Vec<char>, 2);
 
 /// Returns the index of a primitive in a vector, pushes result to int stack
-fn _index_of<T>(vals: Vec<Vec<T>>, auxs: Vec<T>) -> Option<i128>
+fn _index_of<T>(vals: Vec<T>, prim: T) -> Option<i128>
 where
     T: Clone + Eq,
 {
-    let temp_vec = &vals[0];
-    let temp_aux = &auxs[0];
+    let temp_vec = &vals;
+    let temp_aux = &prim;
     if let Some(idx) = temp_vec.iter().position(|r| r == temp_aux) {
         return Some(idx as i128);
     }
     Some(-1)
 }
-make_instruction_aux!(vector_int, int, _index_of, Vec<i128>, 1, int, 1, i128);
-make_instruction_aux!(
-    vector_float,
-    int,
-    _index_of,
-    Vec<Decimal>,
-    1,
-    float,
-    1,
-    Decimal
-);
-make_instruction_aux!(
-    vector_string,
-    int,
-    _index_of,
-    Vec<Vec<char>>,
-    1,
-    string,
-    1,
-    Vec<char>
-);
-make_instruction_aux!(
-    vector_boolean,
-    int,
-    _index_of,
-    Vec<bool>,
-    1,
-    boolean,
-    1,
-    bool
-);
-make_instruction_aux!(vector_char, int, _index_of, Vec<char>, 1, char, 1, char);
-make_instruction_aux!(string, int, _index_of, Vec<char>, 1, char, 1, char);
 
 /// Finds the index of the start of one vector in another. Searches in contiguous space.
-fn _index_of_vector<T>(vals: Vec<Vec<T>>) -> Option<i128>
+fn _index_of_vector<T>(vec0: Vec<T>, vec1: Vec<T>) -> Option<i128>
 where
     T: Eq,
 {
-    if vals[0].is_empty() {
+    if vec0.is_empty() {
         return Some(0);
     }
-    if let Some(val) = vals[1].windows(vals[0].len()).position(|x| x == vals[0]) {
+    if let Some(val) = vec1.windows(vec0.len()).position(|x| x == vec0) {
         return Some(val as i128);
     }
     Some(-1)
 }
-make_instruction_clone!(vector_int, int, _index_of_vector, Vec<i128>, 2);
-make_instruction_clone!(vector_float, int, _index_of_vector, Vec<Decimal>, 2);
-make_instruction_clone!(vector_string, int, _index_of_vector, Vec<Vec<char>>, 2);
-make_instruction_clone!(vector_boolean, int, _index_of_vector, Vec<bool>, 2);
-make_instruction_clone!(vector_char, int, _index_of_vector, Vec<char>, 2);
-make_instruction_clone!(string, int, _index_of_vector, Vec<char>, 2);
 
 /// Counts the amount of a primitive in a vector
-fn _occurrences_of<T>(vals: Vec<Vec<T>>, auxs: Vec<T>) -> Option<i128>
+fn _occurrences_of<T>(vals: Vec<T>, prim: T) -> Option<i128>
 where
     T: Clone + Eq,
 {
-    Some(
-        vals[0]
-            .clone()
-            .into_iter()
-            .filter(|r| r == &auxs[0])
-            .count() as i128,
-    )
+    Some(vals.into_iter().filter(|r| r == &prim).count() as i128)
 }
-make_instruction_aux!(vector_int, int, _occurrences_of, Vec<i128>, 1, int, 1, i128);
-make_instruction_aux!(
-    vector_float,
-    int,
-    _occurrences_of,
-    Vec<Decimal>,
-    1,
-    float,
-    1,
-    Decimal
-);
-make_instruction_aux!(
-    vector_string,
-    int,
-    _occurrences_of,
-    Vec<Vec<char>>,
-    1,
-    string,
-    1,
-    Vec<char>
-);
-make_instruction_aux!(
-    vector_boolean,
-    int,
-    _occurrences_of,
-    Vec<bool>,
-    1,
-    boolean,
-    1,
-    bool
-);
-make_instruction_aux!(
-    vector_char,
-    int,
-    _occurrences_of,
-    Vec<char>,
-    1,
-    char,
-    1,
-    char
-);
-make_instruction_aux!(string, int, _occurrences_of, Vec<char>, 1, char, 1, char);
 
 /// Counts the amount of continuous occurrences one vector appears in another.
-fn _occurrences_of_vector<T>(vals: Vec<Vec<T>>) -> Option<i128>
+fn _occurrences_of_vector<T>(vec0: Vec<T>, vec1: Vec<T>) -> Option<i128>
 where
     T: Eq,
 {
-    if vals[0].is_empty() {
+    if vec0.is_empty() {
         return Some(0);
     }
-    Some(
-        vals[1]
-            .windows(vals[0].len())
-            .filter(|x| x == &vals[0])
-            .count() as i128,
-    )
+    Some(vec1.windows(vec0.len()).filter(|x| x == &vec0).count() as i128)
 }
-make_instruction_clone!(vector_int, int, _occurrences_of_vector, Vec<i128>, 2);
-make_instruction_clone!(vector_float, int, _occurrences_of_vector, Vec<Decimal>, 2);
-make_instruction_clone!(
-    vector_string,
-    int,
-    _occurrences_of_vector,
-    Vec<Vec<char>>,
-    2
-);
-make_instruction_clone!(vector_boolean, int, _occurrences_of_vector, Vec<bool>, 2);
-make_instruction_clone!(vector_char, int, _occurrences_of_vector, Vec<char>, 2);
-make_instruction_clone!(string, int, _occurrences_of_vector, Vec<char>, 2);
 
 /// Pushes the values inside a vector separated into individual vectors back to
 /// the stack.
-fn _parse_to_prim<T>(vals: Vec<Vec<T>>) -> Option<Vec<Vec<T>>>
+fn _parse_to_prim<T>(vals: Vec<T>) -> Option<Vec<Vec<T>>>
 where
     T: Clone,
     Vec<T>: FromIterator<T>,
 {
-    Some(vals[0].clone().into_iter().map(|x| vec![x]).collect())
+    Some(vals.clone().into_iter().map(|x| vec![x]).collect())
 }
-make_instruction_mult!(vector_int, vector_int, _parse_to_prim, Vec<i128>, 1);
-make_instruction_mult!(vector_float, vector_float, _parse_to_prim, Vec<Decimal>, 1);
-make_instruction_mult!(
-    vector_string,
-    vector_string,
-    _parse_to_prim,
-    Vec<Vec<char>>,
-    1
-);
-make_instruction_mult!(vector_boolean, vector_boolean, _parse_to_prim, Vec<bool>, 1);
-make_instruction_mult!(vector_char, vector_char, _parse_to_prim, Vec<char>, 1);
-make_instruction_mult!(string, string, _parse_to_prim, Vec<char>, 1);
 
 /// Sets the nth index in a vector. N from the int stack.
-fn _set_nth<T>(vals: Vec<Vec<T>>, aux0: Vec<T>, aux1: Vec<i128>) -> Option<Vec<T>>
+fn _set_nth<T>(vals: Vec<T>, idx: i128, prim: T) -> Option<Vec<T>>
 where
     T: Clone,
 {
-    let mut temp_vec = vals[0].clone();
-    let idx = bounded_idx(aux1[0], temp_vec.len());
-    temp_vec.insert(idx, aux0[0].clone());
+    let mut temp_vec = vals.clone();
+    let idx = bounded_idx(idx, temp_vec.len());
+    temp_vec.insert(idx, prim);
     Some(temp_vec)
 }
-make_instruction_aux2!(
-    vector_int,
-    vector_int,
-    _set_nth,
-    Vec<i128>,
-    1,
-    int,
-    1,
-    i128,
-    int,
-    1,
-    i128
-);
-make_instruction_aux2!(
-    vector_float,
-    vector_float,
-    _set_nth,
-    Vec<Decimal>,
-    1,
-    float,
-    1,
-    Decimal,
-    int,
-    1,
-    i128
-);
-make_instruction_aux2!(
-    vector_string,
-    vector_string,
-    _set_nth,
-    Vec<Vec<char>>,
-    1,
-    string,
-    1,
-    Vec<char>,
-    int,
-    1,
-    i128
-);
-make_instruction_aux2!(
-    vector_boolean,
-    vector_boolean,
-    _set_nth,
-    Vec<bool>,
-    1,
-    boolean,
-    1,
-    bool,
-    int,
-    1,
-    i128
-);
-make_instruction_aux2!(
-    vector_char,
-    vector_char,
-    _set_nth,
-    Vec<char>,
-    1,
-    char,
-    1,
-    char,
-    int,
-    1,
-    i128
-);
-make_instruction_aux2!(
-    string,
-    string,
-    _set_nth,
-    Vec<char>,
-    1,
-    char,
-    1,
-    char,
-    int,
-    1,
-    i128
-);
 
-/// Splits a vector based the first occurence of a primitive
-fn _split_on<T>(vals: Vec<Vec<T>>, auxs: Vec<T>) -> Option<Vec<Vec<T>>>
+/// Splits a vector based on the first occurence of a primitive
+fn _split_on<T>(vals: Vec<T>, prim: T) -> Option<Vec<Vec<T>>>
 where
     T: Clone + Eq,
     Vec<T>: FromIterator<T>,
 {
     let mut final_vec = vec![];
     let mut temp_vec = vec![];
-    for val in vals[0].iter() {
-        if &auxs[0] == val {
+    for val in vals.iter() {
+        if &prim == val {
             final_vec.push(temp_vec.clone());
             temp_vec.clear();
             continue;
@@ -656,59 +339,8 @@ where
     }
     Some(final_vec)
 }
-make_instruction_mult_aux!(
-    vector_int,
-    vector_int,
-    _split_on,
-    Vec<i128>,
-    1,
-    int,
-    1,
-    i128
-);
-make_instruction_mult_aux!(
-    vector_float,
-    vector_float,
-    _split_on,
-    Vec<Decimal>,
-    1,
-    float,
-    1,
-    Decimal
-);
-make_instruction_mult_aux!(
-    vector_string,
-    vector_string,
-    _split_on,
-    Vec<Vec<char>>,
-    1,
-    string,
-    1,
-    Vec<char>
-);
-make_instruction_mult_aux!(
-    vector_boolean,
-    vector_boolean,
-    _split_on,
-    Vec<bool>,
-    1,
-    boolean,
-    1,
-    bool
-);
-make_instruction_mult_aux!(
-    vector_char,
-    vector_char,
-    _split_on,
-    Vec<char>,
-    1,
-    char,
-    1,
-    char
-);
-make_instruction_mult_aux!(string, string, _split_on, Vec<char>, 1, char, 1, char);
 
-/*/// Splits a vector based the first occurence of a primitive
+/*/// Splits a vector based the first occurrence of a primitive
 fn _split_on_vector<T>(vals: Vec<Vec<T>>) -> Option<Vec<Vec<T>>>
 where
     T: Clone + Eq,
@@ -730,153 +362,35 @@ where
         final_vec.push(temp_vec);
     }
     Some(final_vec)
-}
-make_instruction_mult!(vector_int, vector_int, _split_on_vector, Vec<i128>, 1);
-make_instruction_mult!(
-    vector_float,
-    vector_float,
-    _split_on_vector,
-    Vec<Decimal>,
-    1
-);
-make_instruction_mult!(
-    vector_string,
-    vector_string,
-    _split_on_vector,
-    Vec<Vec<char>>,
-    1
-);
-make_instruction_mult!(
-    vector_boolean,
-    vector_boolean,
-    _split_on_vector,
-    Vec<bool>,
-    1
-);
-make_instruction_mult!(vector_char, vector_char, _split_on_vector, Vec<char>, 1);
-make_instruction_mult!(string, string, _split_on_vector, Vec<char>, 1);*/
+}*/
 
 /// Replaces all values in a vector with respect to two primitives. The first primitive is
 /// the search value and the second value is the one to replace.
-fn _replace<T>(mut vals: Vec<Vec<T>>, auxs: Vec<T>) -> Option<Vec<T>>
+fn _replace<T>(mut vals: Vec<T>, from: T, to: T) -> Option<Vec<T>>
 where
     T: Clone,
     for<'a> &'a T: Eq,
     Vec<T>: FromIterator<T>,
 {
-    let temp_vec = &mut vals[0];
+    let temp_vec = &mut vals;
     let ret_vec: Vec<T> = temp_vec
         .iter()
-        .map(|x| {
-            if x == &auxs[0] {
-                auxs[1].clone()
-            } else {
-                x.clone()
-            }
-        })
+        .map(|x| if x == &from { to.clone() } else { x.clone() })
         .collect();
     Some(ret_vec)
 }
-make_instruction_aux!(vector_int, vector_int, _replace, Vec<i128>, 1, int, 2, i128);
-make_instruction_aux!(
-    vector_float,
-    vector_float,
-    _replace,
-    Vec<Decimal>,
-    1,
-    float,
-    2,
-    Decimal
-);
-make_instruction_aux!(
-    vector_string,
-    vector_string,
-    _replace,
-    Vec<Vec<char>>,
-    1,
-    string,
-    2,
-    Vec<char>
-);
-make_instruction_aux!(
-    vector_boolean,
-    vector_boolean,
-    _replace,
-    Vec<bool>,
-    1,
-    boolean,
-    2,
-    bool
-);
-make_instruction_aux!(
-    vector_char,
-    vector_char,
-    _replace,
-    Vec<char>,
-    1,
-    char,
-    2,
-    char
-);
-make_instruction_aux!(string, string, _replace, Vec<char>, 1, char, 2, char);
 
-/// Removes all values in a vector with respect to a primitives. If is equal, remove it.
-fn _remove<T>(vals: Vec<Vec<T>>, auxs: Vec<T>) -> Option<Vec<T>>
+/// Removes all values in a vector with respect to a primitive. If is equal, remove it.
+fn _remove<T>(vals: Vec<T>, prim: T) -> Option<Vec<T>>
 where
     T: Clone,
     for<'a> &'a T: Eq,
     Vec<T>: FromIterator<T>,
 {
-    let temp_vec = &vals[0];
-    let ret_vec = temp_vec
-        .iter()
-        .filter(|&x| x != &auxs[0])
-        .cloned()
-        .collect();
+    let temp_vec = &vals;
+    let ret_vec = temp_vec.iter().filter(|&x| x != &prim).cloned().collect();
     Some(ret_vec)
 }
-make_instruction_aux!(vector_int, vector_int, _remove, Vec<i128>, 1, int, 1, i128);
-make_instruction_aux!(
-    vector_float,
-    vector_float,
-    _remove,
-    Vec<Decimal>,
-    1,
-    float,
-    1,
-    Decimal
-);
-make_instruction_aux!(
-    vector_string,
-    vector_string,
-    _remove,
-    Vec<Vec<char>>,
-    1,
-    string,
-    1,
-    Vec<char>
-);
-make_instruction_aux!(
-    vector_boolean,
-    vector_boolean,
-    _remove,
-    Vec<bool>,
-    1,
-    boolean,
-    1,
-    bool
-);
-make_instruction_aux!(
-    vector_char,
-    vector_char,
-    _remove,
-    Vec<char>,
-    1,
-    char,
-    1,
-    char
-);
-make_instruction_aux!(string, string, _remove, Vec<char>, 1, char, 1, char);
 
 /// Iterates over a vector using an instruction from the exec stack.
 macro_rules! make_iterate {
@@ -891,11 +405,11 @@ macro_rules! make_iterate {
                     state.exec.pop();
                     return;
                 } else if first_vec.len() == 1 {
-                    state.$prim_stack.push(first_vec[0]);
+                    state.$prim_stack.push(first_vec[0].clone());
                     return;
                 } else {
                     let top_exec = state.exec[state.exec.len() - 1].clone();
-                    let first_prim = first_vec[0];
+                    let first_prim = first_vec[0].clone();
                     state.exec.push(Gene::StateFunc([< $vec_stack _iterate >]));
                     state.exec.push(Gene::$vec_gene(first_vec[1..].to_vec()));
                     state.exec.push(top_exec);
@@ -907,241 +421,94 @@ macro_rules! make_iterate {
 }
 make_iterate!(vector_int, int, GeneVectorInt);
 make_iterate!(vector_float, float, GeneVectorFloat);
-//make_iterate!(vector_string, string, GeneVectorString);
+make_iterate!(vector_string, string, GeneVectorString);
 make_iterate!(vector_boolean, boolean, GeneVectorBoolean);
 make_iterate!(vector_char, char, GeneVectorChar);
-//make_iterate!(string, string, GeneString);
+make_iterate!(string, char, GeneString);
 
 /// Sorts a vector
-fn _sort<T>(mut vals: Vec<Vec<T>>) -> Option<Vec<T>>
+fn _sort<T>(mut vals: Vec<T>) -> Option<Vec<T>>
 where
-    T: NumericTrait + Clone,
+    T: NumericTrait,
 {
-    vals[0].sort();
-    Some(vals[0].clone())
+    vals.sort();
+    Some(vals)
 }
-make_instruction_clone!(vector_int, vector_int, _sort, Vec<i128>, 1);
-make_instruction_clone!(vector_float, vector_float, _sort, Vec<Decimal>, 1);
 
 /// Sorts a vector and reverses it
-fn _sort_reverse<T>(mut vals: Vec<Vec<T>>) -> Option<Vec<T>>
+fn _sort_reverse<T>(mut vals: Vec<T>) -> Option<Vec<T>>
 where
-    T: NumericTrait + Clone,
+    T: NumericTrait,
 {
-    vals[0].sort();
-    vals[0].reverse();
-    Some(vals[0].clone())
+    vals.sort();
+    vals.reverse();
+    Some(vals)
 }
-make_instruction_clone!(vector_int, vector_int, _sort_reverse, Vec<i128>, 1);
-make_instruction_clone!(vector_float, vector_float, _sort_reverse, Vec<Decimal>, 1);
 
 /// Inserts a primitive into a vector at a given point from the int stack
-fn _insert<T>(mut vals: Vec<Vec<T>>, auxs: Vec<T>, auxs2: Vec<i128>) -> Option<Vec<T>>
-where
-    T: Clone,
-{
-    let vec_len = vals[0].len();
-    vals[0].insert(bounded_idx(auxs2[0], vec_len), auxs[0].clone());
-    Some(vals[0].clone())
+fn _insert<T>(mut vals: Vec<T>, idx: i128, prim: T) -> Option<Vec<T>> {
+    let vec_len = vals.len();
+    vals.insert(bounded_idx(idx, vec_len), prim);
+    Some(vals)
 }
-make_instruction_aux2!(
-    vector_int,
-    vector_int,
-    _insert,
-    Vec<i128>,
-    1,
-    int,
-    1,
-    i128,
-    int,
-    1,
-    i128
-);
-make_instruction_aux2!(
-    vector_float,
-    vector_float,
-    _insert,
-    Vec<Decimal>,
-    1,
-    float,
-    1,
-    Decimal,
-    int,
-    1,
-    i128
-);
-make_instruction_aux2!(
-    vector_string,
-    vector_string,
-    _insert,
-    Vec<Vec<char>>,
-    1,
-    string,
-    1,
-    Vec<char>,
-    int,
-    1,
-    i128
-);
-make_instruction_aux2!(
-    vector_boolean,
-    vector_boolean,
-    _insert,
-    Vec<bool>,
-    1,
-    boolean,
-    1,
-    bool,
-    int,
-    1,
-    i128
-);
-make_instruction_aux2!(
-    vector_char,
-    vector_char,
-    _insert,
-    Vec<char>,
-    1,
-    char,
-    1,
-    char,
-    int,
-    1,
-    i128
-);
-make_instruction_aux2!(
-    string,
-    string,
-    _insert,
-    Vec<char>,
-    1,
-    char,
-    1,
-    char,
-    int,
-    1,
-    i128
-);
 
 /// Inserts one vector into another based on an index.
-fn _insert_vector<T>(mut vals: Vec<Vec<T>>, auxs: Vec<i128>) -> Option<Vec<T>>
+fn _insert_vector<T>(vec0: Vec<T>, mut vec1: Vec<T>, idx: i128) -> Option<Vec<T>>
 where
     T: Clone,
 {
-    let vec_len = vals[0].len();
-    let idx = bounded_idx(auxs[0], vec_len);
-    let insert_list = vals[0].clone();
-    vals[1].splice(idx..idx, insert_list);
-    Some(vals[1].clone())
+    let bound_idx = bounded_idx(idx, vec0.len());
+    vec1.splice(bound_idx..bound_idx, vec0);
+    Some(vec1)
 }
-make_instruction_aux!(
-    vector_int,
-    vector_int,
-    _insert_vector,
-    Vec<i128>,
-    2,
-    int,
-    1,
-    i128
-);
-make_instruction_aux!(
-    vector_float,
-    vector_float,
-    _insert_vector,
-    Vec<Decimal>,
-    2,
-    int,
-    1,
-    i128
-);
-make_instruction_aux!(
-    vector_string,
-    vector_string,
-    _insert_vector,
-    Vec<Vec<char>>,
-    2,
-    int,
-    1,
-    i128
-);
-make_instruction_aux!(
-    vector_boolean,
-    vector_boolean,
-    _insert_vector,
-    Vec<bool>,
-    2,
-    int,
-    1,
-    i128
-);
-make_instruction_aux!(
-    vector_char,
-    vector_char,
-    _insert_vector,
-    Vec<char>,
-    2,
-    int,
-    1,
-    i128
-);
-make_instruction_aux!(string, string, _insert_vector, Vec<char>, 2, int, 1, i128);
 
 /// Takes the mean of a vector
-fn _mean<T: NumericTrait + Clone>(vals: Vec<Vec<T>>) -> Option<T> {
-    if vals[0].is_empty() {
+fn _mean<T: NumericTrait + Clone>(vals: Vec<T>) -> Option<T> {
+    if vals.is_empty() {
         return Some(T::zero());
     }
     let mut fin_num = T::zero();
-    for num in vals[0].clone().into_iter() {
+    for num in vals.clone().into_iter() {
         fin_num = fin_num + num;
     }
-    Some(fin_num.div(T::from_usize(vals[0].len())))
+    Some(fin_num.div(T::from_usize(vals.len())))
 }
-make_instruction_clone!(vector_int, int, _mean, Vec<i128>, 1);
-make_instruction_clone!(vector_float, float, _mean, Vec<Decimal>, 1);
 
 /// Takes the max of a vector
-fn _maximum<T: NumericTrait + Clone>(vals: Vec<Vec<T>>) -> Option<T> {
-    if vals[0].is_empty() {
+fn _maximum<T: NumericTrait>(vals: Vec<T>) -> Option<T> {
+    if vals.is_empty() {
         return Some(T::zero());
     }
-    Some(vals[0].iter().max()?.clone())
+    vals.into_iter().max()
 }
-make_instruction_clone!(vector_int, int, _maximum, Vec<i128>, 1);
-make_instruction_clone!(vector_float, float, _maximum, Vec<Decimal>, 1);
 
 /// Takes the min of a vector
-fn _minimum<T: NumericTrait + Clone>(vals: Vec<Vec<T>>) -> Option<T> {
-    if vals[0].is_empty() {
+fn _minimum<T: NumericTrait>(vals: Vec<T>) -> Option<T> {
+    if vals.is_empty() {
         return Some(T::zero());
     }
-    Some(vals[0].iter().min()?.clone())
+    vals.into_iter().min()
 }
-make_instruction_clone!(vector_int, int, _minimum, Vec<i128>, 1);
-make_instruction_clone!(vector_float, float, _minimum, Vec<Decimal>, 1);
 
 /// Takes the sum of a vector
-fn _sum<T: NumericTrait + Clone>(vals: Vec<Vec<T>>) -> Option<T> {
-    if vals[0].is_empty() {
+fn _sum<T: NumericTrait + Clone>(vals: Vec<T>) -> Option<T> {
+    if vals.is_empty() {
         return Some(T::zero());
     }
     let mut fin_num = T::zero();
-    for num in vals[0].clone().into_iter() {
+    for num in vals.clone().into_iter() {
         fin_num = fin_num + num;
     }
     Some(fin_num)
 }
-make_instruction_clone!(vector_int, int, _sum, Vec<i128>, 1);
-make_instruction_clone!(vector_float, float, _sum, Vec<Decimal>, 1);
 
 /// Takes the mode of a vector
-fn _mode<T: NumericTrait + Clone + Hash + Copy>(vals: Vec<Vec<T>>) -> Option<T> {
-    if vals[0].is_empty() {
+fn _mode<T: NumericTrait + Clone + Hash + Copy>(vals: Vec<T>) -> Option<T> {
+    if vals.is_empty() {
         return Some(T::zero());
     }
     let mut counts = HashMap::new();
-    vals[0]
-        .iter()
+    vals.iter()
         .max_by_key(|&x| {
             let count = counts.entry(x).or_insert(0);
             *count += 1;
@@ -1149,38 +516,32 @@ fn _mode<T: NumericTrait + Clone + Hash + Copy>(vals: Vec<Vec<T>>) -> Option<T> 
         })
         .copied()
 }
-make_instruction_clone!(vector_int, int, _mode, Vec<i128>, 1);
-make_instruction_clone!(vector_float, float, _mode, Vec<Decimal>, 1);
 
 /// Adds the squares of all values in a vector and then takes the square root
-fn _two_norm<T: NumericTrait + Clone>(vals: Vec<Vec<T>>) -> Option<T> {
-    if vals[0].is_empty() {
+fn _two_norm<T: NumericTrait + Clone>(vals: Vec<T>) -> Option<T> {
+    if vals.is_empty() {
         return Some(T::zero());
     }
     let mut fin_num = T::zero();
-    for num in vals[0].clone().into_iter() {
+    for num in vals.clone().into_iter() {
         fin_num = fin_num + (num.clone() * num);
     }
     fin_num.safe_sqrt()
 }
-make_instruction_clone!(vector_int, int, _two_norm, Vec<i128>, 1);
-make_instruction_clone!(vector_float, float, _two_norm, Vec<Decimal>, 1);
 
 /// Takes the cumulative sum of a vector
-fn _cumulative_sum<T: NumericTrait + Clone>(vals: Vec<Vec<T>>) -> Option<Vec<T>> {
-    if vals[0].is_empty() {
+fn _cumulative_sum<T: NumericTrait + Clone>(vals: Vec<T>) -> Option<Vec<T>> {
+    if vals.is_empty() {
         return Some(vec![]);
     }
     let mut fin_num = T::zero();
     let mut ret_vec = vec![];
-    for num in vals[0].clone().into_iter() {
+    for num in vals.clone().into_iter() {
         fin_num = fin_num + num;
         ret_vec.push(fin_num.clone());
     }
     Some(ret_vec)
 }
-make_instruction_clone!(vector_int, vector_int, _cumulative_sum, Vec<i128>, 1);
-make_instruction_clone!(vector_float, vector_float, _cumulative_sum, Vec<Decimal>, 1);
 
 /* /// Takes the cumulative mean of a vector
 fn _cumulative_mean<T: NumericTrait + Clone>(vals: Vec<Vec<T>>) -> Option<Vec<T>> {
@@ -1230,8 +591,43 @@ macro_rules! make_vector_instructions {
         make_instruction_new!(_drop_last, $stack, $stack, $stack, int);
         make_instruction_new!(_length, $stack, int, $stack);
         make_instruction_new!(_reverse, $stack, $stack, $stack);
-        //make_instruction_new_aux!(_push_all, $stack, $prim_stack, $stack);
-        //make_instruction_empty!(_make_empty, $stack, $stack, $stack);
+        make_instruction_new_aux!(_push_all, $stack, $prim_stack, $stack);
+        // _make_empty would go here
+        make_instruction_new!(_is_empty, $stack, boolean, $stack);
+        make_instruction_new!(_contains, $stack, boolean, $stack, $prim_stack);
+        make_instruction_new!(
+            _contains_vector_non_contiguous,
+            $stack,
+            boolean,
+            $stack,
+            $stack
+        );
+        make_instruction_new!(_contains_vector_contiguous, $stack, boolean, $stack, $stack);
+        make_instruction_new!(_index_of, $stack, int, $stack, $prim_stack);
+        make_instruction_new!(_index_of_vector, $stack, int, $stack, $stack);
+        make_instruction_new!(_occurrences_of, $stack, int, $stack, $prim_stack);
+        make_instruction_new!(_occurrences_of_vector, $stack, int, $stack, $stack);
+        make_instruction_new_aux!(_parse_to_prim, $stack, $stack, $stack);
+        make_instruction_new!(_set_nth, $stack, $stack, $stack, int, $prim_stack);
+        make_instruction_new_aux!(_split_on, $stack, $stack, $stack, $prim_stack);
+        make_instruction_new!(_replace, $stack, $stack, $stack, $prim_stack, $prim_stack);
+        make_instruction_new!(_remove, $stack, $stack, $stack, $prim_stack);
+        make_instruction_new!(_insert, $stack, $stack, $stack, int, $prim_stack);
+        make_instruction_new!(_insert_vector, $stack, $stack, $stack, $stack, int);
+    };
+}
+
+macro_rules! make_numeric_vector_instructions {
+    ($stack:ident, $prim_stack:ident) => {
+        make_instruction_new!(_sort, $stack, $stack, $stack);
+        make_instruction_new!(_sort_reverse, $stack, $stack, $stack);
+        make_instruction_new!(_mean, $stack, $prim_stack, $stack);
+        make_instruction_new!(_maximum, $stack, $prim_stack, $stack);
+        make_instruction_new!(_minimum, $stack, $prim_stack, $stack);
+        make_instruction_new!(_sum, $stack, $prim_stack, $stack);
+        make_instruction_new!(_mode, $stack, $prim_stack, $stack);
+        make_instruction_new!(_two_norm, $stack, $prim_stack, $stack);
+        make_instruction_new!(_cumulative_sum, $stack, $stack, $stack);
     };
 }
 
@@ -1244,12 +640,19 @@ macro_rules! all_vector_instructions {
         make_vector_instructions!(vector_char, char);
         make_vector_instructions!(string, char);
 
-        // Instructions that don't work on every stack
-        make_instruction_new_aux!(_push_all, vector_int, int, vector_int);
-        make_instruction_new_aux!(_push_all, vector_float, float, vector_float);
-        make_instruction_new_aux!(_push_all, vector_boolean, boolean, vector_boolean);
-        make_instruction_new_aux!(_push_all, vector_char, char, vector_char);
-        make_instruction_new_aux!(_push_all, string, char, string);
+        // Need to pass a stack type to the empty! macro,
+        // wont work in the make_vector_instructions macro without
+        // bloating it a bit more
+        make_instruction_empty!(_make_empty, vector_int, vector_int, i128);
+        make_instruction_empty!(_make_empty, vector_float, vector_float, Decimal);
+        make_instruction_empty!(_make_empty, vector_string, vector_string, Vec<char>);
+        make_instruction_empty!(_make_empty, vector_boolean, vector_boolean, bool);
+        make_instruction_empty!(_make_empty, vector_char, vector_char, char);
+        make_instruction_empty!(_make_empty, string, string, char);
+
+        // Numeric only vector instructions
+        make_numeric_vector_instructions!(vector_int, int);
+        make_numeric_vector_instructions!(vector_float, float);
     };
 }
 all_vector_instructions!();
@@ -1809,6 +1212,15 @@ mod tests {
     }
 
     #[test]
+    fn parse_to_prim_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.vector_int = vec![vec![0, 1, 2]];
+        vector_int_parse_to_prim(&mut test_state);
+        assert_eq!(vec![vec![0], vec![1], vec![2]], test_state.vector_int);
+    }
+
+    #[test]
     fn set_nth_test() {
         let mut test_state = EMPTY_STATE;
 
@@ -1828,15 +1240,6 @@ mod tests {
         test_state.boolean = vec![true];
         vector_boolean_set_nth(&mut test_state);
         assert_eq!(vec![vec![true, false, true]], test_state.vector_boolean);
-    }
-
-    #[test]
-    fn parse_to_prim_test() {
-        let mut test_state = EMPTY_STATE;
-
-        test_state.vector_int = vec![vec![0, 1, 2]];
-        vector_int_parse_to_prim(&mut test_state);
-        assert_eq!(vec![vec![0], vec![1], vec![2]], test_state.vector_int);
     }
 
     #[test]
@@ -2051,7 +1454,7 @@ mod tests {
     }
 
     #[test]
-    fn sqrt_test() {
+    fn two_norm_test() {
         let mut test_state = EMPTY_STATE;
 
         test_state.vector_int = vec![vec![5, 5, 5, 5]];
