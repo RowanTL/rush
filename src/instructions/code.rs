@@ -349,20 +349,19 @@ pub fn exec_when(state: &mut PushState) {
 
 /// Pushes true if the second code item is found within the first item.
 /// If the first item isn't a block, coerced into one.
-pub fn _member(vals: Vec<Gene>) -> Option<bool> {
-    let block = match vals[0].clone() {
+pub fn _member(a: Gene, b: Gene) -> Option<bool> {
+    let block = match b {
         Gene::Block(val) => val,
         val => vec![val],
     };
 
-    Some(block.contains(&vals[1]))
+    Some(block.contains(&a))
 }
-make_instruction_clone!(code, boolean, _member, Gene, 2);
 
 /// Pushes the nth item of the top element of the code stack.
 /// If top code item isn't a block, wrap one around it.
-pub fn _nth(vals: Vec<Gene>, auxs: Vec<i128>) -> Option<Gene> {
-    let gene_vec = match vals[0].clone() {
+pub fn _nth(a: Gene, idx: i128) -> Option<Gene> {
+    let gene_vec = match a {
         Gene::Block(val) => val,
         val => vec![val],
     };
@@ -370,22 +369,19 @@ pub fn _nth(vals: Vec<Gene>, auxs: Vec<i128>) -> Option<Gene> {
     if gene_vec_len == 0 {
         return None;
     }
-    let ndx = auxs[0].abs() as usize % gene_vec_len;
+    let ndx = idx.abs() as usize % gene_vec_len;
     Some(gene_vec[ndx].clone())
 }
-make_instruction_aux!(code, code, _nth, Gene, 1, int, 1, i128);
 
 /// Pushes an empty block to the top of a stack.
-pub fn _make_empty_block<T>(_: Vec<T>) -> Option<Gene> {
+pub fn _make_empty_block<T>() -> Option<Gene> {
     Some(Gene::Block(vec![]))
 }
-make_instruction_clone!(code, code, _make_empty_block, Gene, 0);
-make_instruction_clone!(exec, exec, _make_empty_block, Gene, 0);
 
 /// Checks to see if the top item on the code/exec stack is an empty block.
 /// True if is, False if not.
-pub fn _is_empty_block(vals: Vec<Gene>) -> Option<bool> {
-    Some(match vals[0].clone() {
+pub fn _is_empty_block(a: Gene) -> Option<bool> {
+    Some(match a {
         Gene::Block(val) => {
             if val.is_empty() {
                 true
@@ -396,70 +392,64 @@ pub fn _is_empty_block(vals: Vec<Gene>) -> Option<bool> {
         _ => false,
     })
 }
-make_instruction_clone!(code, boolean, _is_empty_block, Gene, 1);
-make_instruction_clone!(exec, boolean, _is_empty_block, Gene, 1);
 
 /// Returns the size of the top item on the code/exec stack.
-pub fn _size(vals: Vec<Gene>) -> Option<i128> {
-    Some(match vals[0].clone() {
+pub fn _size(a: Gene) -> Option<i128> {
+    Some(match a.clone() {
         Gene::Block(val) => val.len() as i128,
         _ => 1,
     })
 }
-make_instruction_clone!(code, int, _size, Gene, 1);
-make_instruction_clone!(exec, int, _size, Gene, 1);
 
 /// Returns a nested element inside a block based on an int.
-pub fn _extract(vals: Vec<Gene>, auxs: Vec<i128>) -> Option<Gene> {
-    match vals[0].clone() {
+pub fn _extract(a: Gene, idx: i128) -> Option<Gene> {
+    match &a {
         block @ Gene::Block(_) => {
             let block_len = block.rec_len();
             if block_len == 0 {
                 None
             } else {
-                let ndx = (auxs[0] % block_len as i128).abs() as usize;
-                Some(vals[0].clone().code_at_point(ndx)?)
+                let ndx = (idx % block_len as i128).abs() as usize;
+                Some(a.code_at_point(ndx)?)
             }
         }
-        val => Some(val),
+        _ => Some(a),
     }
 }
-make_instruction_aux!(code, code, _extract, Gene, 1, int, 1, i128);
 
 /// Inserts a gene at a given position in into the top block based off an
 /// int from the top of the int stack. The top code item is coerced into a block
 /// if needed.
-pub fn _insert(vals: Vec<Gene>, auxs: Vec<i128>) -> Option<Gene> {
-    let mut block = match vals[0].clone() {
+pub fn _insert(a: Gene, b: Gene, idx: i128) -> Option<Gene> {
+    let mut block = match a.clone() {
         iblock @ Gene::Block(_) => iblock,
         val => Gene::Block(vec![val]),
     };
     if block.rec_len() == 0 {
-        return _combine(block, vals[1].clone());
+        return _combine(block, b);
     }
-    let ndx = auxs[0].abs() as usize % block.rec_len();
-    block.with_code_inserted_at_point(vals[1].clone(), ndx);
+    let ndx = idx.abs() as usize % block.rec_len();
+    block.with_code_inserted_at_point(b, ndx);
     Some(block)
 }
-make_instruction_aux!(code, code, _insert, Gene, 2, int, 1, i128);
 
 /// Pushes the first position of the 2nd code item within the top code item.
 /// If not found, pushes -1. If top code item isn't a block, returns 0 if top
 /// two code items equal, -1 otherwise.
-pub fn _first_position(vals: Vec<Gene>) -> Option<i128> {
-    let bad_cond: bool = match &vals[0] {
+pub fn _first_position(a: Gene, b: Gene) -> Option<i128> {
+    let bad_cond: bool = match &a {
         Gene::Block(val) => val.len() == 0,
         _ => true,
     };
     if bad_cond {
-        if vals[0] == vals[1] {
+        if a == b {
             return Some(0);
         }
     } else {
-        match &vals[0] {
+        match &a {
             Gene::Block(val) => {
                 for (idx, el) in val.iter().enumerate() {
-                    if el == &vals[1] {
+                    if el == &b {
                         return Some(idx as i128);
                     }
                 }
@@ -469,11 +459,10 @@ pub fn _first_position(vals: Vec<Gene>) -> Option<i128> {
     }
     Some(-1)
 }
-make_instruction_clone!(code, int, _first_position, Gene, 2);
 
 /// Reverses the top block. Does nothing if not a block.
-pub fn _reverse(vals: Vec<Gene>) -> Option<Gene> {
-    Some(match vals[0].clone() {
+pub fn _reverse(a: Gene) -> Option<Gene> {
+    Some(match a {
         Gene::Block(mut val) => {
             val.reverse();
             Gene::Block(val)
@@ -481,7 +470,6 @@ pub fn _reverse(vals: Vec<Gene>) -> Option<Gene> {
         val => val,
     })
 }
-make_instruction_clone!(code, code, _reverse, Gene, 1);
 
 macro_rules! make_code_instructions {
     ($stack:ident) => {
@@ -494,7 +482,16 @@ macro_rules! make_code_instructions {
         make_instruction_new!(_but_last, $stack, $stack, $stack);
         make_instruction_new!(_wrap_block, $stack, $stack, $stack);
         make_instruction_new!(_combine, $stack, $stack, $stack, $stack);
-        //make_instruction_new!(_if, $stack, $stack, $stack, $stack, boolean);
+        make_instruction_new!(_if, $stack, exec, $stack, $stack, boolean);
+        make_instruction_new!(_member, $stack, boolean, $stack, $stack);
+        make_instruction_new!(_nth, $stack, $stack, $stack, int);
+        make_instruction_empty!(_make_empty_block, $stack, $stack, Gene);
+        make_instruction_new!(_is_empty_block, $stack, boolean, $stack);
+        make_instruction_new!(_size, $stack, int, $stack);
+        make_instruction_new!(_extract, $stack, $stack, $stack, int);
+        make_instruction_new!(_insert, $stack, $stack, $stack, $stack, int);
+        make_instruction_new!(_first_position, $stack, int, $stack, $stack);
+        make_instruction_new!(_reverse, $stack, $stack, $stack);
     };
 }
 
@@ -505,7 +502,6 @@ macro_rules! all_code_instructions {
     };
 }
 all_code_instructions!();
-make_instruction_new!(_if, code, code, code, code, boolean);
 
 #[cfg(test)]
 mod tests {
@@ -892,7 +888,7 @@ mod tests {
         let mut test_state = EMPTY_STATE;
 
         // Code tests
-        /*test_state.code = vec![Gene::GeneInt(0), Gene::GeneInt(1)];
+        test_state.code = vec![Gene::GeneInt(0), Gene::GeneInt(1)];
         test_state.boolean = vec![true];
         code_if(&mut test_state);
         assert_eq!(vec![Gene::GeneInt(1)], test_state.exec);
@@ -915,7 +911,7 @@ mod tests {
         test_state.boolean = vec![false];
         exec_if(&mut test_state);
         assert_eq!(vec![Gene::GeneInt(0)], test_state.exec);
-        test_state.exec.clear();*/
+        test_state.exec.clear();
     }
 
     #[test]
@@ -959,24 +955,24 @@ mod tests {
         let mut test_state = EMPTY_STATE;
 
         test_state.code = vec![
-            Gene::GeneInt(0),
             Gene::Block(vec![
                 Gene::GeneInt(0),
                 Gene::GeneInt(4),
                 Gene::StateFunc(exec_do_range),
             ]),
+            Gene::GeneInt(0),
         ];
         code_member(&mut test_state);
         assert_eq!(vec![true], test_state.boolean);
         test_state.boolean.clear();
 
         test_state.code = vec![
-            Gene::GeneInt(0),
             Gene::Block(vec![
                 Gene::GeneInt(5),
                 Gene::GeneInt(4),
                 Gene::StateFunc(exec_do_range),
             ]),
+            Gene::GeneInt(0),
         ];
         code_member(&mut test_state);
         assert_eq!(vec![false], test_state.boolean);

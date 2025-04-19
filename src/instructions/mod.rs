@@ -308,13 +308,27 @@ pub mod macros {
         };
     }
 
-    /// Runs a function and ensures needed variables are extracted from a state without error while
+    /// Runs a function and ensures the necessary variables are extracted from a state without error while
     /// returning multiple variables from the function
     macro_rules! make_instruction_new_aux {
         ($func:ident, $prefix:ident, $out_stack:ident, $($stacks:ident), *) => {
             paste::item! {
                 pub fn [< $prefix $func >] (state: &mut PushState) {
                     rush_macro::run_instruction!($func, $out_stack, state, $($stacks), *, ;);
+                }
+            }
+        };
+    }
+
+    /// Makes an instruction that takes no input stacks. Must specify a type for this
+    /// one so because the result needs a type, and the compiler can't infer it here :(
+    macro_rules! make_instruction_empty {
+        ($func:ident, $prefix:ident, $out_stack:ident, $out_type:ty) => {
+            paste::item! {
+                pub fn [< $prefix $func >] (state: &mut PushState) {
+                    if let Some(result) = $func::<$out_type>() {
+                        state.$out_stack.push(result);
+                    }
                 }
             }
         };

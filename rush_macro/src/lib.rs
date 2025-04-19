@@ -37,6 +37,8 @@ mod utils;
 ///
 /// Suggestion: If you need to pull an index from the int stack, make it the first argument
 /// to your function.
+///
+/// If there is an instruction with no stacks as input, must put a comma at the end.
 #[proc_macro]
 pub fn run_instruction(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let f = parse_macro_input!(input as Extract);

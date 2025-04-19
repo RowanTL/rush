@@ -1,5 +1,8 @@
+//! Where the hard work for automatically generating instructions is done.
+//! Check `run_instruction!` for more details.
+//!
 //! This Stack that isn't repeated is the desired output stack.
-//! Extract: Function, Stack, State, (`,` Stack)* ;?
+//! Extract: Function, Stack, State (`,` Stack)* ;?
 //!
 //! Function: identifier
 //!
@@ -56,6 +59,12 @@ impl ToTokens for Extract {
         let stacks = &self.stacks;
         let aux = &self.aux;
 
+        // Gets the counts of each stack passed to the macro held
+        // similarly to a map as: (stack, count).
+        //
+        // Chosen over a HashMap bc these types don't implement Hash
+        // HashMaps are O(nlogn) at worst this is O(n^2). Largest instruction
+        // passes 4 stacks so this shouldn't matter in the long run.
         let mut counts = Vec::new();
         for stack in stacks {
             match counts.iter_mut().find(|(x, _)| x == stack) {
@@ -64,32 +73,40 @@ impl ToTokens for Extract {
             }
         }
 
+        // Writes the piece of the code that ensures the stacks have enough values
+        // to function without error.
         let conditions = counts.iter().map(|(stack, count)| {
             let inner_stack = &stack.0;
             quote! { #inner_state.#inner_stack.len() >= #count }
         });
 
-        // Create variables to store popped values
+        // In case the instruction returns None (meaning revert the state),
+        // need to store the values to return them
         let store_values = stacks.iter().enumerate().map(|(i, stack)| {
             let inner_stack = &&stack.0;
             let var_name = quote::format_ident!("val_{}", i);
             quote! { let #var_name = #inner_state.#inner_stack.pop().unwrap(); }
         });
 
-        // Create slices of variable names for restoration and function call
+        // Create the variable names themselves to store the
+        // popped values.
         let value_vars = (0..stacks.len())
             .map(|i| quote::format_ident!("val_{}", i))
             .collect::<Vec<_>>();
 
-        // Create restore operations for each stack
-        let restore_values = stacks
-            .iter()
-            .zip(value_vars.iter().rev())
-            .map(|(stack, var)| {
-                let inner_stack = &&stack.0;
-                quote! { #inner_state.#inner_stack.push(#var.clone()); }
-            });
+        // Create restore code in case None is returned from the function.
+        let restore_values =
+            stacks
+                .iter()
+                .rev()
+                .zip(value_vars.iter().rev())
+                .map(|(stack, var)| {
+                    let inner_stack = &&stack.0;
+                    quote! { #inner_state.#inner_stack.push(#var.clone()); }
+                });
 
+        // The logic for running the function and returning values
+        // if bad.
         let aux_run = match aux {
             true => quote! {
                 let result = #inner_func(#(#value_vars.clone()),*);
@@ -109,6 +126,8 @@ impl ToTokens for Extract {
             },
         };
 
+        // Where the pieces of the puzzle are put together.
+        // tokens then used to create the function.
         tokens.extend(quote! {
             if true #(&& (#conditions))* {
                 #(#store_values)*
