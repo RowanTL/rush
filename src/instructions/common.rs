@@ -232,23 +232,18 @@ macro_rules! make_common_instructions {
     };
 }
 
-macro_rules! all_common_instructions {
-    () => {
-        make_common_instructions!(int);
-        make_common_instructions!(float);
-        make_common_instructions!(string);
-        make_common_instructions!(boolean);
-        make_common_instructions!(char);
-        make_common_instructions!(vector_int);
-        make_common_instructions!(vector_float);
-        make_common_instructions!(vector_string);
-        make_common_instructions!(vector_boolean);
-        make_common_instructions!(vector_char);
-        make_common_instructions!(code);
-        make_common_instructions!(exec);
-    };
-}
-all_common_instructions!();
+make_common_instructions!(int);
+make_common_instructions!(float);
+make_common_instructions!(string);
+make_common_instructions!(boolean);
+make_common_instructions!(char);
+make_common_instructions!(vector_int);
+make_common_instructions!(vector_float);
+make_common_instructions!(vector_string);
+make_common_instructions!(vector_boolean);
+make_common_instructions!(vector_char);
+make_common_instructions!(code);
+make_common_instructions!(exec);
 
 #[cfg(test)]
 mod tests {
