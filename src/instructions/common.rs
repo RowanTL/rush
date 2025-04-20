@@ -128,15 +128,86 @@ macro_rules! yank {
                 if state.int.is_empty() || state.$in_stack.is_empty() {
                     return;
                 }
-                let in_stack_len = state.$in_stack.len();
                 let in_stack_name = stringify!($in_stack);
-                if in_stack_name == "int" && in_stack_len < 2 {
+                if in_stack_name == "int" && state.$in_stack.len() < 2 {
                     return;
                 }
                 // no -1 from in_stack_len, 1 subtracted within the min_max_bounds function
-                let idx = min_max_bounds(state.int.pop().unwrap(), in_stack_len);
-                let item = state.$in_stack.remove(in_stack_len - idx);
+                let pre_idx = state.int.pop().unwrap();
+                let idx = min_max_bounds(pre_idx, state.$in_stack.len());
+                let item = state.$in_stack.remove(state.$in_stack.len() - 1 - idx);
                 state.$in_stack.push(item);
+            }
+        }
+    };
+}
+
+macro_rules! yank_dup {
+    ($in_stack:ident) => {
+        paste::item! {
+            pub fn [< $in_stack _yank_dup >] (state: &mut PushState) {
+                if state.int.is_empty() || state.$in_stack.is_empty() {
+                    return;
+                }
+                let in_stack_name = stringify!($in_stack);
+                if in_stack_name == "int" && state.$in_stack.len() < 2 {
+                    return;
+                }
+                // no -1 from in_stack_len, 1 subtracted within the min_max_bounds function
+                let pre_idx = state.int.pop().unwrap();
+                let idx = min_max_bounds(pre_idx, state.$in_stack.len());
+                let item = state.$in_stack[state.$in_stack.len() - 1 - idx].clone();
+                state.$in_stack.push(item);
+            }
+        }
+    };
+}
+
+macro_rules! shove {
+    ($in_stack:ident) => {
+        paste::item! {
+            pub fn [< $in_stack _shove >] (state: &mut PushState) {
+                if state.int.is_empty() || state.$in_stack.is_empty() {
+                    return;
+                }
+                let in_stack_name = stringify!($in_stack);
+                if in_stack_name == "int" && state.$in_stack.len() < 2 {
+                    return;
+                }
+                let pre_idx = state.int.pop().unwrap();
+                let idx = min_max_bounds(pre_idx, state.$in_stack.len());
+                let item = state.$in_stack.pop().unwrap();
+                state.$in_stack.insert(state.$in_stack.len() - idx, item);
+            }
+        }
+    };
+}
+
+macro_rules! shove_dup {
+    ($in_stack:ident) => {
+        paste::item! {
+            pub fn [< $in_stack _shove_dup >] (state: &mut PushState) {
+                if state.int.is_empty() || state.$in_stack.is_empty() {
+                    return;
+                }
+                let in_stack_name = stringify!($in_stack);
+                if in_stack_name == "int" && state.$in_stack.len() < 2 {
+                    return;
+                }
+                let pre_idx = state.int.pop().unwrap();
+                let idx = min_max_bounds(pre_idx, state.$in_stack.len());
+                let item = state.$in_stack[state.$in_stack.len() - 1].clone();
+                state.$in_stack.insert(state.$in_stack.len() - idx, item);
+            }
+        }
+    };
+}
+
+macro_rules! is_state_empty {
+    ($in_stack:ident) => {
+        paste::item! {
+            pub fn [< $in_stack _is_empty >] (state: &mut PushState) {
+                state.boolean.push(state.$in_stack.is_empty());
             }
         }
     };
@@ -154,6 +225,10 @@ macro_rules! make_common_instructions {
         flush_state!($stack);
         stack_depth!($stack);
         yank!($stack);
+        yank_dup!($stack);
+        shove!($stack);
+        shove_dup!($stack);
+        is_state_empty!($stack);
     };
 }
 
@@ -291,5 +366,90 @@ mod tests {
         test_state.int = vec![1, 2, 3, 4, 5, 6, 7, 8, 2];
         int_yank(&mut test_state);
         assert_eq!(vec![1, 2, 3, 4, 5, 7, 8, 6], test_state.int);
+
+        test_state.int = vec![1, 2];
+        int_yank(&mut test_state);
+        assert_eq!(vec![1], test_state.int);
+
+        test_state.int = vec![0];
+        test_state.boolean = vec![true, true, true, false];
+        boolean_yank(&mut test_state);
+        assert_eq!(vec![true, true, true, false], test_state.boolean);
+    }
+
+    #[test]
+    fn yank_dup_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.int = vec![1, 2, 3, 4, 5, 6, 7, 8, 2];
+        int_yank_dup(&mut test_state);
+        assert_eq!(vec![1, 2, 3, 4, 5, 6, 7, 8, 6], test_state.int);
+
+        test_state.int = vec![1, 2];
+        int_yank_dup(&mut test_state);
+        assert_eq!(vec![1, 1], test_state.int);
+
+        test_state.int = vec![0];
+        test_state.boolean = vec![true, true, true, false];
+        boolean_yank_dup(&mut test_state);
+        assert_eq!(vec![true, true, true, false, false], test_state.boolean);
+
+        test_state.int = vec![0];
+        int_yank_dup(&mut test_state);
+        assert_eq!(vec![0], test_state.int);
+    }
+
+    #[test]
+    fn shove_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.int = vec![1, 2, 3, 4, 5, 1];
+        int_shove(&mut test_state);
+        assert_eq!(vec![1, 2, 3, 5, 4], test_state.int);
+
+        test_state.int = vec![1, 2, 3, 4, 5, 0];
+        int_shove(&mut test_state);
+        assert_eq!(vec![1, 2, 3, 4, 5], test_state.int);
+
+        test_state.int = vec![-1];
+        test_state.boolean = vec![true, true, true, false];
+        boolean_shove(&mut test_state);
+        assert_eq!(vec![true, true, false, true], test_state.boolean);
+    }
+
+    #[test]
+    fn shove_dup_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.int = vec![1, 1, 2, 3, 2];
+        int_shove_dup(&mut test_state);
+        assert_eq!(vec![1, 1, 3, 2, 3], test_state.int);
+
+        test_state.int = vec![1, 2, 3, 4, 5, 1];
+        int_shove_dup(&mut test_state);
+        assert_eq!(vec![1, 2, 3, 4, 5, 5], test_state.int);
+
+        test_state.int = vec![1, 2, 3, 4, 5, 0];
+        int_shove_dup(&mut test_state);
+        assert_eq!(vec![1, 2, 3, 4, 5, 5], test_state.int);
+
+        test_state.int = vec![-1];
+        test_state.boolean = vec![true, true, true, false];
+        boolean_shove_dup(&mut test_state);
+        assert_eq!(vec![true, true, true, false, false], test_state.boolean);
+    }
+
+    #[test]
+    fn is_state_empty_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.int = vec![1, 2];
+        int_is_empty(&mut test_state);
+        assert_eq!(vec![false], test_state.boolean);
+        test_state.boolean.clear();
+
+        test_state.int = vec![];
+        int_is_empty(&mut test_state);
+        assert_eq!(vec![true], test_state.boolean);
     }
 }
