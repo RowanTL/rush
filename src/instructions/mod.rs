@@ -1,3 +1,6 @@
+use crate::instructions::common::{int_dup, int_yank};
+use crate::push::state::PushState;
+
 #[macro_use]
 pub mod macros {
     /// Runs a function and ensures the necessary variables are extracted from a state without error
