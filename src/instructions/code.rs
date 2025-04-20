@@ -5,32 +5,29 @@ use crate::push::state::{Gene, PushState};
 use super::common::{code_from_exec, code_pop, int_pop};
 
 /// Checks to see if a single gene is a block.
-fn _is_block(vals: Vec<Gene>) -> Option<bool> {
-    Some(match vals[0] {
+fn _is_block(a: Gene) -> Option<bool> {
+    Some(match a {
         Gene::Block(_) => true,
         _ => false,
     })
 }
-make_instruction_clone!(code, boolean, _is_block, Gene, 1);
 
 /// Checks to see if a single gene is not a block.
-fn _is_singular(vals: Vec<Gene>) -> Option<bool> {
-    Some(_is_block(vals)?.not())
+fn _is_singular(a: Gene) -> Option<bool> {
+    Some(_is_block(a)?.not())
 }
-make_instruction_clone!(code, boolean, _is_singular, Gene, 1);
 
 /// Returns the length of a block, else 1 if not a block
-fn _length(vals: Vec<Gene>) -> Option<i128> {
-    Some(match &vals[0] {
+fn _length(a: Gene) -> Option<i128> {
+    Some(match &a {
         Gene::Block(x) => x.len() as i128,
         _ => 1,
     })
 }
-make_instruction_clone!(code, int, _length, Gene, 1);
 
 /// Returns the first item in a block if doable, else None
-fn _first(vals: Vec<Gene>) -> Option<Gene> {
-    match &vals[0] {
+fn _first(a: Gene) -> Option<Gene> {
+    match &a {
         Gene::Block(x) => {
             if x.len() > 1 {
                 Some(x[0].clone())
@@ -41,11 +38,10 @@ fn _first(vals: Vec<Gene>) -> Option<Gene> {
         _ => None,
     }
 }
-make_instruction_clone!(code, code, _first, Gene, 1);
 
 /// Returns the first item in a block if applicable, else None
-fn _last(vals: Vec<Gene>) -> Option<Gene> {
-    match &vals[0] {
+fn _last(a: Gene) -> Option<Gene> {
+    match &a {
         Gene::Block(x) => {
             if x.len() > 1 {
                 Some(x.last()?.clone())
@@ -56,11 +52,10 @@ fn _last(vals: Vec<Gene>) -> Option<Gene> {
         _ => None,
     }
 }
-make_instruction_clone!(code, code, _last, Gene, 1);
 
 /// Returns all but the first code item in a block if applicable, else None
-fn _rest(vals: Vec<Gene>) -> Option<Gene> {
-    match &vals[0] {
+fn _rest(a: Gene) -> Option<Gene> {
+    match &a {
         Gene::Block(x) => {
             if x.len() > 1 {
                 Some(Gene::Block(x[1..].to_vec()))
@@ -71,11 +66,10 @@ fn _rest(vals: Vec<Gene>) -> Option<Gene> {
         _ => None,
     }
 }
-make_instruction_clone!(code, code, _rest, Gene, 1);
 
 /// Returns all but the first code item in a block if applicable, else None
-fn _but_last(vals: Vec<Gene>) -> Option<Gene> {
-    match &vals[0] {
+fn _but_last(a: Gene) -> Option<Gene> {
+    match &a {
         Gene::Block(x) => {
             let x_len = x.len();
             if x_len > 1 {
@@ -87,19 +81,17 @@ fn _but_last(vals: Vec<Gene>) -> Option<Gene> {
         _ => None,
     }
 }
-make_instruction_clone!(code, code, _but_last, Gene, 1);
 
-/// Returns all the vals wrapped in a code block
-fn _wrap_block(vals: Vec<Gene>) -> Option<Gene> {
-    Some(Gene::Block(vals))
+/// Returns a gene wrapped in a block
+fn _wrap_block(a: Gene) -> Option<Gene> {
+    Some(Gene::Block(vec![a]))
 }
-make_instruction_clone!(code, code, _wrap_block, Gene, 1);
 
 /// Combines two genes into one. Accounts for blocks.
 /// If the second gene is a block and the first one isn't,
 /// appends the first gene to the second gene.
-fn _combine(vals: Vec<Gene>) -> Option<Gene> {
-    match (&vals[0], &vals[1]) {
+fn _combine(a: Gene, b: Gene) -> Option<Gene> {
+    match (&a, &b) {
         (Gene::Block(x), Gene::Block(y)) => {
             let x_clone = x.clone();
             let mut y_clone = y.clone();
@@ -119,7 +111,6 @@ fn _combine(vals: Vec<Gene>) -> Option<Gene> {
         (x, y) => Some(Gene::Block(vec![x.clone(), y.clone()])),
     }
 }
-make_instruction_clone!(code, code, _combine, Gene, 2);
 
 /// Pushes `code_pop` and the top item of the code stack to the exec stack.
 /// Top code item gets executed before being removed from code stack.
@@ -330,15 +321,9 @@ pub fn code_map(state: &mut PushState) {
 
 /// If top bool is true, execute top element of code/exec stack and skip the second.
 /// If false, execute second element and skip the top.
-pub fn _if(vals: Vec<Gene>, auxs: Vec<bool>) -> Option<Gene> {
-    Some(if auxs[0] {
-        vals[0].clone()
-    } else {
-        vals[1].clone()
-    })
+pub fn _if(a: Gene, b: Gene, cond: bool) -> Option<Gene> {
+    Some(if cond { a } else { b })
 }
-make_instruction_aux!(code, exec, _if, Gene, 2, boolean, 1, bool);
-make_instruction_aux!(exec, exec, _if, Gene, 2, boolean, 1, bool);
 
 /// Evaluates the top code item if the top code is true, else pops it.
 pub fn code_when(state: &mut PushState) {
@@ -364,20 +349,19 @@ pub fn exec_when(state: &mut PushState) {
 
 /// Pushes true if the second code item is found within the first item.
 /// If the first item isn't a block, coerced into one.
-pub fn _member(vals: Vec<Gene>) -> Option<bool> {
-    let block = match vals[0].clone() {
+pub fn _member(a: Gene, b: Gene) -> Option<bool> {
+    let block = match b {
         Gene::Block(val) => val,
         val => vec![val],
     };
 
-    Some(block.contains(&vals[1]))
+    Some(block.contains(&a))
 }
-make_instruction_clone!(code, boolean, _member, Gene, 2);
 
 /// Pushes the nth item of the top element of the code stack.
 /// If top code item isn't a block, wrap one around it.
-pub fn _nth(vals: Vec<Gene>, auxs: Vec<i128>) -> Option<Gene> {
-    let gene_vec = match vals[0].clone() {
+pub fn _nth(a: Gene, idx: i128) -> Option<Gene> {
+    let gene_vec = match a {
         Gene::Block(val) => val,
         val => vec![val],
     };
@@ -385,22 +369,19 @@ pub fn _nth(vals: Vec<Gene>, auxs: Vec<i128>) -> Option<Gene> {
     if gene_vec_len == 0 {
         return None;
     }
-    let ndx = auxs[0].abs() as usize % gene_vec_len;
+    let ndx = idx.abs() as usize % gene_vec_len;
     Some(gene_vec[ndx].clone())
 }
-make_instruction_aux!(code, code, _nth, Gene, 1, int, 1, i128);
 
 /// Pushes an empty block to the top of a stack.
-pub fn _make_empty_block<T>(_: Vec<T>) -> Option<Gene> {
+pub fn _make_empty_block<T>() -> Option<Gene> {
     Some(Gene::Block(vec![]))
 }
-make_instruction_clone!(code, code, _make_empty_block, Gene, 0);
-make_instruction_clone!(exec, exec, _make_empty_block, Gene, 0);
 
 /// Checks to see if the top item on the code/exec stack is an empty block.
 /// True if is, False if not.
-pub fn _is_empty_block(vals: Vec<Gene>) -> Option<bool> {
-    Some(match vals[0].clone() {
+pub fn _is_empty_block(a: Gene) -> Option<bool> {
+    Some(match a {
         Gene::Block(val) => {
             if val.is_empty() {
                 true
@@ -411,70 +392,64 @@ pub fn _is_empty_block(vals: Vec<Gene>) -> Option<bool> {
         _ => false,
     })
 }
-make_instruction_clone!(code, boolean, _is_empty_block, Gene, 1);
-make_instruction_clone!(exec, boolean, _is_empty_block, Gene, 1);
 
 /// Returns the size of the top item on the code/exec stack.
-pub fn _size(vals: Vec<Gene>) -> Option<i128> {
-    Some(match vals[0].clone() {
+pub fn _size(a: Gene) -> Option<i128> {
+    Some(match a.clone() {
         Gene::Block(val) => val.len() as i128,
         _ => 1,
     })
 }
-make_instruction_clone!(code, int, _size, Gene, 1);
-make_instruction_clone!(exec, int, _size, Gene, 1);
 
 /// Returns a nested element inside a block based on an int.
-pub fn _extract(vals: Vec<Gene>, auxs: Vec<i128>) -> Option<Gene> {
-    match vals[0].clone() {
+pub fn _extract(a: Gene, idx: i128) -> Option<Gene> {
+    match &a {
         block @ Gene::Block(_) => {
             let block_len = block.rec_len();
             if block_len == 0 {
                 None
             } else {
-                let ndx = (auxs[0] % block_len as i128).abs() as usize;
-                Some(vals[0].clone().code_at_point(ndx)?)
+                let ndx = (idx % block_len as i128).abs() as usize;
+                Some(a.code_at_point(ndx)?)
             }
         }
-        val => Some(val),
+        _ => Some(a),
     }
 }
-make_instruction_aux!(code, code, _extract, Gene, 1, int, 1, i128);
 
 /// Inserts a gene at a given position in into the top block based off an
 /// int from the top of the int stack. The top code item is coerced into a block
 /// if needed.
-pub fn _insert(vals: Vec<Gene>, auxs: Vec<i128>) -> Option<Gene> {
-    let mut block = match vals[0].clone() {
+pub fn _insert(a: Gene, b: Gene, idx: i128) -> Option<Gene> {
+    let mut block = match a.clone() {
         iblock @ Gene::Block(_) => iblock,
         val => Gene::Block(vec![val]),
     };
     if block.rec_len() == 0 {
-        return _combine(vec![block, vals[1].clone()]);
+        return _combine(block, b);
     }
-    let ndx = auxs[0].abs() as usize % block.rec_len();
-    block.with_code_inserted_at_point(vals[1].clone(), ndx);
+    let ndx = idx.abs() as usize % block.rec_len();
+    block.with_code_inserted_at_point(b, ndx);
     Some(block)
 }
-make_instruction_aux!(code, code, _insert, Gene, 2, int, 1, i128);
 
 /// Pushes the first position of the 2nd code item within the top code item.
 /// If not found, pushes -1. If top code item isn't a block, returns 0 if top
 /// two code items equal, -1 otherwise.
-pub fn _first_position(vals: Vec<Gene>) -> Option<i128> {
-    let bad_cond: bool = match &vals[0] {
+pub fn _first_position(a: Gene, b: Gene) -> Option<i128> {
+    let bad_cond: bool = match &a {
         Gene::Block(val) => val.len() == 0,
         _ => true,
     };
     if bad_cond {
-        if vals[0] == vals[1] {
+        if a == b {
             return Some(0);
         }
     } else {
-        match &vals[0] {
+        match &a {
             Gene::Block(val) => {
                 for (idx, el) in val.iter().enumerate() {
-                    if el == &vals[1] {
+                    if el == &b {
                         return Some(idx as i128);
                     }
                 }
@@ -484,11 +459,10 @@ pub fn _first_position(vals: Vec<Gene>) -> Option<i128> {
     }
     Some(-1)
 }
-make_instruction_clone!(code, int, _first_position, Gene, 2);
 
 /// Reverses the top block. Does nothing if not a block.
-pub fn _reverse(vals: Vec<Gene>) -> Option<Gene> {
-    Some(match vals[0].clone() {
+pub fn _reverse(a: Gene) -> Option<Gene> {
+    Some(match a {
         Gene::Block(mut val) => {
             val.reverse();
             Gene::Block(val)
@@ -496,7 +470,55 @@ pub fn _reverse(vals: Vec<Gene>) -> Option<Gene> {
         val => val,
     })
 }
-make_instruction_clone!(code, code, _reverse, Gene, 1);
+
+/// Acts as a noop, does nothing to the state internally.
+macro_rules! noop {
+    ($stack:ident, $name:ident) => {
+        paste::item! {
+            pub fn [< $stack $name >] (_: &mut PushState) {
+                ()
+            }
+        }
+    };
+}
+
+macro_rules! make_code_instructions {
+    ($stack:ident) => {
+        make_instruction_new!(_is_block, $stack, boolean, $stack);
+        make_instruction_new!(_is_singular, $stack, boolean, $stack);
+        make_instruction_new!(_length, $stack, int, $stack);
+        make_instruction_new!(_first, $stack, $stack, $stack);
+        make_instruction_new!(_last, $stack, $stack, $stack);
+        make_instruction_new!(_rest, $stack, $stack, $stack);
+        make_instruction_new!(_but_last, $stack, $stack, $stack);
+        make_instruction_new!(_wrap_block, $stack, $stack, $stack);
+        make_instruction_new!(_combine, $stack, $stack, $stack, $stack);
+        make_instruction_new!(_if, $stack, exec, $stack, $stack, boolean);
+        make_instruction_new!(_member, $stack, boolean, $stack, $stack);
+        make_instruction_new!(_nth, $stack, $stack, $stack, int);
+        make_instruction_empty!(_make_empty_block, $stack, $stack, Gene);
+        make_instruction_new!(_is_empty_block, $stack, boolean, $stack);
+        make_instruction_new!(_size, $stack, int, $stack);
+        make_instruction_new!(_extract, $stack, $stack, $stack, int);
+        make_instruction_new!(_insert, $stack, $stack, $stack, $stack, int);
+        make_instruction_new!(_first_position, $stack, int, $stack, $stack);
+        make_instruction_new!(_reverse, $stack, $stack, $stack);
+    };
+}
+
+macro_rules! all_code_instructions {
+    () => {
+        make_code_instructions!(code);
+        make_code_instructions!(exec);
+
+        // Misc instructions
+        noop!(code, _noop);
+        noop!(exec, _noop);
+        noop!(code, _noop_block);
+        noop!(exec, _noop_block);
+    };
+}
+all_code_instructions!();
 
 #[cfg(test)]
 mod tests {
@@ -950,24 +972,24 @@ mod tests {
         let mut test_state = EMPTY_STATE;
 
         test_state.code = vec![
-            Gene::GeneInt(0),
             Gene::Block(vec![
                 Gene::GeneInt(0),
                 Gene::GeneInt(4),
                 Gene::StateFunc(exec_do_range),
             ]),
+            Gene::GeneInt(0),
         ];
         code_member(&mut test_state);
         assert_eq!(vec![true], test_state.boolean);
         test_state.boolean.clear();
 
         test_state.code = vec![
-            Gene::GeneInt(0),
             Gene::Block(vec![
                 Gene::GeneInt(5),
                 Gene::GeneInt(4),
                 Gene::StateFunc(exec_do_range),
             ]),
+            Gene::GeneInt(0),
         ];
         code_member(&mut test_state);
         assert_eq!(vec![false], test_state.boolean);
@@ -1232,5 +1254,20 @@ mod tests {
             ])],
             test_state.code
         );
+    }
+
+    #[test]
+    fn noop_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.int = vec![1, 2];
+        let test_state_copy = test_state.clone();
+        code_noop(&mut test_state);
+        assert_eq!(test_state, test_state_copy);
+
+        test_state.int = vec![1, 2];
+        let test_state_copy = test_state.clone();
+        exec_noop(&mut test_state);
+        assert_eq!(test_state, test_state_copy);
     }
 }
