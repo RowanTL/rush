@@ -471,6 +471,17 @@ pub fn _reverse(a: Gene) -> Option<Gene> {
     })
 }
 
+/// Acts as a noop, does nothing to the state internally.
+macro_rules! noop {
+    ($stack:ident, $name:ident) => {
+        paste::item! {
+            pub fn [< $stack $name >] (_: &mut PushState) {
+                ()
+            }
+        }
+    };
+}
+
 macro_rules! make_code_instructions {
     ($stack:ident) => {
         make_instruction_new!(_is_block, $stack, boolean, $stack);
@@ -499,6 +510,12 @@ macro_rules! all_code_instructions {
     () => {
         make_code_instructions!(code);
         make_code_instructions!(exec);
+
+        // Misc instructions
+        noop!(code, _noop);
+        noop!(exec, _noop);
+        noop!(code, _noop_block);
+        noop!(exec, _noop_block);
     };
 }
 all_code_instructions!();
@@ -1237,5 +1254,20 @@ mod tests {
             ])],
             test_state.code
         );
+    }
+
+    #[test]
+    fn noop_test() {
+        let mut test_state = EMPTY_STATE;
+
+        test_state.int = vec![1, 2];
+        let test_state_copy = test_state.clone();
+        code_noop(&mut test_state);
+        assert_eq!(test_state, test_state_copy);
+
+        test_state.int = vec![1, 2];
+        let test_state_copy = test_state.clone();
+        exec_noop(&mut test_state);
+        assert_eq!(test_state, test_state_copy);
     }
 }

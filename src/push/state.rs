@@ -99,7 +99,7 @@ impl Gene {
                         _ => continue,
                     }
                 }
-                return None;
+                None
             }
             val => Some(val),
         }
