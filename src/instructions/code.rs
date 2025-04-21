@@ -316,7 +316,7 @@ pub fn code_map(state: &mut PushState) {
 
 /// If top bool is true, execute top element of code/exec stack and skip the second.
 /// If false, execute second element and skip the top.
-pub fn _if(a: Gene, b: Gene, cond: bool) -> Option<Gene> {
+fn _if(a: Gene, b: Gene, cond: bool) -> Option<Gene> {
     Some(if cond { a } else { b })
 }
 
@@ -344,7 +344,7 @@ pub fn exec_when(state: &mut PushState) {
 
 /// Pushes true if the second code item is found within the first item.
 /// If the first item isn't a block, coerced into one.
-pub fn _member(a: Gene, b: Gene) -> Option<bool> {
+fn _member(a: Gene, b: Gene) -> Option<bool> {
     let block = match b {
         Gene::Block(val) => val,
         val => vec![val],
@@ -355,7 +355,7 @@ pub fn _member(a: Gene, b: Gene) -> Option<bool> {
 
 /// Pushes the nth item of the top element of the code stack.
 /// If top code item isn't a block, wrap one around it.
-pub fn _nth(a: Gene, idx: i128) -> Option<Gene> {
+fn _nth(a: Gene, idx: i128) -> Option<Gene> {
     let gene_vec = match a {
         Gene::Block(val) => val,
         val => vec![val],
@@ -369,27 +369,21 @@ pub fn _nth(a: Gene, idx: i128) -> Option<Gene> {
 }
 
 /// Pushes an empty block to the top of a stack.
-pub fn _make_empty_block<T>() -> Option<Gene> {
+fn _make_empty_block<T>() -> Option<Gene> {
     Some(Gene::Block(vec![]))
 }
 
 /// Checks to see if the top item on the code/exec stack is an empty block.
 /// True if is, False if not.
-pub fn _is_empty_block(a: Gene) -> Option<bool> {
+fn _is_empty_block(a: Gene) -> Option<bool> {
     Some(match a {
-        Gene::Block(val) => {
-            if val.is_empty() {
-                true
-            } else {
-                false
-            }
-        }
+        Gene::Block(val) => val.is_empty(),
         _ => false,
     })
 }
 
 /// Returns the size of the top item on the code/exec stack.
-pub fn _size(a: Gene) -> Option<i128> {
+fn _size(a: Gene) -> Option<i128> {
     Some(match a.clone() {
         Gene::Block(val) => val.len() as i128,
         _ => 1,
@@ -397,7 +391,7 @@ pub fn _size(a: Gene) -> Option<i128> {
 }
 
 /// Returns a nested element inside a block based on an int.
-pub fn _extract(a: Gene, idx: i128) -> Option<Gene> {
+fn _extract(a: Gene, idx: i128) -> Option<Gene> {
     match &a {
         block @ Gene::Block(_) => {
             let block_len = block.rec_len();
@@ -415,7 +409,7 @@ pub fn _extract(a: Gene, idx: i128) -> Option<Gene> {
 /// Inserts a gene at a given position in into the top block based off an
 /// int from the top of the int stack. The top code item is coerced into a block
 /// if needed.
-pub fn _insert(a: Gene, b: Gene, idx: i128) -> Option<Gene> {
+fn _insert(a: Gene, b: Gene, idx: i128) -> Option<Gene> {
     let mut block = match a.clone() {
         iblock @ Gene::Block(_) => iblock,
         val => Gene::Block(vec![val]),
@@ -431,7 +425,7 @@ pub fn _insert(a: Gene, b: Gene, idx: i128) -> Option<Gene> {
 /// Pushes the first position of the 2nd code item within the top code item.
 /// If not found, pushes -1. If top code item isn't a block, returns 0 if top
 /// two code items equal, -1 otherwise.
-pub fn _first_position(a: Gene, b: Gene) -> Option<i128> {
+fn _first_position(a: Gene, b: Gene) -> Option<i128> {
     let bad_cond: bool = match &a {
         Gene::Block(val) => val.len() == 0,
         _ => true,
@@ -456,7 +450,7 @@ pub fn _first_position(a: Gene, b: Gene) -> Option<i128> {
 }
 
 /// Reverses the top block. Does nothing if not a block.
-pub fn _reverse(a: Gene) -> Option<Gene> {
+fn _reverse(a: Gene) -> Option<Gene> {
     Some(match a {
         Gene::Block(mut val) => {
             val.reverse();

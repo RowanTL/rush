@@ -70,31 +70,31 @@ macro_rules! make_code {
 }
 
 /// Duplicates an item
-pub fn _dup<T: Clone>(val: T) -> Option<Vec<T>> {
+fn _dup<T: Clone>(val: T) -> Option<Vec<T>> {
     Some(vec![val.clone(), val])
 }
 
-pub fn _dup_times<T: Clone>(amt: i128, val: T) -> Option<Vec<T>> {
+fn _dup_times<T: Clone>(amt: i128, val: T) -> Option<Vec<T>> {
     Some(vec![val; amt as usize])
 }
 
 /// Swaps two values
-pub fn _swap<T: Clone>(a: T, b: T) -> Option<Vec<T>> {
+fn _swap<T>(a: T, b: T) -> Option<Vec<T>> {
     Some(vec![a, b])
 }
 
 /// Rotates three values
-pub fn _rotate<T>(a: T, b: T, c: T) -> Option<Vec<T>> {
+fn _rotate<T>(a: T, b: T, c: T) -> Option<Vec<T>> {
     Some(vec![c, a, b])
 }
 
 /// Checks if two values are equal
-pub fn _equal<T: Eq>(a: T, b: T) -> Option<bool> {
+fn _equal<T: Eq>(a: T, b: T) -> Option<bool> {
     Some(b == a)
 }
 
 /// Checks if two values are not equal
-pub fn _not_equal<T: Clone + Eq>(a: T, b: T) -> Option<bool> {
+fn _not_equal<T: Eq>(a: T, b: T) -> Option<bool> {
     Some(b != a)
 }
 
