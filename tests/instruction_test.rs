@@ -43,6 +43,3 @@ fn run_extract_test() {
     run_instruction!(aux_char, char, test_state, vector_char;);
     assert_eq!(vec!['a', 'b'], test_state.char);
 }
-
-#[test]
-fn instruction_list_test() {}
