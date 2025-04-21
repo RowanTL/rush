@@ -45,6 +45,31 @@ pub fn run_instruction(input: proc_macro::TokenStream) -> proc_macro::TokenStrea
     quote! { #f }.into()
 }
 
+#[proc_macro]
+pub fn instruction_list(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    // Convert to proc_macro2::TokenStream for better iteration
+    let input2: proc_macro2::TokenStream = input.clone().into();
+
+    println!("Token stream analysis:");
+    for token in input2.into_iter() {
+        match token {
+            proc_macro2::TokenTree::Group(group) => println!(
+                "Group: delimiter={:?}, tokens={}",
+                group.delimiter(),
+                group.stream()
+            ),
+            proc_macro2::TokenTree::Ident(ident) => println!("Identifier: {}", ident),
+            proc_macro2::TokenTree::Punct(punct) => println!(
+                "Punctuation: {} (spacing={:?})",
+                punct.as_char(),
+                punct.spacing()
+            ),
+            proc_macro2::TokenTree::Literal(lit) => println!("Literal: {}", lit),
+        }
+    }
+    input
+}
+
 #[cfg(test)]
 mod tests {
     #[test]

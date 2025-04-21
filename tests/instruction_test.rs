@@ -1,5 +1,5 @@
 use rush::push::state::EMPTY_STATE;
-use rush_macro::run_instruction;
+use rush_macro::{instruction_list, run_instruction};
 
 fn iadd(x: i128, y: i128) -> Option<i128> {
     Some(x + y)
