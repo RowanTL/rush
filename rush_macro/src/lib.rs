@@ -30,7 +30,7 @@ mod utils;
 ///     Some(vec![x + y, x - y])
 /// }
 ///
-/// run_instruction!(aux_iadd, int, state, int, int;);
+/// // rush_macro::run_instruction!(aux_iadd, int, _state, int, int;);
 /// ```
 /// would have the ; placed at the end of the instruction. Check rush's `tests/instruction_test.rs`
 /// file for an example using this code.

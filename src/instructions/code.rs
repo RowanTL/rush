@@ -1,15 +1,10 @@
-use std::ops::Not;
-
-use crate::push::state::{Gene, PushState};
-
 use super::common::{code_from_exec, code_pop, int_pop};
+use crate::push::state::{Gene, PushState};
+use std::ops::Not;
 
 /// Checks to see if a single gene is a block.
 fn _is_block(a: Gene) -> Option<bool> {
-    Some(match a {
-        Gene::Block(_) => true,
-        _ => false,
-    })
+    Some(matches!(a, Gene::Block(_)))
 }
 
 /// Checks to see if a single gene is not a block.

@@ -1,6 +1,5 @@
-use std::cmp::{max, min};
-
 use crate::push::state::{Gene, PushState};
+use std::cmp::{max, min};
 
 fn min_max_bounds(ndx: i128, length: usize) -> usize {
     max(0, min(ndx.unsigned_abs() as usize, length - 1))
