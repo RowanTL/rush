@@ -219,7 +219,7 @@ fn _make_empty<T>() -> Option<Vec<T>> {
 }
 
 /// Checks if a vector is empty. Pushes true if is, false otherwise
-fn _is_empty<T>(vals: Vec<T>) -> Option<bool> {
+fn _is_vector_empty<T>(vals: Vec<T>) -> Option<bool> {
     Some(vals.is_empty())
 }
 
@@ -593,7 +593,7 @@ macro_rules! make_vector_instructions {
         make_instruction_new!(_reverse, $stack, $stack, $stack);
         make_instruction_new_aux!(_push_all, $stack, $prim_stack, $stack);
         // _make_empty would go here
-        make_instruction_new!(_is_empty, $stack, boolean, $stack);
+        make_instruction_new!(_is_vector_empty, $stack, boolean, $stack);
         make_instruction_new!(_contains, $stack, boolean, $stack, $prim_stack);
         make_instruction_new!(
             _contains_vector_non_contiguous,
@@ -1059,12 +1059,12 @@ mod tests {
         let empty_vec: Vec<i128> = vec![];
 
         test_state.vector_int = vec![empty_vec.clone()];
-        vector_int_is_empty(&mut test_state);
+        vector_int_is_vector_empty(&mut test_state);
         assert_eq!(vec![true], test_state.boolean);
         test_state.boolean.clear();
 
         test_state.vector_int = vec![vec![1, 2]];
-        vector_int_is_empty(&mut test_state);
+        vector_int_is_vector_empty(&mut test_state);
         assert_eq!(vec![false], test_state.boolean);
     }
 
