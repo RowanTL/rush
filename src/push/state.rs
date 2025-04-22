@@ -35,7 +35,7 @@ pub const EMPTY_STATE: PushState = PushState {
     code: vec![],
 };
 
-#[derive(PartialEq, Eq, Debug, Clone)]
+#[derive(PartialEq, Eq, Debug, Clone, Hash)]
 #[allow(dead_code)] // remove this later. Is here bc Close, Skip, CrossoverPadding
 pub enum Gene {
     GeneInt(i128),
@@ -129,16 +129,13 @@ impl Gene {
                         val.insert(n, gene.clone());
                         return true;
                     }
-                    match el {
-                        iblock @ Gene::Block(_) => {
-                            // This line has side effects on iblock if inserts properly.
-                            let success = iblock.attempt_code_insert(gene.clone(), idx - 1);
-                            if success {
-                                return true;
-                            }
-                            idx -= iblock.rec_len() + 1
+                    if let iblock @ Gene::Block(_) = el {
+                        // This line has side effects on iblock if inserts properly.
+                        let success = iblock.attempt_code_insert(gene.clone(), idx - 1);
+                        if success {
+                            return true;
                         }
-                        _ => (),
+                        idx -= iblock.rec_len() + 1
                     }
                     idx -= 1;
                 }

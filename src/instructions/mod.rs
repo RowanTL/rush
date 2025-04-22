@@ -666,6 +666,23 @@ pub fn exec_instructions() -> Vec<fn(&mut PushState)> {
     ]
 }
 
+pub fn all_instructions() -> Vec<fn(&mut PushState)> {
+    let mut instructions = vec![];
+    instructions.append(&mut int_instructions());
+    instructions.append(&mut float_instructions());
+    instructions.append(&mut string_instructions());
+    instructions.append(&mut boolean_instructions());
+    instructions.append(&mut char_instructions());
+    instructions.append(&mut vector_int_instructions());
+    instructions.append(&mut vector_float_instructions());
+    instructions.append(&mut vector_string_instructions());
+    instructions.append(&mut vector_boolean_instructions());
+    instructions.append(&mut vector_char_instructions());
+    instructions.append(&mut code_instructions());
+    instructions.append(&mut exec_instructions());
+    instructions
+}
+
 #[cfg(test)]
 mod tests {
     //use super::*;

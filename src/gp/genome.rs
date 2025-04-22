@@ -1,0 +1,115 @@
+use crate::instructions::code::{
+    exec_do_count, exec_do_range, exec_do_times, exec_do_while, exec_if, exec_when, exec_while,
+};
+use crate::instructions::common::{
+    exec_dup, exec_dup_times, exec_pop, exec_rotate, exec_shove, exec_swap,
+};
+use crate::instructions::vector::{
+    string_iterate, vector_boolean_iterate, vector_char_iterate, vector_float_iterate,
+    vector_int_iterate, vector_string_iterate,
+};
+use crate::push::state::Gene;
+use crate::push::state::Gene::StateFunc;
+use rand::prelude::*;
+use std::collections::HashMap;
+use std::sync::LazyLock;
+
+/// Generates a random plushy.
+pub fn make_random_plushy(
+    genes: Vec<Gene>,
+    max_init_plushy_size: usize,
+    mut rng: impl Rng,
+) -> Vec<Gene> {
+    let plushy_size = rng.random_range(0..=max_init_plushy_size);
+    let mut plushy = Vec::with_capacity(plushy_size);
+    for _ in 0..plushy_size {
+        plushy.push(genes[rng.random_range(0..genes.len())].clone());
+    }
+    plushy
+}
+
+/// A map of genes to their number of blocks they open.
+static OPEN_MAP: LazyLock<HashMap<Gene, u8>> = LazyLock::new(|| {
+    let mut temp_map = HashMap::default();
+    temp_map.insert(StateFunc(exec_dup), 1u8);
+    temp_map.insert(StateFunc(exec_dup_times), 1u8);
+    temp_map.insert(StateFunc(exec_pop), 1u8);
+    temp_map.insert(StateFunc(exec_rotate), 3u8);
+    temp_map.insert(StateFunc(exec_shove), 1u8);
+    temp_map.insert(StateFunc(exec_swap), 2u8);
+    temp_map.insert(StateFunc(exec_if), 2u8);
+    temp_map.insert(StateFunc(exec_when), 1u8);
+    temp_map.insert(StateFunc(exec_while), 1u8);
+    temp_map.insert(StateFunc(exec_do_while), 1u8);
+    temp_map.insert(StateFunc(exec_do_range), 1u8);
+    temp_map.insert(StateFunc(exec_do_count), 1u8);
+    temp_map.insert(StateFunc(exec_do_times), 1u8);
+    //exec_k, 2
+    //exec_s 3
+    //exec_y 1
+    temp_map.insert(StateFunc(string_iterate), 1u8);
+    temp_map.insert(StateFunc(vector_int_iterate), 1u8);
+    temp_map.insert(StateFunc(vector_float_iterate), 1u8);
+    temp_map.insert(StateFunc(vector_string_iterate), 1u8);
+    temp_map.insert(StateFunc(vector_boolean_iterate), 1u8);
+    temp_map.insert(StateFunc(vector_char_iterate), 1u8);
+    temp_map
+});
+
+fn has_openers(genes: &[Gene]) -> bool {
+    for gene in genes {
+        match gene {
+            Gene::Open(_) => return true,
+            _ => (),
+        };
+    }
+    false
+}
+
+/// Converts a plushy to a push program.
+pub fn plushy_to_push(genes: Vec<Gene>) -> Vec<Gene> {
+    let mut plushy_buffer: Vec<Gene> = Vec::with_capacity(genes.len() * 2);
+    for gene in genes.into_iter() {
+        let open = OPEN_MAP.get(&gene);
+        plushy_buffer.push(gene);
+        if let Some(amt) = open {
+            plushy_buffer.push(Gene::Open(*amt))
+        }
+    }
+    let mut push_buffer = Vec::with_capacity(plushy_buffer.len());
+    loop {
+        // recur with one more close if there are openers
+        if plushy_buffer.is_empty() && has_openers(&push_buffer) {
+            plushy_buffer.push(Gene::Close);
+        } else if plushy_buffer.is_empty() {
+            return plushy_buffer;
+        } else {
+            let first_gene = plushy_buffer.pop().unwrap();
+            match &first_gene {
+                Gene::Close => if has_openers(&push_buffer) {
+                    let ndx: usize;
+                    let opener
+                },
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::instructions::vector::{string_iterate, vector_float_maximum};
+    use crate::push::interpreter::interpret_program;
+    use crate::push::state::Gene::StateFunc;
+    use crate::push::state::{EMPTY_STATE, PushState};
+    use crate::push::utils::most_genes;
+    use rand::SeedableRng;
+
+    #[test]
+    fn make_random_plushy_test() {
+        let rng = StdRng::seed_from_u64(42);
+        let rand_plushy = make_random_plushy(most_genes(), 15, rng);
+        let fin_result = vec![StateFunc(string_iterate), StateFunc(vector_float_maximum)];
+        assert_eq!(fin_result, rand_plushy);
+    }
+}
