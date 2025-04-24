@@ -27,6 +27,7 @@
             rust-bin.beta.latest.rustfmt
             rust-bin.beta.latest.rust-std
             jetbrains.rust-rover
+            gdb
           ];
           shellHook = ''
             export SHELL=${pkgs.lib.getExe pkgs.bashInteractive}
