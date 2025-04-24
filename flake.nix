@@ -27,7 +27,7 @@
             rust-bin.beta.latest.rust-analyzer
             rust-bin.beta.latest.rustfmt
             # rust-bin.beta.latest.rustup
-            rust-bin.beta.rust-std
+            rust-bin.beta.latest.rust-std
             jetbrains.rust-rover
           ];
           shellHook = ''
