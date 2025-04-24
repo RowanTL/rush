@@ -32,7 +32,7 @@
           ];
           shellHook = ''
             export SHELL=${pkgs.lib.getExe pkgs.bashInteractive}
-            # export RUST_SRC=${pkgs.rust-bin.beta.latest.rust-src}
+            export RUST_SRC_PATH=${pkgs.rust-bin.beta.latest.rust-std}
           '';
         };
       }
