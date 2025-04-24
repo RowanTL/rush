@@ -1,69 +1,34 @@
 {
+  description = "Simple Rush nix flake";
+
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    flake-parts.url = "github:hercules-ci/flake-parts";
+    nixpkgs.url      = "github:NixOS/nixpkgs/nixos-unstable";
     rust-overlay.url = "github:oxalica/rust-overlay";
+    flake-utils.url  = "github:numtide/flake-utils";
   };
 
-  outputs = inputs:
-    inputs.flake-parts.lib.mkFlake { inherit inputs; } {
-      systems = [ "x86_64-linux" ];
-      perSystem = { config, self', pkgs, lib, system, ... }:
-        let
-          runtimeDeps = with pkgs; [ alsa-lib speechd ];
-          buildDeps = with pkgs; [ pkg-config rustPlatform.bindgenHook ];
-          devDeps = with pkgs; [ gdb ];
-
-          cargoToml = builtins.fromTOML (builtins.readFile ./Cargo.toml);
-          msrv = cargoToml.package.rust-version;
-
-          rustPackage = features:
-            (pkgs.makeRustPlatform {
-              cargo = pkgs.rust-bin.stable.latest.minimal;
-              rustc = pkgs.rust-bin.stable.latest.minimal;
-            }).buildRustPackage {
-              inherit (cargoToml.package) name version;
-              src = ./.;
-              cargoLock.lockFile = ./Cargo.lock;
-              buildFeatures = features;
-              buildInputs = runtimeDeps;
-              nativeBuildInputs = buildDeps;
-              # Uncomment if your cargo tests require networking or otherwise
-              # don't play nicely with the Nix build sandbox:
-              # doCheck = false;
-            };
-
-          mkDevShell = rustc:
-            pkgs.mkShell {
-              shellHook = ''
-                export RUST_SRC_PATH=${pkgs.rustPlatform.rustLibSrc}
-                export SHELL=${pkgs.lib.getExe pkgs.bashInteractive}
-              '';
-              buildInputs = runtimeDeps;
-              nativeBuildInputs = buildDeps ++ devDeps ++ [ rustc ];
-              packages = with pkgs; [
-                rust-analyzer
-                lldb
-                jetbrains.rust-rover
-              ];
-            };
-        in {
-          _module.args.pkgs = import inputs.nixpkgs {
-            inherit system;
-            overlays = [ (import inputs.rust-overlay) ];
-            config.allowUnfree = true;
-          };
-
-          packages.default = self'.packages.rush;
-          devShells.default = self'.devShells.stable;
-
-          packages.rush = (rustPackage "rush");
-          packages.rush-base = (rustPackage "");
-
-          devShells.nightly = (mkDevShell (pkgs.rust-bin.selectLatestNightlyWith
-            (toolchain: toolchain.default)));
-          devShells.stable = (mkDevShell pkgs.rust-bin.stable.latest.default);
-          devShells.msrv = (mkDevShell pkgs.rust-bin.stable.${msrv}.default);
+  outputs = { self, nixpkgs, rust-overlay, flake-utils, ... }:
+    flake-utils.lib.eachDefaultSystem (system:
+      let
+        overlays = [ (import rust-overlay) ];
+        pkgs = import nixpkgs {
+          inherit system overlays;
+          config.allowUnfree = true;
         };
-    };
+      in
+      {
+        devShells.default = with pkgs; mkShell {
+          buildInputs = [
+            # rust-bin.beta.latest.default
+            rust-bin.selectLatestNightlyWith (toolchain: toolchain.default)
+          ];
+          packages = with pkgs; [
+            jetbrains.rust-rover
+          ];
+          shellHook = ''
+            export SHELL=${pkgs.lib.getExe pkgs.bashInteractive}
+          '';
+        };
+      }
+    );
 }
