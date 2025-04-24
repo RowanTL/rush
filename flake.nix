@@ -19,8 +19,8 @@
       {
         devShells.default = with pkgs; mkShell {
           buildInputs = [
-            # rust-bin.beta.latest.default
-            rust-bin.selectLatestNightlyWith (toolchain: toolchain.default)
+            rust-bin.beta.latest.default
+            # rust-bin.selectLatestNightlyWith (toolchain: toolchain.default)
           ];
           packages = with pkgs; [
             jetbrains.rust-rover
