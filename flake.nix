@@ -51,6 +51,7 @@
           _module.args.pkgs = import inputs.nixpkgs {
             inherit system;
             overlays = [ (import inputs.rust-overlay) ];
+            config.allowUnfree = true;
           };
 
           packages.default = self'.packages.rush;
