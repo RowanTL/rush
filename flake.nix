@@ -20,20 +20,16 @@
         devShells.default = with pkgs; mkShell {
           buildInputs = [
             rust-bin.beta.latest.default
-            # rust-bin.selectLatestNightlyWith (toolchain: toolchain.default)
           ];
           packages = with pkgs; [
             rust-bin.beta.latest.clippy
             rust-bin.beta.latest.rust-analyzer
             rust-bin.beta.latest.rustfmt
-            # rust-bin.beta.latest.rustup
             rust-bin.beta.latest.rust-std
-            rust-bin.beta.latest.rust-lib-src
             jetbrains.rust-rover
           ];
           shellHook = ''
             export SHELL=${pkgs.lib.getExe pkgs.bashInteractive}
-            export RUST_SRC_PATH=${pkgs.rust-bin.beta.latest.rust-lib-src}
           '';
         };
       }
