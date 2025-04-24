@@ -28,11 +28,12 @@
             rust-bin.beta.latest.rustfmt
             # rust-bin.beta.latest.rustup
             rust-bin.beta.latest.rust-std
+            rust-bin.beta.latest.rust-lib-src
             jetbrains.rust-rover
           ];
           shellHook = ''
             export SHELL=${pkgs.lib.getExe pkgs.bashInteractive}
-            export RUST_SRC_PATH=${pkgs.rust-bin.beta.latest.rust-std}
+            export RUST_SRC_PATH=${pkgs.rust-bin.beta.latest.rust-lib-src}
           '';
         };
       }
