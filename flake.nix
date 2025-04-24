@@ -23,10 +23,16 @@
             # rust-bin.selectLatestNightlyWith (toolchain: toolchain.default)
           ];
           packages = with pkgs; [
+            rust-bin.beta.latest.clippy
+            rust-bin.beta.latest.rust-analyzer
+            rust-bin.beta.latest.rustfmt
+            # rust-bin.beta.latest.rustup
+            rust-bin.beta.rust-src
             jetbrains.rust-rover
           ];
           shellHook = ''
             export SHELL=${pkgs.lib.getExe pkgs.bashInteractive}
+            export RUST_SRC=${pkgs.rust-bin.beta.latest.rust-src}
           '';
         };
       }
