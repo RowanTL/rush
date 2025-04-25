@@ -85,12 +85,12 @@ pub fn plushy_to_push(genes: Vec<Gene>) -> Vec<Gene> {
             return plushy_buffer;
         } else {
             let first_gene = plushy_buffer.pop().unwrap();
-            match &first_gene {
-                Gene::Close => if has_openers(&push_buffer) {
-                    let ndx: usize;
-                    let opener
-                },
-            }
+            // match &first_gene {
+            //     Gene::Close => if has_openers(&push_buffer) {
+            //         let ndx: usize;
+            //         let opener;
+            //     },
+            // }
         }
     }
 }
