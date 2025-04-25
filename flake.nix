@@ -27,6 +27,8 @@
             rust-bin.beta.latest.rustfmt
             rust-bin.beta.latest.rust-std
             gdb
+            gdb-dashboard
+            python313Packages.pygments
           ];
           shellHook = ''
             export SHELL=${pkgs.lib.getExe pkgs.bashInteractive}
