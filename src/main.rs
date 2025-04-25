@@ -1,3 +1,5 @@
+use push::utils::most_genes;
+
 use crate::instructions::*;
 use crate::push::interpreter::interpret_program;
 use crate::push::state::EMPTY_STATE;
@@ -22,4 +24,6 @@ fn main() {
     vector_char_instructions();
     code_instructions();
     exec_instructions();
+    all_instructions();
+    most_genes();
 }

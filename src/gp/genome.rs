@@ -58,12 +58,33 @@ static OPEN_MAP: LazyLock<HashMap<Gene, u8>> = LazyLock::new(|| {
 
 fn has_openers(genes: &[Gene]) -> bool {
     for gene in genes {
-        match gene {
-            Gene::Open(_) => return true,
-            _ => (),
-        };
+        if is_opener(gene) {
+            return true;
+        }
     }
     false
+}
+
+fn is_opener(gene: &Gene) -> bool {
+    match gene {
+        Gene::Open(_) => return true,
+        _ => (),
+    }
+    false
+}
+
+fn get_opener_count(gene: &Gene) -> &u8 {
+    match gene {
+        Gene::Open(val) => val,
+        _ => &0u8,
+    }
+}
+
+fn dec_opener(gene: Gene) -> Gene {
+    match gene {
+        Gene::Open(val) => Gene::Open(val - 1),
+        _ => gene,
+    }
 }
 
 /// Converts a plushy to a push program.
@@ -85,12 +106,30 @@ pub fn plushy_to_push(genes: Vec<Gene>) -> Vec<Gene> {
             return plushy_buffer;
         } else {
             let first_gene = plushy_buffer.pop().unwrap();
-            // match &first_gene {
-            //     Gene::Close => if has_openers(&push_buffer) {
-            //         let ndx: usize;
-            //         let opener;
-            //     },
-            // }
+            match &first_gene {
+                Gene::Close => {
+                    if has_openers(&push_buffer) {
+                        let mut index: Option<usize> = None;
+                        let mut opener: Option<&Gene> = None;
+                        // not the most optimal iterating through the entire genome.
+                        // Will do for now.
+                        for (ndx, el) in push_buffer.iter().enumerate() {
+                            if is_opener(&el) {
+                                index = Some(ndx);
+                                opener = Some(el);
+                            }
+                        }
+                        let post_open = push_buffer[(index.unwrap() + 1)..].to_vec();
+                        let mut push_buffer = push_buffer[..index.unwrap()].to_vec();
+                        push_buffer.extend(post_open);
+                        if get_opener_count(opener.unwrap()) > &1u8 {
+                            let opener_new = dec_opener(opener.unwrap().clone());
+                            push_buffer.push(opener_new);
+                        }
+                    }
+                }
+                _ => push_buffer.push(first_gene),
+            }
         }
     }
 }
@@ -99,9 +138,7 @@ pub fn plushy_to_push(genes: Vec<Gene>) -> Vec<Gene> {
 mod tests {
     use super::*;
     use crate::instructions::vector::{string_iterate, vector_float_maximum};
-    use crate::push::interpreter::interpret_program;
     use crate::push::state::Gene::StateFunc;
-    use crate::push::state::{EMPTY_STATE, PushState};
     use crate::push::utils::most_genes;
     use rand::SeedableRng;
 
