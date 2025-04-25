@@ -28,6 +28,7 @@
             rust-bin.beta.latest.rust-std
             gdb
             gdb-dashboard
+            bacon
           ];
           shellHook = ''
             export SHELL=${pkgs.lib.getExe pkgs.bashInteractive}
