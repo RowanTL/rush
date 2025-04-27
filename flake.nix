@@ -27,7 +27,7 @@
             rust-bin.beta.latest.rustfmt
             rust-bin.beta.latest.rust-std
             gdb
-            gdb-dashboard
+            # gdb-dashboard
             bacon
           ];
           shellHook = ''
