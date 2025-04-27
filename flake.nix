@@ -29,7 +29,7 @@
             gdb
             # gdb-dashboard
             bacon
-            python313Packages.pygments
+            python313Packages.pygments # for personal gdb-dashboard use
           ];
           shellHook = ''
             export SHELL=${pkgs.lib.getExe pkgs.bashInteractive}
