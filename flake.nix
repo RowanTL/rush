@@ -19,15 +19,10 @@
       {
         devShells.default = with pkgs; mkShell {
           buildInputs = [
-            rust-bin.beta.latest.default
+            rust-bin.beta.latest.complete
           ];
           packages = with pkgs; [
-            rust-bin.beta.latest.clippy
-            rust-bin.beta.latest.rust-analyzer
-            rust-bin.beta.latest.rustfmt
-            rust-bin.beta.latest.rust-std
             gdb
-            # gdb-dashboard
             bacon
             python313Packages.pygments # for personal gdb-dashboard use
           ];
@@ -38,7 +33,7 @@
         devShells.nightly = with pkgs; mkShell {
           buildInputs = [
             # rust-bin.beta.latest.default
-            rust-bin.selectLatestNightlyWith (toolchain: toolchain.default)
+            rust-bin.selectLatestNightlyWith (toolchain: toolchain.complete)
           ];
           packages = with pkgs; [
             # rust-bin.beta.latest.clippy
