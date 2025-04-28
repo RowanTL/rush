@@ -33,7 +33,8 @@
         devShells.nightly = with pkgs; mkShell {
           buildInputs = [
             # rust-bin.beta.latest.default
-            rust-bin.selectLatestNightlyWith (toolchain: toolchain.complete)
+            # rust-bin.selectLatestNightlyWith (toolchain: toolchain.complete)
+            rust-bin.fromRustupToolchainFile ./rust-toolchain.toml
           ];
           packages = with pkgs; [
             # rust-bin.beta.latest.clippy
