@@ -32,7 +32,8 @@
         };
         devShells.nightly = with pkgs; mkShell {
           buildInputs = [
-            rust-bin.nightly.latest.complete
+            # rust-bin.nightly.latest.complete
+            (rust-bin.selectLatestNightlyWith (toolchain: toolchain.complete))
           ];
           packages = with pkgs; [
             gdb
