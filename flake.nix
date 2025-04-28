@@ -38,7 +38,6 @@
             gdb
             bacon
             python313Packages.pygments # for personal gdb-dashboard use
-            cargo-expand
           ];
           shellHook = ''
             export SHELL=${pkgs.lib.getExe pkgs.bashInteractive}
