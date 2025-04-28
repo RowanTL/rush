@@ -32,13 +32,13 @@
         };
         devShells.nightly = with pkgs; mkShell {
           buildInputs = [
-            # rust-bin.nightly.latest.complete
             (rust-bin.selectLatestNightlyWith (toolchain: toolchain.complete))
           ];
           packages = with pkgs; [
             gdb
             bacon
             python313Packages.pygments # for personal gdb-dashboard use
+            cargo-expand
           ];
           shellHook = ''
             export SHELL=${pkgs.lib.getExe pkgs.bashInteractive}
