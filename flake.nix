@@ -37,7 +37,9 @@
           packages = with pkgs; [
             gdb
             bacon
+            python313
             python313Packages.pygments # for personal gdb-dashboard use
+            python313Packages.ruff
             cargo-expand
           ];
           shellHook = ''
