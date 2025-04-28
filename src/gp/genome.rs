@@ -103,26 +103,26 @@ pub fn plushy_to_push(genes: Vec<Gene>) -> Vec<Gene> {
         if plushy_buffer.is_empty() && has_openers(&push_buffer) {
             plushy_buffer.push(Gene::Close);
         } else if plushy_buffer.is_empty() {
-            return plushy_buffer;
+            return push_buffer;
         } else {
-            let first_gene = plushy_buffer.pop().unwrap();
+            let first_gene = plushy_buffer.remove(0);
             match &first_gene {
                 Gene::Close => {
                     if has_openers(&push_buffer) {
                         let mut index: Option<usize> = None;
-                        let mut opener: Option<&Gene> = None;
+                        let mut opener: Option<Gene> = None;
                         // not the most optimal iterating through the entire genome.
                         // Will do for now.
-                        for (ndx, el) in push_buffer.iter().enumerate() {
+                        for (ndx, el) in push_buffer.clone().into_iter().enumerate() {
                             if is_opener(&el) {
                                 index = Some(ndx);
                                 opener = Some(el);
                             }
                         }
-                        let post_open = push_buffer[(index.unwrap() + 1)..].to_vec();
-                        let mut push_buffer = push_buffer[..index.unwrap()].to_vec();
-                        push_buffer.extend(post_open);
-                        if get_opener_count(opener.unwrap()) > &1u8 {
+                        let post_open: Vec<_> = push_buffer.drain((index.unwrap() + 1)..).collect();
+                        push_buffer.pop(); // Pop the close here
+                        push_buffer.push(Gene::Block(post_open));
+                        if get_opener_count(&opener.clone().unwrap()) > &1u8 {
                             let opener_new = dec_opener(opener.unwrap().clone());
                             push_buffer.push(opener_new);
                         }
@@ -136,7 +136,7 @@ pub fn plushy_to_push(genes: Vec<Gene>) -> Vec<Gene> {
 
 #[cfg(test)]
 mod tests {
-    // use super::*;
+    use super::*;
     // use crate::instructions::vector::{string_iterate, vector_float_maximum};
     use crate::instructions::common::*;
     use crate::instructions::numeric::*;
@@ -156,13 +156,39 @@ mod tests {
     #[test]
     fn plushy_to_push_test() {
         let plushy = vec![
-            Gene::StateFunc(float_flush),
-            Gene::StateFunc(exec_pop),
-            Gene::StateFunc(int_add),
-            Gene::StateFunc(float_rem),
+            Gene::StateFunc(exec_swap),
+            Gene::StateFunc(float_tan),
+            Gene::StateFunc(int_pop),
             Gene::Close,
-            Gene::StateFunc(float_sub),
+            Gene::StateFunc(exec_flush),
+            Gene::Close,
+            Gene::StateFunc(boolean_pop),
+        ];
+        let res_push = plushy_to_push(plushy);
+        assert_eq!(
+            res_push,
+            vec![
+                StateFunc(exec_swap),
+                Gene::Block(vec![Gene::StateFunc(float_tan), Gene::StateFunc(int_pop)]),
+                Gene::Block(vec![Gene::StateFunc(exec_flush)]),
+                Gene::StateFunc(boolean_pop),
+            ]
+        );
+
+        let plushy = vec![
+            Gene::StateFunc(exec_swap),
+            Gene::StateFunc(float_tan),
+            Gene::StateFunc(int_pop),
             Gene::Close,
         ];
+        let res_push = plushy_to_push(plushy);
+        assert_eq!(
+            res_push,
+            vec![
+                StateFunc(exec_swap),
+                Gene::Block(vec![Gene::StateFunc(float_tan), Gene::StateFunc(int_pop)]),
+                Gene::Block(vec![]),
+            ]
+        )
     }
 }
