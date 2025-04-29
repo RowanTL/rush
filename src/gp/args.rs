@@ -10,6 +10,7 @@ pub enum ClosingType {
     None,
 }
 
+#[allow(dead_code)]
 struct PushArgs {
     alignment_deviation: usize, // For alternation, std dev of deviation of index when alternating
     alternation_rate: Decimal,  // For alternation, prob of switching parents at each location
