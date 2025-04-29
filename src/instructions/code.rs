@@ -464,7 +464,7 @@ fn _reverse(a: Gene) -> Option<Gene> {
 macro_rules! noop {
     ($stack:ident, $name:ident) => {
         paste::item! {
-            pub fn [< $stack $name >] (_: &mut PushState) {
+            pub fn [< $stack $name >] (_state: &mut PushState) {
                 ()
             }
         }

@@ -25,7 +25,7 @@ def run_cargo_expand(binary_name, path_to_module):
 def extract_functions_with_push_state(code):
     """Extract function names that have &mut PushState as their only parameter."""
     # Look for function definitions with pattern: pub fn name(state: &mut PushState)
-    pattern = r'pub fn ([a-zA-Z0-9_]+)\s*\(\s*state\s*:\s*&mut\s+PushState\s*\)'
+    pattern = r'pub fn ([a-zA-Z0-9_]+)\s*\(\s*_?state\s*:\s*&mut\s+PushState\s*\)'
     matches = re.findall(pattern, code)
     return matches
 
