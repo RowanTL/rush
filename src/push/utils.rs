@@ -1,4 +1,4 @@
-use crate::instructions::all_instructions;
+use crate::instructions::list::all_instructions;
 use crate::push::state::Gene;
 
 pub fn most_genes() -> Vec<Gene> {

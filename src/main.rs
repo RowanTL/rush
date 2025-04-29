@@ -1,8 +1,7 @@
-use push::utils::most_genes;
-
-use crate::instructions::*;
+use crate::instructions::list::*;
 use crate::push::interpreter::interpret_program;
 use crate::push::state::EMPTY_STATE;
+use push::utils::most_genes;
 
 mod instructions;
 mod push;
