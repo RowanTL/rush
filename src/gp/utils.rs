@@ -1,5 +1,22 @@
+use crate::gp::args::ClosingType;
+use crate::push::state::Gene;
 use rand::Rng;
+use rand::seq::IndexedRandom;
 use rust_decimal::prelude::*;
+
+pub fn random_instruction(
+    instructions: Vec<Gene>,
+    closing_type: ClosingType,
+    rng: &mut impl Rng,
+) -> Gene {
+    match closing_type {
+        ClosingType::Specified => return instructions.choose(rng).unwrap().clone(),
+        ClosingType::Balanced => {
+            let 
+        }
+        _ => todo!(),
+    }
+}
 
 pub fn gaussian_noise_factor(rng: &mut impl Rng) -> Decimal {
     let u0f64: f64 = rng.random();

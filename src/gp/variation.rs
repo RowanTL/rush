@@ -125,6 +125,10 @@ fn alternation(
     }
 }
 
+fn uniform_addition(plushy: Vec<Gene>, instructions: Vec<Gene>, umad_rate: Decimal) {
+    let mut new_plushy: Vec<Gene> = vec![];
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
