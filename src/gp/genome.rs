@@ -29,7 +29,7 @@ pub fn make_random_plushy(
 }
 
 /// A map of genes to their number of blocks they open.
-static OPEN_MAP: LazyLock<HashMap<Gene, u8>> = LazyLock::new(|| {
+pub static OPEN_MAP: LazyLock<HashMap<Gene, u8>> = LazyLock::new(|| {
     let mut temp_map = HashMap::default();
     temp_map.insert(StateFunc(exec_dup), 1u8);
     temp_map.insert(StateFunc(exec_dup_times), 1u8);
