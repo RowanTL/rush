@@ -12,10 +12,10 @@ pub enum ClosingType {
 
 #[allow(dead_code)]
 struct PushArgs {
-    alignment_deviation: usize, // For alternation, std dev of deviation of index when alternating
-    alternation_rate: Decimal,  // For alternation, prob of switching parents at each location
-    closes: ClosingType,        // How push should automatically place Gene::Close into a plushy
-    dont_end: bool,             // If true, keep running until limit regardless of success
+    alignment_deviation: Decimal, // For alternation, std dev of deviation of index when alternating
+    alternation_rate: usize, // For alternation, prob of switching parents at each location. A number 0-100
+    closes: ClosingType,     // How push should automatically place Gene::Close into a plushy
+    dont_end: bool,          // If true, keep running until limit regardless of success
     // downsample: bool, // Whether or not to downsample. TODO later with all the related args
     elitism: bool, // Whether to always add the best individual to next generation
     error_function: fn(&PushArgs, DataFrame, Vec<Gene>) -> Series, // The error function
