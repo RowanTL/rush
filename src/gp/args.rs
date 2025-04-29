@@ -19,7 +19,7 @@ pub struct PushArgs {
     pub dont_end: bool,          // If true, keep running until limit regardless of success
     // pub downsample: bool, // Whether or not to downsample. TODO later with all the related args
     pub elitism: bool, // Whether to always add the best individual to next generation
-    pub error_function: fn(&PushArgs, DataFrame, Vec<Gene>) -> Series, // The error function
+    pub error_function: fn(&PushArgs, &DataFrame, Vec<Gene>) -> Vec<Decimal>, // The error function
     pub instructions: Vec<Gene>, // Instructions to use in a run
     pub max_init_plushy_size: usize, // max initial plushy size
     pub max_generations: usize, // Max amount of generations
@@ -29,6 +29,8 @@ pub struct PushArgs {
     pub use_simplification: bool, // Whether to use simplification at end of run
     pub simplification_k: usize, // Max amt of genes to attempt removal during one round of simplification process
     pub simplification_steps: usize, // How many attempts to find simplified genomes
+    pub simplification_verbose: bool, // Whether to send extra messages about simplification or not
+    pub solution_error_threshold: Decimal, // Max total error for solutions
     pub use_single_thread: bool, // if true, only single threaded
     pub step_limit: usize,       // Amount of steps a push interpreter can run for
     pub testing_data: DataFrame, // The testing data, must be formatted the same as training data
