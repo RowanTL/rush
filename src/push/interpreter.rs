@@ -25,6 +25,10 @@ pub fn gene_to_stack(state: &mut PushState, gene: Gene) {
         Gene::CrossoverPadding => {
             panic!("CrossoverPadding found in the exec stack, this should not happen!")
         }
+        Gene::Place(idx) => {
+            let var = state.input[idx].clone();
+            state.exec.push(var)
+        }
     }
 }
 

@@ -1,9 +1,162 @@
 use crate::gp::args::ClosingType;
 use crate::gp::genome::OPEN_MAP;
 use crate::push::state::Gene;
+use polars::prelude::*;
 use rand::Rng;
 use rand::seq::IndexedRandom;
 use rust_decimal::prelude::*;
+
+pub fn polars_to_gene(polars_value: &AnyValue) -> Gene {
+    match polars_value {
+        AnyValue::Int8(val) => Gene::GeneInt(*val as i128),
+        AnyValue::Int16(val) => Gene::GeneInt(*val as i128),
+        AnyValue::Int32(val) => Gene::GeneInt(*val as i128),
+        AnyValue::Int64(val) => Gene::GeneInt(*val as i128),
+        AnyValue::Int128(val) => Gene::GeneInt(*val as i128),
+        AnyValue::UInt8(val) => Gene::GeneInt(*val as i128),
+        AnyValue::UInt16(val) => Gene::GeneInt(*val as i128),
+        AnyValue::UInt32(val) => Gene::GeneInt(*val as i128),
+        AnyValue::UInt64(val) => Gene::GeneInt(*val as i128),
+        AnyValue::Float32(val) => Gene::GeneFloat(Decimal::from_f32(*val).unwrap()),
+        AnyValue::Float64(val) => Gene::GeneFloat(Decimal::from_f64(*val).unwrap()),
+        AnyValue::Boolean(val) => Gene::GeneBoolean(*val),
+        AnyValue::String(val) => Gene::GeneString(val.chars().collect()),
+        AnyValue::List(series) => match series.dtype() {
+            DataType::Int8 => {
+                let vec = series
+                    .i8()
+                    .unwrap()
+                    .into_iter()
+                    .map(|opt| opt.map(|v| v as i128))
+                    .collect::<Option<Vec<_>>>()
+                    .unwrap();
+                Gene::GeneVectorInt(vec)
+            }
+            DataType::Int16 => {
+                let vec = series
+                    .i16()
+                    .unwrap()
+                    .into_iter()
+                    .map(|opt| opt.map(|v| v as i128))
+                    .collect::<Option<Vec<_>>>()
+                    .unwrap();
+                Gene::GeneVectorInt(vec)
+            }
+            DataType::Int32 => {
+                let vec = series
+                    .i32()
+                    .unwrap()
+                    .into_iter()
+                    .map(|opt| opt.map(|v| v as i128))
+                    .collect::<Option<Vec<_>>>()
+                    .unwrap();
+                Gene::GeneVectorInt(vec)
+            }
+            DataType::Int64 => {
+                let vec = series
+                    .i64()
+                    .unwrap()
+                    .into_iter()
+                    .map(|opt| opt.map(|v| v as i128))
+                    .collect::<Option<Vec<_>>>()
+                    .unwrap();
+                Gene::GeneVectorInt(vec)
+            }
+            DataType::Int128 => {
+                let vec = series
+                    .i64() // i64 will have to do
+                    .unwrap()
+                    .into_iter()
+                    .map(|opt| opt.map(|v| v as i128))
+                    .collect::<Option<Vec<_>>>()
+                    .unwrap();
+                Gene::GeneVectorInt(vec)
+            }
+            DataType::UInt8 => {
+                let vec = series
+                    .u8()
+                    .unwrap()
+                    .into_iter()
+                    .map(|opt| opt.map(|v| v as i128))
+                    .collect::<Option<Vec<_>>>()
+                    .unwrap();
+                Gene::GeneVectorInt(vec)
+            }
+            DataType::UInt16 => {
+                let vec = series
+                    .u16()
+                    .unwrap()
+                    .into_iter()
+                    .map(|opt| opt.map(|v| v as i128))
+                    .collect::<Option<Vec<_>>>()
+                    .unwrap();
+                Gene::GeneVectorInt(vec)
+            }
+            DataType::UInt32 => {
+                let vec = series
+                    .u32()
+                    .unwrap()
+                    .into_iter()
+                    .map(|opt| opt.map(|v| v as i128))
+                    .collect::<Option<Vec<_>>>()
+                    .unwrap();
+                Gene::GeneVectorInt(vec)
+            }
+            DataType::UInt64 => {
+                let vec = series
+                    .u64()
+                    .unwrap()
+                    .into_iter()
+                    .map(|opt| opt.map(|v| v as i128))
+                    .collect::<Option<Vec<_>>>()
+                    .unwrap();
+                Gene::GeneVectorInt(vec)
+            }
+            DataType::Float32 => {
+                let vec = series
+                    .f32()
+                    .unwrap()
+                    .into_iter()
+                    .map(|opt| opt.map(|v| Decimal::from_f32(v).unwrap()))
+                    .collect::<Option<Vec<_>>>()
+                    .unwrap();
+                Gene::GeneVectorFloat(vec)
+            }
+            DataType::Float64 => {
+                let vec = series
+                    .f64()
+                    .unwrap()
+                    .into_iter()
+                    .map(|opt| opt.map(|v| Decimal::from_f64(v).unwrap()))
+                    .collect::<Option<Vec<_>>>()
+                    .unwrap();
+                Gene::GeneVectorFloat(vec)
+            }
+            DataType::Boolean => {
+                let vec = series
+                    .bool()
+                    .unwrap()
+                    .into_iter()
+                    .map(|opt| opt.map(|v| v as bool))
+                    .collect::<Option<Vec<_>>>()
+                    .unwrap();
+                Gene::GeneVectorBoolean(vec)
+            }
+            DataType::String => {
+                let vec = series
+                    .str()
+                    .unwrap()
+                    .into_iter()
+                    .map(|opt| opt.map(|v| v.chars().collect()))
+                    .collect::<Option<Vec<_>>>()
+                    .unwrap();
+                Gene::GeneVectorString(vec)
+            }
+            _ => unimplemented!("Type {:?} not handled inside a vector", polars_value),
+        },
+        _ => unimplemented!("Type {:?} not handled", polars_value),
+    }
+}
 
 pub fn random_instruction(
     instructions: Vec<Gene>,

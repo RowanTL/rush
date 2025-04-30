@@ -56,6 +56,7 @@ pub enum Gene {
     Skip,
     Block(Vec<Gene>),
     CrossoverPadding,
+    Place(usize),
 }
 
 impl Gene {

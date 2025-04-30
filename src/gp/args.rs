@@ -22,8 +22,9 @@ pub struct PushArgs {
     pub elitism: bool, // Whether to always add the best individual to next generation
     pub error_function: Option<fn(&PushArgs, &DataFrame, Vec<Gene>) -> Vec<Decimal>>, // The error function
     pub instructions: Option<Vec<Gene>>, // Instructions to use in a run
-    pub max_init_plushy_size: usize,     // max initial plushy size
     pub max_generations: usize,          // Max amount of generations
+    pub max_init_plushy_size: usize,     // max initial plushy size
+    pub max_stack_size: usize,           // max size a stack is allowed to reach during execution
     pub parent_selection: Selection,     // Selection to use, TODO change this later.
     pub pop_size: usize,                 // Population size
     pub replacement_rate: f64,           // For uniform replacement, rate items replaced
@@ -55,8 +56,9 @@ impl PushArgs {
             elitism: false,
             error_function: None,
             instructions: None,
-            max_init_plushy_size: 100,
             max_generations: 1000,
+            max_init_plushy_size: 100,
+            max_stack_size: 100,
             parent_selection: Selection::Lexicase,
             pop_size: 1000,
             replacement_rate: 0.1,
