@@ -1,5 +1,9 @@
 use polars::prelude::*;
+use rand::SeedableRng;
+use rand::rngs::StdRng;
+use rush::gp::args::SearchDirection;
 use rush::gp::individual::Individual;
+use rush::gp::selection::{Selection, select_parent};
 use rush::gp::simplification::auto_simplify_plushy;
 use rush::gp::utils::polars_to_gene;
 use rush::instructions::numeric::*;
@@ -97,19 +101,75 @@ fn simplification_function_test() {
 
 #[test]
 fn tournament_selection_test() {
+    let mut rng = StdRng::seed_from_u64(42);
+
     let train_df: DataFrame = make_train_df();
 
+    let mut args = PushArgs::new();
+    args.training_data = Some(train_df.clone());
+    args.instructions = Some(most_genes());
+    args.simplification_steps = 100;
+    args.error_function = Some(test_error_function);
+    args.parent_selection = Selection::Tournament;
+
     let mut individuals: Vec<Individual> = Vec::with_capacity(5);
-    let mut individual = Individual {
-        plushy: vec![
-            Gene::StateFunc(int_add),
-            Gene::StateFunc(int_add),
-            Gene::GeneInt(9999),
-            Gene::Place(0),
-            Gene::Place(1),
-        ],
-        total_fitness: ,
-        fitness_cases: None,
-    };
+
+    let plushy = vec![
+        Gene::StateFunc(int_add),
+        Gene::StateFunc(int_add),
+        Gene::GeneInt(9999),
+        Gene::Place(0),
+        Gene::Place(1),
+    ];
+    let individual = Individual::with_error(plushy, test_error_function, &args, &train_df);
     individuals.push(individual);
+
+    let plushy = vec![
+        Gene::StateFunc(int_add),
+        Gene::StateFunc(int_add),
+        Gene::GeneInt(9000),
+        Gene::Place(0),
+        Gene::Place(1),
+    ];
+    let individual = Individual::with_error(plushy, test_error_function, &args, &train_df);
+    individuals.push(individual);
+
+    let plushy = vec![
+        Gene::StateFunc(int_add),
+        Gene::StateFunc(int_add),
+        Gene::GeneInt(420),
+        Gene::Place(0),
+        Gene::Place(1),
+    ];
+    let individual = Individual::with_error(plushy, test_error_function, &args, &train_df);
+    individuals.push(individual);
+
+    let plushy = vec![
+        Gene::StateFunc(int_add),
+        Gene::StateFunc(int_add),
+        Gene::GeneInt(69),
+        Gene::Place(0),
+        Gene::Place(1),
+    ];
+    let individual = Individual::with_error(plushy, test_error_function, &args, &train_df);
+    individuals.push(individual);
+
+    let plushy = vec![
+        Gene::StateFunc(int_add),
+        Gene::StateFunc(int_add),
+        Gene::GeneInt(42),
+        Gene::Place(0),
+        Gene::Place(1),
+    ];
+    let individual = Individual::with_error(plushy, test_error_function, &args, &train_df);
+    individuals.push(individual);
+
+    // For minimization problem.
+    let winning_ind = select_parent(individuals.clone(), &args, &mut rng);
+    assert_eq!(Some(dec!(126.0)), winning_ind.total_fitness);
+
+    // For maximization problem.
+    args.search_direction = SearchDirection::Max;
+    let winning_ind = select_parent(individuals.clone(), &args, &mut rng);
+    assert_eq!(Some(dec!(29997.0)), winning_ind.total_fitness);
 }

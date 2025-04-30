@@ -12,6 +12,7 @@ pub enum ClosingType {
     None,
 }
 
+#[derive(Clone, Copy)]
 pub enum SearchDirection {
     Min,
     Max,

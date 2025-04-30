@@ -24,10 +24,14 @@ pub enum Selection {
     Tournament,
 }
 
-pub fn select_parent(
-    _pop: Vec<Individual>,
-    _push_args: &PushArgs,
-    _rng: &mut impl Rng,
-) -> Individual {
-    todo!()
+pub fn select_parent(pop: Vec<Individual>, push_args: &PushArgs, rng: &mut impl Rng) -> Individual {
+    match push_args.parent_selection {
+        Selection::Tournament => tournament_selection(
+            pop,
+            push_args.tournament_size,
+            push_args.search_direction,
+            rng,
+        ),
+        _ => todo!(),
+    }
 }

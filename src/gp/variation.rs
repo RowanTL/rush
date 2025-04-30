@@ -300,6 +300,7 @@ pub fn new_individual(pop: Vec<Individual>, argmap: &PushArgs, rng: &mut impl Rn
 
     Individual {
         plushy,
+        push_program: None,
         total_fitness: None,
         fitness_cases: None,
     }
