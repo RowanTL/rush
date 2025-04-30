@@ -12,7 +12,7 @@ use std::iter::zip;
 use super::args::ClosingType;
 use super::utils::random_instruction;
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub enum Variation {
     Crossover,
     Alternation,
@@ -21,6 +21,7 @@ pub enum Variation {
     UniformReplacement,
     UniformDeletion,
     Reproduction,
+    UMAD,
 }
 
 fn crossover(plushy0: Vec<Gene>, plushy1: Vec<Gene>, mut rng: impl Rng) -> Vec<Gene> {
@@ -132,13 +133,13 @@ fn uniform_addition(
     instructions: Vec<Gene>,
     umad_rate: f64,
     closing_type: ClosingType,
-    mut rng: impl Rng,
+    rng: &mut impl Rng,
 ) -> Vec<Gene> {
     let mut new_plushy: Vec<Gene> = vec![];
 
     for gene in plushy {
         if rng.random::<f64>() < umad_rate {
-            let new_instruction = random_instruction(instructions.clone(), closing_type, &mut rng);
+            let new_instruction = random_instruction(instructions.clone(), closing_type, rng);
 
             // Randomly decide order (original first or new first)
             if rng.random::<bool>() {
@@ -231,7 +232,10 @@ pub fn new_individual(pop: Vec<Individual>, argmap: &PushArgs, rng: &mut impl Rn
             let parent = select_parent(pop, argmap, rng);
             uniform_addition(
                 parent.plushy.clone(),
-                argmap.instructions.clone(),
+                argmap
+                    .instructions
+                    .clone()
+                    .expect("Must provide instructions"),
                 argmap.umad_rate,
                 argmap.closes,
                 rng,
@@ -242,7 +246,10 @@ pub fn new_individual(pop: Vec<Individual>, argmap: &PushArgs, rng: &mut impl Rn
             let parent = select_parent(pop, argmap, rng);
             uniform_replacement(
                 parent.plushy.clone(),
-                argmap.instructions.clone(),
+                argmap
+                    .instructions
+                    .clone()
+                    .expect("Must provide instructions!"),
                 argmap.replacement_rate,
                 argmap.closes,
                 rng,
@@ -264,6 +271,25 @@ pub fn new_individual(pop: Vec<Individual>, argmap: &PushArgs, rng: &mut impl Rn
                 argmap.alignment_deviation,
                 rng,
             )
+        }
+
+        Variation::UMAD => {
+            let parent = select_parent(pop, argmap, rng);
+            let parent_plushy = parent.plushy.clone();
+
+            // Apply uniform addition followed by uniform deletion
+            let after_addition = uniform_addition(
+                parent_plushy,
+                argmap
+                    .instructions
+                    .clone()
+                    .expect("Must provide instructions"),
+                argmap.umad_rate,
+                argmap.closes,
+                rng,
+            );
+
+            uniform_deletion(after_addition, argmap.umad_rate, rng)
         }
 
         Variation::Reproduction => {
@@ -407,14 +433,15 @@ mod tests {
 
     #[test]
     fn uniform_addition_test() {
-        let rng = StdRng::seed_from_u64(42);
+        let mut rng = StdRng::seed_from_u64(42);
         let plushy0 = vec![
             Gene::StateFunc(exec_swap),
             Gene::StateFunc(float_tan),
             Gene::StateFunc(int_pop),
             Gene::Close,
         ];
-        let res_plushy = uniform_addition(plushy0, most_genes(), 0.75, ClosingType::Balanced, rng);
+        let res_plushy =
+            uniform_addition(plushy0, most_genes(), 0.75, ClosingType::Balanced, &mut rng);
         assert_eq!(
             vec![
                 Gene::StateFunc(exec_swap),

@@ -18,6 +18,7 @@ pub struct PushState {
     pub vector_char: Vec<Vec<char>>,
     pub exec: Vec<Gene>,
     pub code: Vec<Gene>,
+    pub input: Vec<Gene>,
 }
 
 pub const EMPTY_STATE: PushState = PushState {
@@ -33,6 +34,7 @@ pub const EMPTY_STATE: PushState = PushState {
     vector_char: vec![],
     exec: vec![],
     code: vec![],
+    input: vec![],
 };
 
 #[derive(PartialEq, Eq, Debug, Clone, Hash)]

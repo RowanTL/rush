@@ -19,7 +19,9 @@ pub fn gene_to_stack(state: &mut PushState, gene: Gene) {
         Gene::Block(x) => state.exec.extend(x.into_iter().rev()),
         Gene::Close => panic!("Close found in the exec stack, this should not happen!"),
         Gene::Open(_) => panic!("Open found in the exec stack, this should not happen!"),
-        Gene::Skip => panic!("Skip found in the exec stack, this should not happen!"),
+        Gene::Skip => {
+            state.exec.pop(); // Skip the next item by removing it.
+        }
         Gene::CrossoverPadding => {
             panic!("CrossoverPadding found in the exec stack, this should not happen!")
         }
