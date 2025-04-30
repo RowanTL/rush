@@ -6,6 +6,9 @@ use rand::Rng;
 use rand::seq::IndexedRandom;
 use rust_decimal::prelude::*;
 
+/// A helper function to convert from a polars type to a Gene
+/// Note: **Does not support chars**. If you want chars, gonna have to
+/// program that yourself in your error function.
 pub fn polars_to_gene(polars_value: &AnyValue) -> Gene {
     match polars_value {
         AnyValue::Int8(val) => Gene::GeneInt(*val as i128),

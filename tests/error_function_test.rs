@@ -11,6 +11,7 @@ use rust_decimal::{Decimal, dec};
 
 /// This is a prototype for an error function. I'm hoping to have some of this
 /// refined later.
+/// Will leave this for testing purposes.
 fn test_error_function(
     push_args: &PushArgs,
     data: &DataFrame,
@@ -29,9 +30,6 @@ fn test_error_function(
         .unwrap(); // How to convert a series to a vector everybody
     let x = data.drop("y").unwrap();
 
-    // println!("x: {x:#?}");
-    // println!("y: {y:#?}");
-
     for n in 0..x.height() {
         let mut state = EMPTY_STATE;
         let mut inputs: Vec<Gene> = Vec::with_capacity(x.width());
@@ -49,7 +47,6 @@ fn test_error_function(
         }
     }
 
-    // println!("{:?}", error_vec);
     error_vec
 }
 

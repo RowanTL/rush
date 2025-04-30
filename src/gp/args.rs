@@ -12,6 +12,11 @@ pub enum ClosingType {
     None,
 }
 
+pub enum SearchDirection {
+    Min,
+    Max,
+}
+
 #[allow(dead_code)]
 pub struct PushArgs {
     pub alignment_deviation: Decimal, // For alternation, std dev of deviation of index when alternating
@@ -29,6 +34,7 @@ pub struct PushArgs {
     pub pop_size: usize,                 // Population size
     pub replacement_rate: f64,           // For uniform replacement, rate items replaced
     pub use_simplification: bool,        // Whether to use simplification at end of run
+    pub search_direction: SearchDirection, // Whether the problem is a minimization or maximization problem
     pub simplification_k: usize, // Max amt of genes to attempt removal during one round of simplification process
     pub simplification_steps: usize, // How many attempts to find simplified genomes
     pub simplification_verbose: bool, // Whether to send extra messages about simplification or not
@@ -63,6 +69,7 @@ impl PushArgs {
             pop_size: 1000,
             replacement_rate: 0.1,
             use_simplification: true,
+            search_direction: SearchDirection::Min,
             simplification_k: 4,
             simplification_steps: 1000,
             simplification_verbose: true,
