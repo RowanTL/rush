@@ -1,4 +1,5 @@
 use polars::prelude::*;
+use rush::gp::individual::Individual;
 use rush::gp::simplification::auto_simplify_plushy;
 use rush::gp::utils::polars_to_gene;
 use rush::instructions::numeric::*;
@@ -50,16 +51,18 @@ fn test_error_function(
     error_vec
 }
 
-#[test]
-fn simplification_function_test() {
-    let train_df: DataFrame = df!(
+fn make_train_df() -> DataFrame {
+    df!(
         "x0" => [4, 5, 6],
         "x1" => [7, 8, 9],
         "y" => [11, 13, 15],
     )
-    .unwrap();
-    println!("{}", train_df);
-    // println!("{:#?}", train_df["x0"]);
+    .unwrap()
+}
+
+#[test]
+fn simplification_function_test() {
+    let train_df: DataFrame = make_train_df();
 
     // push program declaration
     let push_program: Vec<Gene> = vec![
@@ -75,6 +78,7 @@ fn simplification_function_test() {
         Gene::Place(1), // stays
     ];
 
+    // Assuming minimization problem here
     let mut args = PushArgs::new();
     args.training_data = Some(train_df.clone());
     args.instructions = Some(most_genes());
@@ -89,4 +93,23 @@ fn simplification_function_test() {
         vec![Gene::StateFunc(int_add), Gene::Place(0), Gene::Place(1)],
         simplified_genome
     )
+}
+
+#[test]
+fn tournament_selection_test() {
+    let train_df: DataFrame = make_train_df();
+
+    let mut individuals: Vec<Individual> = Vec::with_capacity(5);
+    let mut individual = Individual {
+        plushy: vec![
+            Gene::StateFunc(int_add),
+            Gene::StateFunc(int_add),
+            Gene::GeneInt(9999),
+            Gene::Place(0),
+            Gene::Place(1),
+        ],
+        total_fitness: ,
+        fitness_cases: None,
+    };
+    individuals.push(individual);
 }

@@ -1,4 +1,5 @@
 use super::args::PushArgs;
+use crate::gp::genome::plushy_to_push;
 use crate::push::state::Gene;
 use polars::prelude::*;
 use rand::Rng;
@@ -58,7 +59,7 @@ where
         .clone()
         .expect("Must provide training_data");
 
-    let mut curr_errors = error_func(&push_args, &training_data, plushy.clone());
+    let mut curr_errors = error_func(&push_args, &training_data, plushy_to_push(plushy.clone()));
     let mut step = 0;
     let mut curr_plushy = plushy;
 
@@ -67,7 +68,11 @@ where
         let random_k = rng.random_range(1..=push_args.simplification_k);
 
         let new_plushy = delete_k_random(random_k, &curr_plushy, &mut rng);
-        let new_plushy_errors = error_func(&push_args, &training_data, new_plushy.clone());
+        let new_plushy_errors = error_func(
+            &push_args,
+            &training_data,
+            plushy_to_push(new_plushy.clone()),
+        );
 
         if new_plushy_errors.iter().sum::<Decimal>() <= curr_errors.iter().sum() {
             curr_plushy = new_plushy;
