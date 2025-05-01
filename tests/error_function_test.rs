@@ -92,7 +92,7 @@ fn simplification_function_test() {
     // test_error_function(&args, &train_df, push_program);
 
     // test the auto simplification here
-    let simplified_genome = auto_simplify_plushy(push_program, args.error_function.unwrap(), args);
+    let simplified_genome = auto_simplify_plushy(push_program, args.error_function.unwrap(), &args);
     assert_eq!(
         vec![Gene::StateFunc(int_add), Gene::Place(0), Gene::Place(1)],
         simplified_genome
