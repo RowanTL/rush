@@ -38,15 +38,16 @@ pub fn gp_loop(push_args: PushArgs) {
                 .cmp(&ind1.total_fitness.unwrap())
         }),
         SearchDirection::Max => pop.sort_by(|ind0, ind1| {
-            ind0.total_fitness
+            ind1.total_fitness
                 .unwrap()
-                .cmp(&ind1.total_fitness.unwrap())
-                .reverse()
+                .cmp(&ind0.total_fitness.unwrap())
         }),
     }
 
     let mut generation: usize = 0;
     let mut best_ind = pop[0].clone();
+
+    println!("Starting run!");
 
     while generation < push_args.max_generations
         && (&pop[0].total_fitness.unwrap() != &dec!(0.0) || push_args.dont_end)
@@ -73,10 +74,9 @@ pub fn gp_loop(push_args: PushArgs) {
                     .cmp(&ind1.total_fitness.unwrap())
             }),
             SearchDirection::Max => pop.sort_by(|ind0, ind1| {
-                ind0.total_fitness
+                ind1.total_fitness
                     .unwrap()
-                    .cmp(&ind1.total_fitness.unwrap())
-                    .reverse()
+                    .cmp(&ind0.total_fitness.unwrap())
             }),
         }
         best_ind = pop[0].clone();
@@ -84,6 +84,7 @@ pub fn gp_loop(push_args: PushArgs) {
 
         println!("Generation: {}", generation);
         println!("Best Individual: {:?}", best_ind);
+        println!("Worst Individual: {:?}", pop[pop.len() - 1]);
     }
 
     let simplified_plushy = auto_simplify_plushy(

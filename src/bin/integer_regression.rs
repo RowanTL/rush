@@ -1,5 +1,6 @@
 use polars::prelude::*;
 use rush::gp::args::PushArgs;
+use rush::gp::args::SearchDirection;
 use rush::gp::gp_loop;
 use rush::gp::selection::Selection;
 use rush::gp::utils::polars_to_gene;
@@ -12,7 +13,7 @@ use rust_decimal::prelude::FromPrimitive;
 use rust_decimal::{Decimal, dec};
 
 fn target_function(x: i64) -> i64 {
-    (x * x * x) + (2 * x * x) + x + 3
+    (x * x * x) + (2 * x * x) + 3
 }
 
 fn train_data() -> DataFrame {
@@ -26,14 +27,15 @@ fn train_data() -> DataFrame {
 
 fn instructions() -> Vec<Gene> {
     vec![
-        Gene::Place(1),
+        Gene::Place(0),
         Gene::StateFunc(int_add),
         Gene::StateFunc(int_sub),
         Gene::StateFunc(int_mult),
         Gene::StateFunc(int_div),
         Gene::StateFunc(int_dup),
+        Gene::StateFunc(int_equal),
         Gene::StateFunc(exec_dup),
-        Gene::StateFunc(exec_if),
+        // Gene::StateFunc(exec_if),
         Gene::Close,
         Gene::GeneInt(1),
         Gene::GeneInt(0),
@@ -46,7 +48,7 @@ fn error_function(push_args: &PushArgs, data: &DataFrame, push_program: Vec<Gene
     let y = data
         .column("y")
         .unwrap()
-        .i32()
+        .i64()
         .unwrap()
         .into_iter()
         .map(|opt| opt.map(|v| v as i128))
@@ -80,7 +82,10 @@ fn main() {
     push_args.instructions = Some(instructions());
     push_args.simplification_steps = 100;
     push_args.error_function = Some(error_function);
-    push_args.parent_selection = Selection::EpsilonLexicase;
+    push_args.parent_selection = Selection::Tournament;
+    // push_args.max_generations = 5;
+    push_args.elitism = true;
+    // push_args.search_direction = SearchDirection::Max;
 
     gp_loop(push_args);
 }

@@ -6,6 +6,7 @@
 // Just don't know enough Rust yet ig.
 
 use crate::push::state::PushState;
+use num_traits::ops::checked::CheckedMul;
 use rust_decimal::Decimal;
 use std::cmp::{max, min};
 use std::ops::{Add, Div, Mul, Sub};
@@ -31,9 +32,10 @@ where
 /// Multiplies two values with each other.
 fn _mult<T>(a: T, b: T) -> Option<T>
 where
-    T: Mul<Output = T> + Copy,
+    T: CheckedMul + Mul<Output = T> + Copy,
 {
-    Some(b * a)
+    // This is different from the numeric trait checked operators.
+    b.checked_mul(&a)
 }
 
 /// Divides two values from each other.

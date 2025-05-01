@@ -80,7 +80,7 @@ impl PushArgs {
             testing_data: None,
             tournament_size: 5,
             training_data: None,
-            umad_rate: 0.1,
+            umad_rate: 0.2,
             variation: map,
         }
     }

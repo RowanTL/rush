@@ -20,9 +20,9 @@ fn tournament_selection(
     }
 }
 
-// Selects individuals based on individual cases rather than an aggregate value.
-// Use Selection::EpsilonLexicase for regression problems.
-// Tom Helmuth describing Lexicase: https://youtu.be/Th6Hx3SJOlk
+/// Selects individuals based on individual cases rather than an aggregate value.
+/// Use Selection::EpsilonLexicase for regression problems.
+/// Tom Helmuth describing Lexicase: https://youtu.be/Th6Hx3SJOlk
 fn lexicase_selection(
     mut pop: Vec<Individual>,
     direction: SearchDirection,
@@ -53,6 +53,7 @@ fn lexicase_selection(
     }
 }
 
+// need to fix this function, best-epsilon needs to be directional.
 fn epsilon_lexicase_selection(
     mut pop: Vec<Individual>,
     direction: SearchDirection,

@@ -26,7 +26,7 @@ impl Individual {
         F: Fn(&PushArgs, &DataFrame, Vec<Gene>) -> Vec<Decimal>,
     {
         let push_program = Some(plushy_to_push(plushy.clone()));
-        let error_vec = error_func(push_args, data, plushy.clone());
+        let error_vec = error_func(push_args, data, push_program.clone().unwrap());
         Self {
             plushy,
             push_program,
