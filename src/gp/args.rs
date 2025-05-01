@@ -18,7 +18,7 @@ pub enum SearchDirection {
     Max,
 }
 
-#[allow(dead_code)]
+#[derive(Clone)]
 pub struct PushArgs {
     pub alignment_deviation: Decimal, // For alternation, std dev of deviation of index when alternating
     pub alternation_rate: usize, // For alternation, prob of switching parents at each location. A number 0-100

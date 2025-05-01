@@ -38,7 +38,7 @@ pub const EMPTY_STATE: PushState = PushState {
 };
 
 #[derive(PartialEq, Eq, Debug, Clone, Hash)]
-#[allow(dead_code)] // remove this later. Is here bc Close, Skip, CrossoverPadding
+#[allow(dead_code)] // I do use these in code base. Rust doesn't see it tho :(
 pub enum Gene {
     GeneInt(i128),
     GeneFloat(Decimal),

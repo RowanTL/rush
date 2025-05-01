@@ -5,7 +5,7 @@ use rust_decimal::Decimal;
 
 use super::genome::plushy_to_push;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Individual {
     pub plushy: Vec<Gene>,
     pub push_program: Option<Vec<Gene>>,
@@ -14,6 +14,8 @@ pub struct Individual {
 }
 
 impl Individual {
+    // Creates a new individual based off a plushy. Converts it to a push program
+    // and runs the error function on it.
     pub fn with_error<F>(
         plushy: Vec<Gene>,
         error_func: F,

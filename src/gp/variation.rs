@@ -210,100 +210,104 @@ fn select_variation_op(variation_ops: &HashMap<Variation, f64>, r: f64) -> Varia
 }
 
 /// Creates a new individual based on an argmap variation
-pub fn new_individual(pop: Vec<Individual>, argmap: &PushArgs, rng: &mut impl Rng) -> Individual {
+pub fn new_individual(
+    pop: Vec<Individual>,
+    push_args: &PushArgs,
+    rng: &mut impl Rng,
+) -> Individual {
     // Select variation operator based on probabilities
     let r = rng.random::<f64>();
-    let op = select_variation_op(&argmap.variation, r);
+    let op = select_variation_op(&push_args.variation, r);
 
     let plushy = match op {
         Variation::Crossover => {
-            let parent1 = select_parent(pop.clone(), argmap, rng);
-            let parent2 = select_parent(pop, argmap, rng);
+            let parent1 = select_parent(pop.clone(), push_args, rng);
+            let parent2 = select_parent(pop, push_args, rng);
             crossover(parent1.plushy, parent2.plushy, rng)
         }
 
         Variation::TailAlignedCrossover => {
-            let parent1 = select_parent(pop.clone(), argmap, rng);
-            let parent2 = select_parent(pop, argmap, rng);
+            let parent1 = select_parent(pop.clone(), push_args, rng);
+            let parent2 = select_parent(pop, push_args, rng);
             tail_aligned_crossover(parent1.plushy, parent2.plushy, rng)
         }
 
         Variation::UniformAddition => {
-            let parent = select_parent(pop, argmap, rng);
+            let parent = select_parent(pop, push_args, rng);
             uniform_addition(
                 parent.plushy.clone(),
-                argmap
+                push_args
                     .instructions
                     .clone()
                     .expect("Must provide instructions"),
-                argmap.umad_rate,
-                argmap.closes,
+                push_args.umad_rate,
+                push_args.closes,
                 rng,
             )
         }
 
         Variation::UniformReplacement => {
-            let parent = select_parent(pop, argmap, rng);
+            let parent = select_parent(pop, push_args, rng);
             uniform_replacement(
                 parent.plushy.clone(),
-                argmap
+                push_args
                     .instructions
                     .clone()
                     .expect("Must provide instructions!"),
-                argmap.replacement_rate,
-                argmap.closes,
+                push_args.replacement_rate,
+                push_args.closes,
                 rng,
             )
         }
 
         Variation::UniformDeletion => {
-            let parent = select_parent(pop, argmap, rng);
-            uniform_deletion(parent.plushy.clone(), argmap.umad_rate, rng)
+            let parent = select_parent(pop, push_args, rng);
+            uniform_deletion(parent.plushy.clone(), push_args.umad_rate, rng)
         }
 
         Variation::Alternation => {
-            let parent1 = select_parent(pop.clone(), argmap, rng);
-            let parent2 = select_parent(pop, argmap, rng);
+            let parent1 = select_parent(pop.clone(), push_args, rng);
+            let parent2 = select_parent(pop, push_args, rng);
             alternation(
                 parent1.plushy,
                 parent2.plushy,
-                argmap.alternation_rate,
-                argmap.alignment_deviation,
+                push_args.alternation_rate,
+                push_args.alignment_deviation,
                 rng,
             )
         }
 
         Variation::UMAD => {
-            let parent = select_parent(pop, argmap, rng);
+            let parent = select_parent(pop, push_args, rng);
             let parent_plushy = parent.plushy.clone();
 
             // Apply uniform addition followed by uniform deletion
             let after_addition = uniform_addition(
                 parent_plushy,
-                argmap
+                push_args
                     .instructions
                     .clone()
                     .expect("Must provide instructions"),
-                argmap.umad_rate,
-                argmap.closes,
+                push_args.umad_rate,
+                push_args.closes,
                 rng,
             );
 
-            uniform_deletion(after_addition, argmap.umad_rate, rng)
+            uniform_deletion(after_addition, push_args.umad_rate, rng)
         }
 
         Variation::Reproduction => {
-            let parent = select_parent(pop, argmap, rng);
+            let parent = select_parent(pop, push_args, rng);
             parent.plushy.clone()
         }
     };
 
-    Individual {
+    Individual::with_error(
         plushy,
-        push_program: None,
-        total_fitness: None,
-        fitness_cases: None,
-    }
+        push_args.error_function.unwrap(),
+        push_args,
+        &push_args.training_data.clone().unwrap(),
+    )
 }
 
 #[cfg(test)]

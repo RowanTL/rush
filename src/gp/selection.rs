@@ -1,7 +1,9 @@
 use crate::gp::args::{PushArgs, SearchDirection};
 use crate::gp::individual::Individual;
+use crate::gp::utils::absolute_median_deviation;
 use rand::Rng;
-use rand::seq::SliceRandom;
+use rand::seq::{IndexedRandom, SliceRandom};
+use rust_decimal::Decimal;
 
 fn tournament_selection(
     mut pop: Vec<Individual>,
@@ -18,6 +20,80 @@ fn tournament_selection(
     }
 }
 
+// Selects individuals based on individual cases rather than an aggregate value.
+// Use Selection::EpsilonLexicase for regression problems.
+// Tom Helmuth describing Lexicase: https://youtu.be/Th6Hx3SJOlk
+fn lexicase_selection(
+    mut pop: Vec<Individual>,
+    direction: SearchDirection,
+    rng: &mut impl Rng,
+) -> Individual {
+    let mut cases: Vec<usize> = (0..pop[0].fitness_cases.clone().unwrap().len()).collect();
+    cases.shuffle(rng);
+
+    while pop.len() > 1 && cases.len() > 0 {
+        let t = cases[cases.len() - 1];
+        pop.sort_by(|ind0, ind1| {
+            ind0.fitness_cases.clone().unwrap()[t].cmp(&ind1.fitness_cases.clone().unwrap()[t])
+        });
+        let best: Decimal = match direction {
+            SearchDirection::Min => pop[0].fitness_cases.clone().unwrap()[t],
+            SearchDirection::Max => pop[pop.len() - 1].fitness_cases.clone().unwrap()[t],
+        };
+        pop = pop
+            .into_iter()
+            .filter(|ind| ind.fitness_cases.clone().unwrap()[t] == best)
+            .collect();
+        cases.pop();
+    }
+    if pop.len() == 1 {
+        return pop[0].clone();
+    } else {
+        return pop.choose(rng).unwrap().clone();
+    }
+}
+
+fn epsilon_lexicase_selection(
+    mut pop: Vec<Individual>,
+    direction: SearchDirection,
+    rng: &mut impl Rng,
+) -> Individual {
+    let mut cases: Vec<usize> = (0..pop[0].fitness_cases.clone().unwrap().len()).collect();
+    cases.shuffle(rng);
+
+    while pop.len() > 1 && cases.len() > 0 {
+        let t = cases[cases.len() - 1];
+        pop.sort_by(|ind0, ind1| {
+            ind0.fitness_cases.clone().unwrap()[t].cmp(&ind1.fitness_cases.clone().unwrap()[t])
+        });
+        let best: Decimal = match direction {
+            SearchDirection::Min => pop[0].fitness_cases.clone().unwrap()[t],
+            SearchDirection::Max => pop[pop.len() - 1].fitness_cases.clone().unwrap()[t],
+        };
+        // Contains all values of the specified case from each individual in the population.
+        // Tracking which value belongs to who doesn't matter.
+        let pop_cases: Vec<Decimal> = pop
+            .iter()
+            .map(|ind| ind.fitness_cases.clone().unwrap()[t])
+            .collect();
+        let epsilon = absolute_median_deviation(&pop_cases);
+        pop = pop
+            .into_iter()
+            .filter(|ind| {
+                ind.fitness_cases.clone().unwrap()[t] <= best
+                    && ind.fitness_cases.clone().unwrap()[t] >= best - epsilon
+            })
+            .collect();
+        cases.pop();
+    }
+    if pop.len() == 1 {
+        return pop[0].clone();
+    } else {
+        return pop.choose(rng).unwrap().clone();
+    }
+}
+
+#[derive(Clone)]
 pub enum Selection {
     Lexicase,
     EpsilonLexicase,
@@ -32,6 +108,9 @@ pub fn select_parent(pop: Vec<Individual>, push_args: &PushArgs, rng: &mut impl 
             push_args.search_direction,
             rng,
         ),
-        _ => todo!(),
+        Selection::Lexicase => lexicase_selection(pop, push_args.search_direction, rng),
+        Selection::EpsilonLexicase => {
+            epsilon_lexicase_selection(pop, push_args.search_direction, rng)
+        }
     }
 }

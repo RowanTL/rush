@@ -42,7 +42,7 @@ fn delete_k_random<T: Clone>(k: usize, plushy: &[T], rng: &mut impl Rng) -> Vec<
     delete_at_indices(&indices, plushy)
 }
 
-pub fn auto_simplify_plushy<F>(plushy: Vec<Gene>, error_func: F, push_args: PushArgs) -> Vec<Gene>
+pub fn auto_simplify_plushy<F>(plushy: Vec<Gene>, error_func: F, push_args: &PushArgs) -> Vec<Gene>
 where
     F: Fn(&PushArgs, &DataFrame, Vec<Gene>) -> Vec<Decimal>,
 {

@@ -18,7 +18,7 @@ use std::sync::LazyLock;
 pub fn make_random_plushy(
     genes: Vec<Gene>,
     max_init_plushy_size: usize,
-    mut rng: impl Rng,
+    rng: &mut impl Rng,
 ) -> Vec<Gene> {
     let plushy_size = rng.random_range(0..=max_init_plushy_size);
     let mut plushy = Vec::with_capacity(plushy_size);

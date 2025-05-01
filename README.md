@@ -20,6 +20,9 @@ in `src/instructions/list.rs`. When creating new instructions, it is important t
 lists. This script uses python 3.13. Must be ran from the root of the directory as
 `python scripts/instruction_list.py`.
 
+You must be able to run `cargo expand` for this script to function. Nix users should be okay.
+If you're not on nix, run `cargo install cargo-expand`.
+
 ## Link for later
 
 https://miroslavtushev.medium.com/does-my-sample-have-to-be-normally-distributed-for-a-t-test-7ee91aaaca2a

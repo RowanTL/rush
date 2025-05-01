@@ -5,6 +5,7 @@ use polars::prelude::*;
 use rand::Rng;
 use rand::seq::IndexedRandom;
 use rust_decimal::prelude::*;
+use std::cmp::Ordering;
 
 /// A helper function to convert from a polars type to a Gene
 /// Note: **Does not support chars**. If you want chars, gonna have to
@@ -239,6 +240,32 @@ pub fn gaussian_noise_factor(rng: &mut impl Rng) -> Decimal {
     (dec!(-2.0) * u0.ln()).sqrt().unwrap() * (dec!(2.0) * rust_decimal::Decimal::PI * u1).cos()
 }
 
+fn median(data: &Vec<Decimal>) -> Decimal {
+    let mut sorted = data.clone();
+    sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
+
+    let len = sorted.len();
+    if len == 0 {
+        panic!("Cannot compute median of an empty vector");
+    }
+
+    if len % 2 == 1 {
+        sorted[len / 2]
+    } else {
+        let mid = len / 2;
+        (sorted[mid - 1] + sorted[mid]) / Decimal::TWO
+    }
+}
+
+// Used in epsilon lexicase selection
+pub fn absolute_median_deviation(data: &Vec<Decimal>) -> Decimal {
+    let med = median(data);
+
+    let deviations: Vec<Decimal> = data.iter().map(|x| (*x - med).abs()).collect();
+
+    median(&deviations)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -267,5 +294,30 @@ mod tests {
         let mut rng = StdRng::seed_from_u64(3203890821);
         let rand_instruction = random_instruction(genes, ClosingType::None, &mut rng);
         assert_eq!(Gene::StateFunc(code_insert), rand_instruction);
+    }
+
+    #[test]
+    fn median_test() {
+        let temp_vec = vec![dec!(1.0), dec!(2.0), dec!(3.0), dec!(4.0), dec!(5.0)];
+
+        let res_median = median(&temp_vec);
+        assert_eq!(dec!(3.0), res_median);
+    }
+
+    #[test]
+    fn absolute_median_deviation_test() {
+        // https://en.wikipedia.org/wiki/Median_absolute_deviation
+        let temp_vec = vec![
+            dec!(1.0),
+            dec!(1.0),
+            dec!(2.0),
+            dec!(2.0),
+            dec!(4.0),
+            dec!(6.0),
+            dec!(9.0),
+        ];
+
+        let res_abs_median_dev = absolute_median_deviation(&temp_vec);
+        assert_eq!(dec!(1.0), res_abs_median_dev);
     }
 }
