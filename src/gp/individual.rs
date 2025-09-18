@@ -13,6 +13,12 @@ pub struct Individual {
     pub fitness_cases: Option<Vec<Decimal>>,
 }
 
+impl fmt::Display for Individual {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        todo!()
+    }
+}
+
 impl Individual {
     // Creates a new individual based off a plushy. Converts it to a push program
     // and runs the error function on it.
