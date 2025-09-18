@@ -83,8 +83,8 @@ pub fn gp_loop(push_args: PushArgs) {
         generation += 1;
 
         println!("Generation: {}", generation);
-        println!("Best Individual: {:?}", best_ind);
-        println!("Worst Individual: {:?}", pop[pop.len() - 1]);
+        println!("Best Individual: {}", best_ind);
+        // println!("Worst Individual: {}", pop[pop.len() - 1]);
     }
 
     let simplified_plushy = auto_simplify_plushy(
@@ -99,5 +99,5 @@ pub fn gp_loop(push_args: PushArgs) {
         &push_args.training_data.unwrap(),
     );
 
-    println!("Simplified Best Individual: {:?}", simplified_ind);
+    println!("Simplified Best Individual: {}", simplified_ind);
 }

@@ -1,7 +1,9 @@
 use crate::gp::args::PushArgs;
+use crate::instructions::list::INSTR_NAME_MAP;
 use crate::push::state::Gene;
 use polars::prelude::*;
 use rust_decimal::Decimal;
+use std::fmt;
 
 use super::genome::plushy_to_push;
 
@@ -15,7 +17,47 @@ pub struct Individual {
 
 impl fmt::Display for Individual {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        todo!()
+        let mut final_string: String = "".to_string();
+        for gene in &self.plushy {
+            let temp_str: String = match gene {
+                Gene::StateFunc(func) => INSTR_NAME_MAP
+                    .get(&(func.clone() as usize))
+                    .unwrap()
+                    .clone(),
+                other => format!("{:?}", other),
+            };
+            final_string.push_str(&temp_str);
+            final_string.push_str(" ");
+        }
+        final_string.push_str("\n------------------------------------------------\n");
+        if let Some(program) = &self.push_program {
+            for gene in program {
+                let temp_str: String = match gene {
+                    Gene::StateFunc(func) => INSTR_NAME_MAP
+                        .get(&(func.clone() as usize))
+                        .unwrap()
+                        .clone(),
+                    other => format!("{:?}", other), // TODO: Make this for loop a function
+                };
+                final_string.push_str(&temp_str);
+                final_string.push_str(" ");
+            }
+        } else {
+            final_string.push_str("No push program")
+        }
+        final_string.push_str("\n------------------------------------------------\n");
+        if let Some(total_fitness) = &self.total_fitness {
+            final_string.push_str(&format!("{:?}", total_fitness))
+        } else {
+            final_string.push_str("No total fitness")
+        }
+        final_string.push_str("\n------------------------------------------------\n");
+        if let Some(fitness_cases) = &self.fitness_cases {
+            final_string.push_str(&format!("{:?}", fitness_cases))
+        } else {
+            final_string.push_str("No fitness cases")
+        }
+        write!(f, "{}", final_string)
     }
 }
 
