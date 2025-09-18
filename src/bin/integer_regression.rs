@@ -13,7 +13,7 @@ use rust_decimal::prelude::FromPrimitive;
 use rust_decimal::{Decimal, dec};
 
 fn target_function(x: i64) -> i64 {
-    (x * x * x) + (2 * x * x) + 3
+    (x * x * x)
 }
 
 fn train_data() -> DataFrame {
@@ -82,7 +82,7 @@ fn main() {
     push_args.instructions = Some(instructions());
     push_args.simplification_steps = 100;
     push_args.error_function = Some(error_function);
-    push_args.parent_selection = Selection::Tournament;
+    push_args.parent_selection = Selection::EpsilonLexicase;
     // push_args.max_generations = 5;
     push_args.elitism = true;
     // push_args.search_direction = SearchDirection::Max;
