@@ -15,33 +15,36 @@ pub struct Individual {
     pub fitness_cases: Option<Vec<Decimal>>,
 }
 
+/// Stringifies a genome. Steps into blocks to recursively stringify too.
+fn rec_gene_stringify(genome: &Vec<Gene>) -> String {
+    let mut final_str: String = "".to_string();
+    for gene in genome {
+        let temp_str: String = match gene {
+            Gene::StateFunc(func) => INSTR_NAME_MAP
+                .get(&(func.clone() as usize))
+                .unwrap()
+                .clone(),
+            Gene::Block(block) => {
+                let mut inner_temp: String = "[ ".to_string();
+                inner_temp.push_str(&rec_gene_stringify(block));
+                inner_temp.push_str("]");
+                inner_temp
+            }
+            other => format!("{:?}", other),
+        };
+        final_str.push_str(&temp_str);
+        final_str.push_str(" ");
+    }
+    final_str
+}
+
 impl fmt::Display for Individual {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut final_string: String = "".to_string();
-        for gene in &self.plushy {
-            let temp_str: String = match gene {
-                Gene::StateFunc(func) => INSTR_NAME_MAP
-                    .get(&(func.clone() as usize))
-                    .unwrap()
-                    .clone(),
-                other => format!("{:?}", other),
-            };
-            final_string.push_str(&temp_str);
-            final_string.push_str(" ");
-        }
+        final_string.push_str(&rec_gene_stringify(&self.plushy));
         final_string.push_str("\n------------------------------------------------\n");
         if let Some(program) = &self.push_program {
-            for gene in program {
-                let temp_str: String = match gene {
-                    Gene::StateFunc(func) => INSTR_NAME_MAP
-                        .get(&(func.clone() as usize))
-                        .unwrap()
-                        .clone(),
-                    other => format!("{:?}", other), // TODO: Make this for loop a function
-                };
-                final_string.push_str(&temp_str);
-                final_string.push_str(" ");
-            }
+            final_string.push_str(&rec_gene_stringify(program))
         } else {
             final_string.push_str("No push program")
         }
