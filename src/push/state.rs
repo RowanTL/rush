@@ -1,3 +1,5 @@
+use pyo3::FromPyObject;
+use pyo3::prelude::*;
 use rust_decimal::prelude::*;
 
 /// The declaration of the state that push operates on.
@@ -149,6 +151,12 @@ impl Gene {
             }
             _ => panic!("Error: self must be a block for attempt_code_insert to work!"),
         }
+    }
+}
+
+impl FromPyObject<'_> for PushState {
+    fn extract_bound(obj: &Bound<'_, PyAny>) -> PyResult<Self> {
+        todo!()
     }
 }
 
