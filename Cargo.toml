@@ -10,4 +10,4 @@ rust_decimal = { version = "1.37", features = ["macros", "maths"] }
 rush_macro = { path = "rush_macro" }
 polars = { version = "0.46.0", features = ["lazy"] }
 num-traits = { version = "0.2.19" }
-pyo3 = { version = "0.25.0", features = [ "auto-initialize" ] }
+pyo3 = { version = "0.26.0", features = [ "auto-initialize" ] }
