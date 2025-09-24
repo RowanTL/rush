@@ -1,6 +1,9 @@
 use pyo3::FromPyObject;
 use pyo3::prelude::*;
+use pyo3::types::PyDict;
 use rust_decimal::prelude::*;
+
+use crate::push::utils::find_replace;
 
 /// The declaration of the state that push operates on.
 ///
@@ -156,7 +159,16 @@ impl Gene {
 
 impl FromPyObject<'_> for PushState {
     fn extract_bound(obj: &Bound<'_, PyAny>) -> PyResult<Self> {
-        todo!()
+        let temp_state = EMPTY_STATE.clone();
+        let state_dict = match obj.cast::<PyDict>() {
+            Err(err) => return Err(err.into()),
+            // Now can use dictionary methods on pythonified PushState
+            Ok(obj_dict) => obj_dict,
+        };
+        let mut dict_keys: Vec<String> = state_dict.keys().extract()?;
+        // need to rename the bool stack to boolean for later
+        dict_keys = find_replace(dict_keys, "bool".to_string(), "boolean".to_string());
+        Ok(EMPTY_STATE)
     }
 }
 
